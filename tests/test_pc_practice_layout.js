@@ -84,6 +84,14 @@ for (const cls of [
 }
 assert(/padding(?:-bottom)?:[^;]*84px/.test(styleCss), 'src/style.css gives .re-body 84px bottom clearance above dsh-pet');
 
+// 3D flip transitions: knowledge card -> explanation panel, and between right sub-tabs
+for (const sel of ['.review-flip-scene', '.review-flip-card.flipped', '.rf-back', '@keyframes reFlipOut', '@keyframes reFlipIn', 'prefers-reduced-motion']) {
+  assert(styleCss.includes(sel), `src/style.css defines flip transition rule: ${sel}`);
+}
+for (const fn of ['wrapReviewFlipScene', 'runReviewFlipIn', 'prefersReducedMotion', '_reviewFlipShown', "classList.add('re-flip-out')"]) {
+  assert(appSrc.includes(fn), `src/app.js implements flip transition hook: ${fn}`);
+}
+
 for (const fnName of [
   'buildPostAnswerRightPanelHTML',
   'buildPostAnswerCodeTabHTML',

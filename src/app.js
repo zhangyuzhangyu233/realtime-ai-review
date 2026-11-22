@@ -2491,6 +2491,43 @@
       </aside>`;
   }
 
+  function prefersReducedMotion() {
+    try { return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); }
+    catch { return false; }
+  }
+
+  // 作答完成瞬间：右侧知识摘要卡（正面）3D 翻转到「本题详细解析」面板（背面），动画结束后移除正面残影
+  function wrapReviewFlipScene(panelHTML, frontHTML, animate) {
+    return `
+      <div class="review-flip-scene ${animate ? 'is-animating' : 'is-settled'}" id="review-flip-scene">
+        <div class="review-flip-card" id="review-flip-card">
+          ${animate ? `<div class="rf-face rf-front" aria-hidden="true">${frontHTML}</div>` : ''}
+          <div class="rf-face rf-back">${panelHTML}</div>
+        </div>
+      </div>`;
+  }
+
+  function runReviewFlipIn(rootEl) {
+    const scene = rootEl ? rootEl.querySelector('#review-flip-scene') : null;
+    const card = scene ? scene.querySelector('#review-flip-card') : null;
+    if (!scene || !card) return;
+    let settled = false;
+    const settle = () => {
+      if (settled) return;
+      settled = true;
+      const front = scene.querySelector('.rf-front');
+      if (front) front.remove();
+      scene.classList.remove('is-animating');
+      scene.classList.add('is-settled');
+      card.classList.remove('flipped');
+    };
+    requestAnimationFrame(() => requestAnimationFrame(() => card.classList.add('flipped')));
+    card.addEventListener('transitionend', (e) => {
+      if (e.target === card && e.propertyName === 'transform') settle();
+    });
+    setTimeout(settle, 1150);
+  }
+
   function bindPostAnswerLayout(rootEl, opts = {}) {
     if (!rootEl) return;
     const onNext = opts.onNext || null;
@@ -2533,11 +2570,8 @@
       syncReFootBtn();
     };
 
-    const activateRightTab = (rKey) => {
-      if (!rKey) return;
-      if (stateHolder) stateHolder.reviewRightTab = rKey;
-      if (opts.onRightTabChange) opts.onRightTabChange(rKey);
-
+    let curRightTab = (stateHolder && stateHolder.reviewRightTab) || 'explain';
+    const applyRightPanes = (rKey) => {
       rootEl.querySelectorAll('.re-subtab-btn[data-rpanel]').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.rpanel === rKey);
       });
@@ -2546,6 +2580,29 @@
       });
       const bodyEl = rootEl.querySelector('.review-explain-sidebar .re-body');
       if (bodyEl) bodyEl.scrollTop = 0;
+    };
+    // 右侧「本题详细解析 / 相关知识点」切换：整张卡片 3D 翻面（前半程翻到侧面 → 换内容 → 后半程翻回正面）
+    const activateRightTab = (rKey, animate = false) => {
+      if (!rKey || rKey === curRightTab) return;
+      curRightTab = rKey;
+      if (stateHolder) stateHolder.reviewRightTab = rKey;
+      if (opts.onRightTabChange) opts.onRightTabChange(rKey);
+
+      const sidebar = rootEl.querySelector('.review-explain-sidebar');
+      if (!animate || !sidebar || prefersReducedMotion()) {
+        applyRightPanes(rKey);
+        return;
+      }
+      clearTimeout(sidebar._flipT1);
+      clearTimeout(sidebar._flipT2);
+      sidebar.classList.remove('re-flip-in');
+      sidebar.classList.add('re-flip-out');
+      sidebar._flipT1 = setTimeout(() => {
+        applyRightPanes(curRightTab);
+        sidebar.classList.remove('re-flip-out');
+        sidebar.classList.add('re-flip-in');
+        sidebar._flipT2 = setTimeout(() => sidebar.classList.remove('re-flip-in'), 300);
+      }, 220);
     };
 
     rootEl.querySelectorAll('.post-tab-btn[data-lpanel]').forEach(btn => {
@@ -2560,10 +2617,10 @@
     }
 
     rootEl.querySelectorAll('.re-subtab-btn[data-rpanel]').forEach(btn => {
-      btn.onclick = () => activateRightTab(btn.dataset.rpanel);
+      btn.onclick = () => activateRightTab(btn.dataset.rpanel, true);
     });
     rootEl.querySelectorAll('[data-open-rpanel]').forEach(btn => {
-      btn.onclick = () => activateRightTab(btn.dataset.openRpanel);
+      btn.onclick = () => activateRightTab(btn.dataset.openRpanel, true);
     });
 
     rootEl.querySelectorAll('[data-jump-sec]').forEach(btn => {
@@ -3492,16 +3549,23 @@
       });
     }
 
+    const animateFlipIn = isReviewMode && !inst._reviewFlipShown && !prefersReducedMotion();
+    if (isReviewMode) inst._reviewFlipShown = true;
+
     const rightSidebarHTML = isReviewMode
-      ? buildPostAnswerRightPanelHTML({
-          itemKind: inst.kind,
-          item: dObj || qObj,
-          saved: inst.ans || { checked: false },
-          flipMeta,
-          diffInfo,
-          hasNext: true,
-          activeRightTab
-        })
+      ? wrapReviewFlipScene(
+          buildPostAnswerRightPanelHTML({
+            itemKind: inst.kind,
+            item: dObj || qObj,
+            saved: inst.ans || { checked: false },
+            flipMeta,
+            diffInfo,
+            hasNext: true,
+            activeRightTab
+          }),
+          animateFlipIn ? buildFlipSummaryCardHTML(flipMeta, diffInfo) : '',
+          animateFlipIn
+        )
       : buildFlipSummaryCardHTML(flipMeta, diffInfo);
 
     listEl.innerHTML = `
@@ -3556,6 +3620,7 @@
     };
     const togglePeekExplain = () => {
       inst.peekExplain = !inst.peekExplain;
+      if (!inst.peekExplain) inst._reviewFlipShown = false;
       if (inst.peekExplain) {
         if (inst.kind === 'drill' || (qObj && qObj.type === 'code' && qObj.subkind === 'write')) {
           inst.reviewLeftTab = 'code';
@@ -3624,6 +3689,7 @@
         initialLeftTab: activeLeftTab,
         onNext: goNext
       });
+      if (animateFlipIn) runReviewFlipIn(listEl);
     }
     if (window.DshPetAssistant) window.DshPetAssistant.onContextChanged();
   }

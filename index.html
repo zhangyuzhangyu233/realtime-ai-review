@@ -2628,6 +2628,65 @@ svg text { font-family: var(--font-mono); }
     grid-template-columns: minmax(0, 1.15fr) minmax(350px, 0.9fr);
   }
 }
+
+/* --- 3D Flip: knowledge summary card (front) -> explanation panel (back) --- */
+.review-flip-scene {
+  position: sticky;
+  top: 76px;
+  align-self: start;
+  min-width: 0;
+  perspective: 1600px;
+}
+.review-flip-card {
+  position: relative;
+  display: grid;
+  width: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.82s cubic-bezier(0.34, 1.28, 0.64, 1);
+}
+.review-flip-card.flipped { transform: rotateY(180deg); }
+.rf-face {
+  grid-area: 1 / 1;
+  min-width: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.rf-back { transform: rotateY(180deg); }
+.rf-front { pointer-events: none; }
+.rf-front .flip-sidebar { position: static; top: auto; }
+.rf-front .flip-card { animation: none !important; transition: none !important; }
+.review-flip-scene.is-settled .review-flip-card,
+.review-flip-scene.is-settled .rf-back {
+  transform: none !important;
+  transition: none !important;
+}
+.review-flip-scene .review-explain-sidebar {
+  position: relative;
+  top: auto;
+  animation: none;
+}
+
+/* --- 3D Flip between right sub-tabs (本题详细解析 <-> 相关知识点) --- */
+@keyframes reFlipOut {
+  0% { transform: perspective(1600px) rotateY(0deg); }
+  100% { transform: perspective(1600px) rotateY(90deg); }
+}
+@keyframes reFlipIn {
+  0% { transform: perspective(1600px) rotateY(-90deg); }
+  100% { transform: perspective(1600px) rotateY(0deg); }
+}
+.review-explain-sidebar.re-flip-out {
+  animation: reFlipOut 0.22s cubic-bezier(0.55, 0, 0.9, 0.45) forwards;
+}
+.review-explain-sidebar.re-flip-in {
+  animation: reFlipIn 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.15) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .review-flip-card { transition: none; }
+  .review-explain-sidebar.re-flip-out,
+  .review-explain-sidebar.re-flip-in { animation: none; }
+}
 @media (max-width: 1060px) {
   .practice-split-layout.is-review-mode {
     grid-template-columns: 1fr;
@@ -2636,6 +2695,9 @@ svg text { font-family: var(--font-mono); }
     position: static;
     min-height: 0;
     max-height: none;
+  }
+  .review-flip-scene {
+    position: static;
   }
   .re-body {
     overflow-y: visible;
@@ -18307,6 +18369,43 @@ public class RunAway : IState {
       </aside>`;
   }
 
+  function prefersReducedMotion() {
+    try { return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); }
+    catch { return false; }
+  }
+
+  // 作答完成瞬间：右侧知识摘要卡（正面）3D 翻转到「本题详细解析」面板（背面），动画结束后移除正面残影
+  function wrapReviewFlipScene(panelHTML, frontHTML, animate) {
+    return `
+      <div class="review-flip-scene ${animate ? 'is-animating' : 'is-settled'}" id="review-flip-scene">
+        <div class="review-flip-card" id="review-flip-card">
+          ${animate ? `<div class="rf-face rf-front" aria-hidden="true">${frontHTML}</div>` : ''}
+          <div class="rf-face rf-back">${panelHTML}</div>
+        </div>
+      </div>`;
+  }
+
+  function runReviewFlipIn(rootEl) {
+    const scene = rootEl ? rootEl.querySelector('#review-flip-scene') : null;
+    const card = scene ? scene.querySelector('#review-flip-card') : null;
+    if (!scene || !card) return;
+    let settled = false;
+    const settle = () => {
+      if (settled) return;
+      settled = true;
+      const front = scene.querySelector('.rf-front');
+      if (front) front.remove();
+      scene.classList.remove('is-animating');
+      scene.classList.add('is-settled');
+      card.classList.remove('flipped');
+    };
+    requestAnimationFrame(() => requestAnimationFrame(() => card.classList.add('flipped')));
+    card.addEventListener('transitionend', (e) => {
+      if (e.target === card && e.propertyName === 'transform') settle();
+    });
+    setTimeout(settle, 1150);
+  }
+
   function bindPostAnswerLayout(rootEl, opts = {}) {
     if (!rootEl) return;
     const onNext = opts.onNext || null;
@@ -18349,11 +18448,8 @@ public class RunAway : IState {
       syncReFootBtn();
     };
 
-    const activateRightTab = (rKey) => {
-      if (!rKey) return;
-      if (stateHolder) stateHolder.reviewRightTab = rKey;
-      if (opts.onRightTabChange) opts.onRightTabChange(rKey);
-
+    let curRightTab = (stateHolder && stateHolder.reviewRightTab) || 'explain';
+    const applyRightPanes = (rKey) => {
       rootEl.querySelectorAll('.re-subtab-btn[data-rpanel]').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.rpanel === rKey);
       });
@@ -18362,6 +18458,29 @@ public class RunAway : IState {
       });
       const bodyEl = rootEl.querySelector('.review-explain-sidebar .re-body');
       if (bodyEl) bodyEl.scrollTop = 0;
+    };
+    // 右侧「本题详细解析 / 相关知识点」切换：整张卡片 3D 翻面（前半程翻到侧面 → 换内容 → 后半程翻回正面）
+    const activateRightTab = (rKey, animate = false) => {
+      if (!rKey || rKey === curRightTab) return;
+      curRightTab = rKey;
+      if (stateHolder) stateHolder.reviewRightTab = rKey;
+      if (opts.onRightTabChange) opts.onRightTabChange(rKey);
+
+      const sidebar = rootEl.querySelector('.review-explain-sidebar');
+      if (!animate || !sidebar || prefersReducedMotion()) {
+        applyRightPanes(rKey);
+        return;
+      }
+      clearTimeout(sidebar._flipT1);
+      clearTimeout(sidebar._flipT2);
+      sidebar.classList.remove('re-flip-in');
+      sidebar.classList.add('re-flip-out');
+      sidebar._flipT1 = setTimeout(() => {
+        applyRightPanes(curRightTab);
+        sidebar.classList.remove('re-flip-out');
+        sidebar.classList.add('re-flip-in');
+        sidebar._flipT2 = setTimeout(() => sidebar.classList.remove('re-flip-in'), 300);
+      }, 220);
     };
 
     rootEl.querySelectorAll('.post-tab-btn[data-lpanel]').forEach(btn => {
@@ -18376,10 +18495,10 @@ public class RunAway : IState {
     }
 
     rootEl.querySelectorAll('.re-subtab-btn[data-rpanel]').forEach(btn => {
-      btn.onclick = () => activateRightTab(btn.dataset.rpanel);
+      btn.onclick = () => activateRightTab(btn.dataset.rpanel, true);
     });
     rootEl.querySelectorAll('[data-open-rpanel]').forEach(btn => {
-      btn.onclick = () => activateRightTab(btn.dataset.openRpanel);
+      btn.onclick = () => activateRightTab(btn.dataset.openRpanel, true);
     });
 
     rootEl.querySelectorAll('[data-jump-sec]').forEach(btn => {
@@ -19308,16 +19427,23 @@ public class RunAway : IState {
       });
     }
 
+    const animateFlipIn = isReviewMode && !inst._reviewFlipShown && !prefersReducedMotion();
+    if (isReviewMode) inst._reviewFlipShown = true;
+
     const rightSidebarHTML = isReviewMode
-      ? buildPostAnswerRightPanelHTML({
-          itemKind: inst.kind,
-          item: dObj || qObj,
-          saved: inst.ans || { checked: false },
-          flipMeta,
-          diffInfo,
-          hasNext: true,
-          activeRightTab
-        })
+      ? wrapReviewFlipScene(
+          buildPostAnswerRightPanelHTML({
+            itemKind: inst.kind,
+            item: dObj || qObj,
+            saved: inst.ans || { checked: false },
+            flipMeta,
+            diffInfo,
+            hasNext: true,
+            activeRightTab
+          }),
+          animateFlipIn ? buildFlipSummaryCardHTML(flipMeta, diffInfo) : '',
+          animateFlipIn
+        )
       : buildFlipSummaryCardHTML(flipMeta, diffInfo);
 
     listEl.innerHTML = `
@@ -19372,6 +19498,7 @@ public class RunAway : IState {
     };
     const togglePeekExplain = () => {
       inst.peekExplain = !inst.peekExplain;
+      if (!inst.peekExplain) inst._reviewFlipShown = false;
       if (inst.peekExplain) {
         if (inst.kind === 'drill' || (qObj && qObj.type === 'code' && qObj.subkind === 'write')) {
           inst.reviewLeftTab = 'code';
@@ -19440,6 +19567,7 @@ public class RunAway : IState {
         initialLeftTab: activeLeftTab,
         onNext: goNext
       });
+      if (animateFlipIn) runReviewFlipIn(listEl);
     }
     if (window.DshPetAssistant) window.DshPetAssistant.onContextChanged();
   }
