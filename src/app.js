@@ -3503,24 +3503,24 @@
       : buildFlipSummaryCardHTML(flipMeta, diffInfo);
 
     listEl.innerHTML = `
+      <div class="pager-bar" style="margin-bottom:16px">
+        <div class="diff-curve-top">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <strong style="font-size:15px">无限随机刷题 · 第 <span style="color:var(--primary)">${idx + 1}</span> 题</strong>
+            <span class="diff-tier-badge ${diffInfo.cls}">${diffInfo.name} · ${diffInfo.stars}</span>
+            <span class="exam-tag blue">不限量 · 含编程实战</span>
+            ${focusChipHTML}
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <span style="font-size:12px;color:var(--text-muted);font-weight:700">本轮已答 ${sessAnswered} 题${sessAnswered ? ` · 正确率 ${sessAcc}%` : ''}</span>
+            ${state.streak > 0 ? `<span class="exam-tag hot">连对 ${state.streak} 题</span>` : ''}
+            <button class="secondary-btn" id="btn-reshuffle-deck" style="padding:5px 12px;font-size:12px">换一批新题</button>
+          </div>
+        </div>
+      </div>
+
       <div class="practice-split-layout ${isReviewMode ? 'is-review-mode' : ''}">
         <div class="practice-main-col">
-          <div class="pager-bar" style="margin-bottom:18px">
-            <div class="diff-curve-top">
-              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-                <strong style="font-size:15px">无限随机刷题 · 第 <span style="color:var(--primary)">${idx + 1}</span> 题</strong>
-                <span class="diff-tier-badge ${diffInfo.cls}">${diffInfo.name} · ${diffInfo.stars}</span>
-                <span class="exam-tag blue">不限量 · 含编程实战</span>
-                ${focusChipHTML}
-              </div>
-              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-                <span style="font-size:12px;color:var(--text-muted);font-weight:700">本轮已答 ${sessAnswered} 题${sessAnswered ? ` · 正确率 ${sessAcc}%` : ''}</span>
-                ${state.streak > 0 ? `<span class="exam-tag hot">连对 ${state.streak} 题</span>` : ''}
-                <button class="secondary-btn" id="btn-reshuffle-deck" style="padding:5px 12px;font-size:12px">换一批新题</button>
-              </div>
-            </div>
-          </div>
-
           ${mainCardHTML}
 
           <div class="pager-footer">

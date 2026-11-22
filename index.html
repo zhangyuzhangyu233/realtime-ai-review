@@ -1992,6 +1992,14 @@ svg text { font-family: var(--font-mono); }
   .flip-sidebar { position: static; top: auto; }
 }
 
+@media (max-width: 1100px) and (min-width: 761px) {
+  .brand-sub { display: none; }
+  .topbar-inner { padding: 8px 16px; gap: 10px; flex-wrap: nowrap; }
+  .brand-title { font-size: 14.5px; white-space: nowrap; }
+  .nav-tab { padding: 7px 10px; font-size: 12.8px; white-space: nowrap; }
+  .icon-btn { height: 34px; padding: 0 10px; font-size: 12.2px; white-space: nowrap; }
+}
+
 @media (max-width: 760px) {
   .topbar-inner { padding: 8px 12px; gap: 8px; }
   .brand-avatar { width: 34px; height: 34px; border-radius: 10px; }
@@ -2712,8 +2720,33 @@ svg text { font-family: var(--font-mono); }
   .review-explain-sidebar.re-flip-in { animation: none; }
 }
 @media (max-width: 1060px) {
+  .practice-split-layout,
   .practice-split-layout.is-review-mode {
     grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .flip-sidebar {
+    position: static;
+    top: auto;
+    order: -1;
+  }
+  .flip-sidebar .flip-front {
+    padding: 14px 16px;
+  }
+  .flip-sidebar .flip-front-inner {
+    gap: 10px;
+  }
+  .flip-sidebar .flip-svg-hero {
+    height: 112px;
+  }
+  .flip-sidebar .flip-front-mascot-badge {
+    width: 52px;
+    height: 52px;
+  }
+  .review-flip-scene {
+    position: static;
+    top: auto;
+    order: -1;
   }
   .review-explain-sidebar {
     position: static;
@@ -2721,12 +2754,9 @@ svg text { font-family: var(--font-mono); }
     min-height: 0;
     max-height: none;
   }
-  .review-flip-scene {
-    position: static;
-  }
   .re-body {
     overflow-y: visible;
-    padding-bottom: 16px;
+    padding: 12px 14px 16px;
   }
 }
 
@@ -19406,24 +19436,24 @@ public class RunAway : IState {
       : buildFlipSummaryCardHTML(flipMeta, diffInfo);
 
     listEl.innerHTML = `
+      <div class="pager-bar" style="margin-bottom:16px">
+        <div class="diff-curve-top">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <strong style="font-size:15px">无限随机刷题 · 第 <span style="color:var(--primary)">${idx + 1}</span> 题</strong>
+            <span class="diff-tier-badge ${diffInfo.cls}">${diffInfo.name} · ${diffInfo.stars}</span>
+            <span class="exam-tag blue">不限量 · 含编程实战</span>
+            ${focusChipHTML}
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <span style="font-size:12px;color:var(--text-muted);font-weight:700">本轮已答 ${sessAnswered} 题${sessAnswered ? ` · 正确率 ${sessAcc}%` : ''}</span>
+            ${state.streak > 0 ? `<span class="exam-tag hot">连对 ${state.streak} 题</span>` : ''}
+            <button class="secondary-btn" id="btn-reshuffle-deck" style="padding:5px 12px;font-size:12px">换一批新题</button>
+          </div>
+        </div>
+      </div>
+
       <div class="practice-split-layout ${isReviewMode ? 'is-review-mode' : ''}">
         <div class="practice-main-col">
-          <div class="pager-bar" style="margin-bottom:18px">
-            <div class="diff-curve-top">
-              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-                <strong style="font-size:15px">无限随机刷题 · 第 <span style="color:var(--primary)">${idx + 1}</span> 题</strong>
-                <span class="diff-tier-badge ${diffInfo.cls}">${diffInfo.name} · ${diffInfo.stars}</span>
-                <span class="exam-tag blue">不限量 · 含编程实战</span>
-                ${focusChipHTML}
-              </div>
-              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-                <span style="font-size:12px;color:var(--text-muted);font-weight:700">本轮已答 ${sessAnswered} 题${sessAnswered ? ` · 正确率 ${sessAcc}%` : ''}</span>
-                ${state.streak > 0 ? `<span class="exam-tag hot">连对 ${state.streak} 题</span>` : ''}
-                <button class="secondary-btn" id="btn-reshuffle-deck" style="padding:5px 12px;font-size:12px">换一批新题</button>
-              </div>
-            </div>
-          </div>
-
           ${mainCardHTML}
 
           <div class="pager-footer">

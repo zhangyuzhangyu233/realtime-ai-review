@@ -122,6 +122,56 @@ assert(
   'renderInlineDrillCard renders animation ABOVE reference C# code inside the same card'
 );
 
+// PC non-maximized stacking order & half-screen single-row topbar
+assert(styleCss.includes('@media (max-width: 1100px) and (min-width: 761px)'), 'src/style.css keeps half-screen topbar on a single compact row');
+assert(
+  /\.flip-sidebar\s*\{[\s\S]*?order:\s*-1;[\s\S]*?\}/.test(styleCss) &&
+  /\.review-flip-scene\s*\{[\s\S]*?order:\s*-1;[\s\S]*?\}/.test(styleCss),
+  'src/style.css places knowledge/explanation card ABOVE question/code on non-maximized viewports (order: -1)'
+);
+assert(
+  appSrc.indexOf('<div class="pager-bar" style="margin-bottom:16px">') < appSrc.indexOf('<div class="practice-split-layout ${isReviewMode ? \'is-review-mode\' : \'\'}">'),
+  'src/app.js renders top HUD pager-bar above .practice-split-layout so cards align flush on wide view and stack cleanly below HUD on narrow view'
+);
+
+// 6. Verify Mobile layout optimization (src/mobile_app.js, src/mobile.css, mobile.html)
+const mobileSrc = fs.readFileSync(path.join(SRC, 'mobile_app.js'), 'utf8');
+let mobileParseOk = true;
+try { new vm.Script(mobileSrc); } catch (e) { mobileParseOk = false; console.error('[FAIL] src/mobile_app.js syntax error:', e.message); }
+assert(mobileParseOk, 'src/mobile_app.js parses cleanly with zero syntax errors');
+
+const mobileCss = fs.readFileSync(path.join(SRC, 'mobile.css'), 'utf8');
+for (const mCls of [
+  'scrollbar-gutter: stable',
+  'calc(118px + env(safe-area-inset-bottom))',
+  '.m-kp-collapse',
+  '.m-review-panel',
+  '.m-unified-media',
+  '.m-code-card',
+  '.tok-filled',
+  '@keyframes mReFlipOut',
+  '@keyframes mReFlipIn'
+]) {
+  assert(mobileCss.includes(mCls), `src/mobile.css defines ${mCls}`);
+}
+
+assert(
+  mobileSrc.includes("${topContextHTML}\n        <div id=\"m-prac-card-stage\">") ||
+  mobileSrc.includes("${topContextHTML}\r\n        <div id=\"m-prac-card-stage\">"),
+  'mobile_app.js renders collapsible knowledge card / review explanation panel ABOVE #m-prac-card-stage'
+);
+assert(
+  mobileSrc.includes("${buildMobileAnimHTML('question', q)}\n           ${buildMobileCodeSectionHTML('question', q, saved, opts.instance)}") ||
+  mobileSrc.includes("${buildMobileAnimHTML('question', q)}\r\n           ${buildMobileCodeSectionHTML('question', q, saved, opts.instance)}"),
+  'Mobile renderQuestionCard renders animation ABOVE C# code inside .m-unified-media'
+);
+assert(
+  mobileSrc.includes("${buildMobileAnimHTML('drill', d)}\n           ${buildMobileCodeSectionHTML('drill', d, saved, inst)}") ||
+  mobileSrc.includes("${buildMobileAnimHTML('drill', d)}\r\n           ${buildMobileCodeSectionHTML('drill', d, saved, inst)}"),
+  'Mobile renderInlineDrillCard renders animation ABOVE C# reference code inside .m-unified-media'
+);
+assert(mobileSrc.includes('m-drill-explain'), 'Mobile preserves m-drill-explain hook');
+
 const indexPath = path.join(ROOT, 'index.html');
 assert(fs.existsSync(indexPath), 'Bundled index.html exists');
 if (fs.existsSync(indexPath)) {
@@ -155,5 +205,33 @@ if (fs.existsSync(indexPath)) {
   assert(compileOk, 'index.html all embedded <script> blocks compile without syntax error');
 }
 
-console.log(`\nSummary: ${fails === 0 ? 'ALL PC POST-ANSWER PRACTICE LAYOUT CHECKS PASSED!' : fails + ' FAILURES'}`);
+const mobilePath = path.join(ROOT, 'mobile.html');
+assert(fs.existsSync(mobilePath), 'Bundled mobile.html exists');
+if (fs.existsSync(mobilePath)) {
+  const mobileHtml = fs.readFileSync(mobilePath, 'utf8');
+  for (const marker of [
+    'm-kp-collapse',
+    'm-review-panel',
+    'm-unified-media',
+    'm-code-card',
+    'm-drill-explain',
+    'q-reset-starter-btn',
+    'buildExplainDetailHTML',
+    'dsh-pet-dock',
+    'DshPetAssistant.onWrongAnswer',
+    'buildIdleHint'
+  ]) {
+    assert(mobileHtml.includes(marker), `mobile.html embeds marker: ${marker}`);
+  }
+
+  const mScripts = [...mobileHtml.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m => m[1]);
+  assert(mScripts.length >= 10, `mobile.html contains all embedded script bundles (${mScripts.length})`);
+  let mCompileOk = true;
+  mScripts.forEach((sc, i) => {
+    try { new vm.Script(sc); } catch (e) { mCompileOk = false; console.error(`[FAIL] mobile.html script #${i} error:`, e.message); }
+  });
+  assert(mCompileOk, 'mobile.html all embedded <script> blocks compile without syntax error');
+}
+
+console.log(`\nSummary: ${fails === 0 ? 'ALL PC & MOBILE PRACTICE LAYOUT CHECKS PASSED!' : fails + ' FAILURES'}`);
 process.exit(fails ? 1 : 0);

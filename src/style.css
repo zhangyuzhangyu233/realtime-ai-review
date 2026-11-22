@@ -1972,6 +1972,14 @@ svg text { font-family: var(--font-mono); }
   .flip-sidebar { position: static; top: auto; }
 }
 
+@media (max-width: 1100px) and (min-width: 761px) {
+  .brand-sub { display: none; }
+  .topbar-inner { padding: 8px 16px; gap: 10px; flex-wrap: nowrap; }
+  .brand-title { font-size: 14.5px; white-space: nowrap; }
+  .nav-tab { padding: 7px 10px; font-size: 12.8px; white-space: nowrap; }
+  .icon-btn { height: 34px; padding: 0 10px; font-size: 12.2px; white-space: nowrap; }
+}
+
 @media (max-width: 760px) {
   .topbar-inner { padding: 8px 12px; gap: 8px; }
   .brand-avatar { width: 34px; height: 34px; border-radius: 10px; }
@@ -2692,8 +2700,33 @@ svg text { font-family: var(--font-mono); }
   .review-explain-sidebar.re-flip-in { animation: none; }
 }
 @media (max-width: 1060px) {
+  .practice-split-layout,
   .practice-split-layout.is-review-mode {
     grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .flip-sidebar {
+    position: static;
+    top: auto;
+    order: -1;
+  }
+  .flip-sidebar .flip-front {
+    padding: 14px 16px;
+  }
+  .flip-sidebar .flip-front-inner {
+    gap: 10px;
+  }
+  .flip-sidebar .flip-svg-hero {
+    height: 112px;
+  }
+  .flip-sidebar .flip-front-mascot-badge {
+    width: 52px;
+    height: 52px;
+  }
+  .review-flip-scene {
+    position: static;
+    top: auto;
+    order: -1;
   }
   .review-explain-sidebar {
     position: static;
@@ -2701,11 +2734,8 @@ svg text { font-family: var(--font-mono); }
     min-height: 0;
     max-height: none;
   }
-  .review-flip-scene {
-    position: static;
-  }
   .re-body {
     overflow-y: visible;
-    padding-bottom: 16px;
+    padding: 12px 14px 16px;
   }
 }
