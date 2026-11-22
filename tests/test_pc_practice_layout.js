@@ -71,8 +71,7 @@ for (const cid of ['c6', 'c7', 'c8', 'c9']) {
 const styleCss = fs.readFileSync(path.join(SRC, 'style.css'), 'utf8');
 for (const cls of [
   '.practice-split-layout.is-review-mode',
-  '.post-card-tabs',
-  '.post-tab-btn',
+  '.post-unified-media',
   '.rs-code-card',
   '.rs-gutter',
   '.tok-filled',
@@ -83,6 +82,11 @@ for (const cls of [
   assert(styleCss.includes(cls), `src/style.css defines ${cls}`);
 }
 assert(/padding(?:-bottom)?:[^;]*84px/.test(styleCss), 'src/style.css gives .re-body 84px bottom clearance above dsh-pet');
+
+// Anti page-shift guards when flipping right panel sub-tabs
+assert(styleCss.includes('scrollbar-gutter: stable'), 'src/style.css reserves scrollbar-gutter: stable to stop horizontal shift');
+assert(/\.review-explain-sidebar\s*\{[\s\S]*?height:\s*calc\(100vh - 96px\)/.test(styleCss), 'src/style.css locks desktop .review-explain-sidebar height to stop vertical jump');
+assert(/\.review-flip-scene\s*\{[\s\S]*?overflow:\s*hidden/.test(styleCss), 'src/style.css clips 3D flip scene projection inside column bounds');
 
 // 3D flip transitions: knowledge card -> explanation panel, and between right sub-tabs
 for (const sel of ['.review-flip-scene', '.review-flip-card.flipped', '.rf-back', '@keyframes reFlipOut', '@keyframes reFlipIn', 'prefers-reduced-motion']) {
@@ -106,17 +110,16 @@ for (const fnName of [
   assert(inAppOrCss, `Source defines/references layout hook: ${fnName}`);
 }
 
-assert(!appSrc.includes('data-lpanel="anim"'), 'src/app.js merges animation into the unified code tab (no separate anim tab)');
-assert(!appSrc.includes('data-lpanel-body="anim"'), 'src/app.js removes separate anim pane in favor of unified code+anim card');
+assert(!appSrc.includes('post-card-tabs'), 'src/app.js puts question, animation, and C# code in a single card without left tabs');
 assert(
-  appSrc.includes("${buildPostAnswerCodeTabHTML('question', q, saved, opts.instance)}\n          ${buildPostAnswerAnimTabHTML('question', q)}") ||
-  appSrc.includes("${buildPostAnswerCodeTabHTML('question', q, saved, opts.instance)}\r\n          ${buildPostAnswerAnimTabHTML('question', q)}"),
-  'renderQuestionCard renders code + animation inside one unified pane'
+  appSrc.includes("${buildPostAnswerAnimTabHTML('question', q)}\n          ${buildPostAnswerCodeTabHTML('question', q, saved, opts.instance)}") ||
+  appSrc.includes("${buildPostAnswerAnimTabHTML('question', q)}\r\n          ${buildPostAnswerCodeTabHTML('question', q, saved, opts.instance)}"),
+  'renderQuestionCard renders animation ABOVE C# code inside the same card'
 );
 assert(
-  appSrc.includes("${buildPostAnswerCodeTabHTML('drill', d, saved, inst)}\n          ${buildPostAnswerAnimTabHTML('drill', d)}") ||
-  appSrc.includes("${buildPostAnswerCodeTabHTML('drill', d, saved, inst)}\r\n          ${buildPostAnswerAnimTabHTML('drill', d)}"),
-  'renderInlineDrillCard renders reference code + animation inside one unified pane'
+  appSrc.includes("${buildPostAnswerAnimTabHTML('drill', d)}\n          ${buildPostAnswerCodeTabHTML('drill', d, saved, inst)}") ||
+  appSrc.includes("${buildPostAnswerAnimTabHTML('drill', d)}\r\n          ${buildPostAnswerCodeTabHTML('drill', d, saved, inst)}"),
+  'renderInlineDrillCard renders animation ABOVE reference C# code inside the same card'
 );
 
 const indexPath = path.join(ROOT, 'index.html');
@@ -126,7 +129,7 @@ if (fs.existsSync(indexPath)) {
   for (const marker of [
     'practice-split-layout',
     'is-review-mode',
-    'post-card-tabs',
+    'post-unified-media',
     'review-explain-sidebar',
     'buildPostAnswerRightPanelHTML',
     'buildPostAnswerCodeTabHTML',

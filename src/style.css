@@ -74,7 +74,7 @@
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; overflow-x: clip; -webkit-tap-highlight-color: transparent; }
+html { scroll-behavior: smooth; overflow-x: clip; scrollbar-gutter: stable; -webkit-tap-highlight-color: transparent; }
 body {
   font-family: var(--font-sans);
   background-color: var(--bg-page);
@@ -2245,6 +2245,23 @@ svg text { font-family: var(--font-mono); }
   display: none !important;
 }
 
+.post-unified-media {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--border-strong);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.post-unified-media .explain-anim-wrap {
+  margin: 0 !important;
+}
+.post-unified-media .rs-code-card,
+.post-unified-media .cs-runner-card {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
 .post-quick-bar {
   margin-top: 12px;
   padding: 10px 14px;
@@ -2445,8 +2462,10 @@ svg text { font-family: var(--font-mono); }
 .review-explain-sidebar {
   position: sticky;
   top: 76px;
+  width: 100%;
   min-width: 0;
-  min-height: min(620px, calc(100vh - 110px));
+  height: calc(100vh - 96px);
+  min-height: 560px;
   max-height: calc(100vh - 96px);
   display: flex;
   flex-direction: column;
@@ -2528,6 +2547,7 @@ svg text { font-family: var(--font-mono); }
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  scrollbar-gutter: stable;
   padding: 14px 16px 84px;
 }
 .re-pane.hidden {
@@ -2614,7 +2634,10 @@ svg text { font-family: var(--font-mono); }
   position: sticky;
   top: 76px;
   align-self: start;
+  width: 100%;
   min-width: 0;
+  overflow: hidden;
+  border-radius: 20px;
   perspective: 1600px;
 }
 .review-flip-card {
@@ -2639,6 +2662,7 @@ svg text { font-family: var(--font-mono); }
 .review-flip-scene.is-settled .rf-back {
   transform: none !important;
   transition: none !important;
+  transform-style: flat;
 }
 .review-flip-scene .review-explain-sidebar {
   position: relative;
@@ -2673,6 +2697,7 @@ svg text { font-family: var(--font-mono); }
   }
   .review-explain-sidebar {
     position: static;
+    height: auto;
     min-height: 0;
     max-height: none;
   }

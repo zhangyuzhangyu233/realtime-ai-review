@@ -1749,7 +1749,6 @@
       : (opts.instance ? opts.instance.ans : (state.answers[q.id] || null));
     const isLocked = (!!opts.lockAfterAnswer && !!(saved && saved.checked)) || (isMock && !!state.mockExam?.submitted);
     const isSplitReview = !!opts.splitReview;
-    const activeLeftTab = opts.activeLeftTab === 'code' ? 'code' : 'question';
     const draftVal = (!saved?.checked && opts.instance && opts.instance.draftVal !== undefined)
       ? opts.instance.draftVal
       : undefined;
@@ -1859,11 +1858,8 @@
       if (isLocked) {
         footerHTML = `
           <div class="locked-notice-bar">
-            <span>本题已作答锁定（无论对错不可改选），右侧可同步浏览详解与关联知识点</span>
-            <div class="post-quick-actions">
-              ${isSplitReview ? `<button type="button" class="secondary-btn" data-jump-lpanel="code" style="padding:7px 13px;font-size:12.5px">切到代码与动画 →</button>` : ''}
-              ${opts.hasNext ? `<button class="submit-btn inline-next-q-btn" style="padding:7px 14px;font-size:12.5px">进入下一题 →</button>` : ''}
-            </div>
+            <span>${isSplitReview ? '本题已作答锁定（无论对错不可改选），下方可直接观看动画与 C# 代码，右侧可同步浏览详解与知识点' : '本题已作答锁定（无论对错不可改选），查看解析后请继续下一题'}</span>
+            ${opts.hasNext ? `<button class="submit-btn inline-next-q-btn" style="padding:7px 14px;font-size:12.5px">进入下一题 →</button>` : ''}
           </div>`;
       } else if (opts.lockAfterAnswer && (q.type === 'single' || q.type === 'tf')) {
         footerHTML = `
@@ -1884,35 +1880,20 @@
     } else if (isSplitReview) {
       footerHTML = `
         <div class="post-quick-bar">
-          <span class="post-quick-status ${saved?.correct ? 'ok' : 'bad'}">${saved?.correct ? '本题智能判定已达标' : '本题仍需巩固（详见右侧分步解析）'}</span>
-          <div class="post-quick-actions">
-            <button type="button" class="secondary-btn" data-jump-lpanel="code" style="padding:6px 12px;font-size:12px">切到代码与动画 →</button>
-            ${opts.hasNext ? `<button type="button" class="submit-btn inline-next-q-btn" style="padding:6px 13px;font-size:12px">下一题 →</button>` : ''}
-          </div>
+          <span class="post-quick-status ${saved?.correct ? 'ok' : 'bad'}">${saved?.correct ? '本题智能判定已达标' : '本题仍需巩固（下方可看动画与代码，右侧查看分步解析）'}</span>
+          ${opts.hasNext ? `<div class="post-quick-actions"><button type="button" class="submit-btn inline-next-q-btn" style="padding:6px 13px;font-size:12px">下一题 →</button></div>` : ''}
         </div>`;
     }
 
     let contentAreaHTML = '';
     if (isSplitReview) {
-      const qTabLabel = (q.type === 'code' && q.subkind === 'write') ? '题目与编码' : '题目与作答';
-      const codeTabLabel = (q.codeTemplate && q.blanks)
-        ? '完整代码与动画演示'
-        : (q.modelCode ? '参考代码与动画演示' : 'C# 代码与动画演示');
-      const codeTabPill = (q.codeTemplate || q.modelCode) ? 'C# · 动画' : '沙盒 · 动画';
       contentAreaHTML = `
-        <div class="post-card-tabs" role="tablist" aria-label="作答后视图切换">
-          <button type="button" class="post-tab-btn ${activeLeftTab === 'question' ? 'active' : ''}" data-lpanel="question">${qTabLabel}</button>
-          <button type="button" class="post-tab-btn ${activeLeftTab === 'code' ? 'active' : ''}" data-lpanel="code">${codeTabLabel} <span class="post-tab-pill">${codeTabPill}</span></button>
-        </div>
-        <div class="post-tab-pane ${activeLeftTab === 'question' ? '' : 'hidden'}" data-lpanel-body="question">
-          <div class="q-stem">${q.stem}</div>
-          ${bodyHTML}
-          ${footerHTML}
-          <div class="explain-slot"></div>
-        </div>
-        <div class="post-tab-pane ${activeLeftTab === 'code' ? '' : 'hidden'}" data-lpanel-body="code">
-          ${buildPostAnswerCodeTabHTML('question', q, saved, opts.instance)}
+        <div class="q-stem">${q.stem}</div>
+        ${bodyHTML}
+        ${footerHTML}
+        <div class="post-unified-media">
           ${buildPostAnswerAnimTabHTML('question', q)}
+          ${buildPostAnswerCodeTabHTML('question', q, saved, opts.instance)}
         </div>`;
     } else {
       contentAreaHTML = `
@@ -2291,7 +2272,7 @@
     }
 
     if (demoHTML) return demoHTML;
-    return `<div class="trap-callout">本题暂无配套 C# 示例代码，可在下方观看交互动画演示或切回「题目与作答」。</div>`;
+    return `<div class="trap-callout">本题暂无配套 C# 示例代码，可在下方查看详解或切换右侧知识点。</div>`;
   }
 
   function buildPostAnswerAnimTabHTML(itemKind, item) {
@@ -2299,7 +2280,7 @@
       ? (item.anim ? { ...item.anim, caption: `${item.file} 实时算法动画演示` } : { engine: 'astar', mode: 'ppt', caption: '交互动画演示' })
       : (item.anim || { engine: 'astar', mode: 'ppt', caption: '交互动画演示' });
     return `
-      <div class="explain-anim-wrap" style="margin-top:14px" data-ex-engine="${anim.engine}" data-ex-mode="${anim.mode}" data-ex-params='${JSON.stringify(anim.params || {})}' data-ex-title="${escapeHTML(anim.caption)}">
+      <div class="explain-anim-wrap" style="margin:16px 0 14px" data-ex-engine="${anim.engine}" data-ex-mode="${anim.mode}" data-ex-params='${JSON.stringify(anim.params || {})}' data-ex-title="${escapeHTML(anim.caption)}">
         <div class="explain-anim-bar">
           <span>动画解析：${escapeHTML(anim.caption)}（点击画面全屏放大）</span>
           <div class="ctrl-group">
@@ -2482,7 +2463,7 @@
         </div>
 
         <div class="re-foot">
-          <button type="button" class="secondary-btn" id="btn-re-toggle-left" style="flex:1">在左侧看代码与动画 →</button>
+          <button type="button" class="secondary-btn" id="btn-re-toggle-left" style="flex:1">${activeRightTab === 'knowledge' ? '翻转回看详细解析 ↻' : '翻转看相关知识点 ↻'}</button>
           ${hasNext ? `<button type="button" class="submit-btn inline-next-q-btn" style="flex:1">进入下一题 →</button>` : ''}
         </div>
       </aside>`;
@@ -2529,45 +2510,19 @@
     if (!rootEl) return;
     const onNext = opts.onNext || null;
     const stateHolder = opts.stateHolder || null;
-    let curLeftTab = (opts.initialLeftTab === 'code' || opts.initialLeftTab === 'anim')
-      ? 'code'
-      : ((stateHolder && (stateHolder.reviewLeftTab === 'code' || stateHolder.reviewLeftTab === 'anim')) ? 'code' : 'question');
-
-    const syncReFootBtn = () => {
-      const footBtn = rootEl.querySelector('#btn-re-toggle-left');
-      if (!footBtn) return;
-      if (curLeftTab === 'code') {
-        footBtn.textContent = '左侧切回题目与作答';
-        footBtn.dataset.nextTab = 'question';
-      } else {
-        footBtn.textContent = '在左侧看代码与动画 →';
-        footBtn.dataset.nextTab = 'code';
-      }
-    };
-
-    const activateLeftTab = (tabKey) => {
-      if (!tabKey) return;
-      const normKey = (tabKey === 'code' || tabKey === 'anim') ? 'code' : 'question';
-      curLeftTab = normKey;
-      if (stateHolder) stateHolder.reviewLeftTab = normKey;
-      if (opts.onLeftTabChange) opts.onLeftTabChange(normKey);
-
-      rootEl.querySelectorAll('.post-tab-btn[data-lpanel]').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.lpanel === normKey);
-      });
-      rootEl.querySelectorAll('.post-tab-pane[data-lpanel-body]').forEach(pane => {
-        const isTarget = pane.dataset.lpanelBody === normKey;
-        pane.classList.toggle('hidden', !isTarget);
-        if (isTarget && normKey === 'code') {
-          bindCodeRunners(pane);
-          bindIdeEditors(pane);
-          requestAnimationFrame(() => mountExplainWidgets(pane, onNext));
-        }
-      });
-      syncReFootBtn();
-    };
 
     let curRightTab = opts.initialRightTab || (stateHolder && stateHolder.reviewRightTab) || 'explain';
+    const syncReFootBtn = (rKey) => {
+      const footBtn = rootEl.querySelector('#btn-re-toggle-left');
+      if (!footBtn) return;
+      if (rKey === 'knowledge') {
+        footBtn.textContent = '翻转回看详细解析 ↻';
+        footBtn.dataset.nextRightTab = 'explain';
+      } else {
+        footBtn.textContent = '翻转看相关知识点 ↻';
+        footBtn.dataset.nextRightTab = 'knowledge';
+      }
+    };
     const applyRightPanes = (rKey) => {
       rootEl.querySelectorAll('.re-subtab-btn[data-rpanel]').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.rpanel === rKey);
@@ -2577,6 +2532,7 @@
       });
       const bodyEl = rootEl.querySelector('.review-explain-sidebar .re-body');
       if (bodyEl) bodyEl.scrollTop = 0;
+      syncReFootBtn(rKey);
     };
     // 右侧「本题详细解析 / 相关知识点」切换：整张卡片 3D 翻面（前半程翻到侧面 → 换内容 → 后半程翻回正面）
     const activateRightTab = (rKey, animate = false) => {
@@ -2602,15 +2558,9 @@
       }, 220);
     };
 
-    rootEl.querySelectorAll('.post-tab-btn[data-lpanel]').forEach(btn => {
-      btn.onclick = () => activateLeftTab(btn.dataset.lpanel);
-    });
-    rootEl.querySelectorAll('[data-jump-lpanel]').forEach(btn => {
-      btn.onclick = () => activateLeftTab(btn.dataset.jumpLpanel);
-    });
     const reFootBtn = rootEl.querySelector('#btn-re-toggle-left');
     if (reFootBtn) {
-      reFootBtn.onclick = () => activateLeftTab(reFootBtn.dataset.nextTab || (curLeftTab === 'code' ? 'question' : 'code'));
+      reFootBtn.onclick = () => activateRightTab(reFootBtn.dataset.nextRightTab || (curRightTab === 'knowledge' ? 'explain' : 'knowledge'), true);
     }
 
     rootEl.querySelectorAll('.re-subtab-btn[data-rpanel]').forEach(btn => {
@@ -2653,7 +2603,10 @@
       rootEl.querySelectorAll('.inline-next-q-btn').forEach(btn => { btn.onclick = onNext; });
     }
 
-    activateLeftTab(curLeftTab);
+    syncReFootBtn(curRightTab);
+    bindCodeRunners(rootEl);
+    bindIdeEditors(rootEl);
+    requestAnimationFrame(() => mountExplainWidgets(rootEl, onNext));
   }
 
   function mountExplainWidgets(cardEl, onNextCb) {
@@ -3193,7 +3146,6 @@
     const saved = inst.ans || null;
     const isLocked = !!(saved && saved.checked);
     const isSplitReview = !!opts.splitReview;
-    const activeLeftTab = opts.activeLeftTab === 'code' ? 'code' : 'question';
     const curCode = isLocked ? (saved.userVal || d.starter) : (inst.draftCode !== null ? inst.draftCode : d.starter);
     const cardCls = isLocked ? (saved.correct ? 'is-correct' : 'is-wrong') : '';
     const ev = saved?.evalReport || null;
@@ -3248,11 +3200,8 @@
     } else if (isLocked && isSplitReview) {
       reportHTML = `
         <div class="locked-notice-bar" style="margin-top:12px">
-          <span>本题已作答锁定，右侧可同步查看分步剖析与考点诊断清单</span>
-          <div class="post-quick-actions">
-            <button type="button" class="secondary-btn" data-jump-lpanel="code" style="padding:7px 13px;font-size:12.5px">切看参考代码与动画 →</button>
-            <button class="submit-btn inline-next-q-btn" style="padding:7px 14px;font-size:12.5px">进入下一题 →</button>
-          </div>
+          <span>本题已作答锁定，下方可直接查看运行动画与标准参考 C# 代码，右侧查看详解与诊断</span>
+          <button class="submit-btn inline-next-q-btn" style="padding:7px 14px;font-size:12.5px">进入下一题 →</button>
         </div>`;
     }
 
@@ -3268,7 +3217,7 @@
 
     const explainBtnLabel = (!isLocked && isSplitReview && opts.peekExplain) ? '收起解析面板' : '直接展开详细解析';
     const editorH = (isLocked && isSplitReview) ? 245 : 320;
-    const outputPaneHTML = (isLocked && isSplitReview)
+    const outputPaneHTML = isSplitReview
       ? `<div class="cs-output-pane" style="grid-template-columns:1fr">
            <div class="cs-editor-bar"><span>智能语义与数值仿真检测控制台</span><span>自动评分</span></div>
            <div class="cs-console-box" id="drill-console" style="border-right:none">${consoleInitHTML}</div>
@@ -3323,16 +3272,10 @@
     let drillContentHTML = mainBodyHTML;
     if (isSplitReview) {
       drillContentHTML = `
-        <div class="post-card-tabs" role="tablist" aria-label="编程题作答后视图切换">
-          <button type="button" class="post-tab-btn ${activeLeftTab === 'question' ? 'active' : ''}" data-lpanel="question">题目与编码</button>
-          <button type="button" class="post-tab-btn ${activeLeftTab === 'code' ? 'active' : ''}" data-lpanel="code">参考代码与动画演示 <span class="post-tab-pill">C# · 动画</span></button>
-        </div>
-        <div class="post-tab-pane ${activeLeftTab === 'question' ? '' : 'hidden'}" data-lpanel-body="question">
-          ${mainBodyHTML}
-        </div>
-        <div class="post-tab-pane ${activeLeftTab === 'code' ? '' : 'hidden'}" data-lpanel-body="code">
-          ${buildPostAnswerCodeTabHTML('drill', d, saved, inst)}
+        ${mainBodyHTML}
+        <div class="post-unified-media">
           ${buildPostAnswerAnimTabHTML('drill', d)}
+          ${buildPostAnswerCodeTabHTML('drill', d, saved, inst)}
         </div>`;
     }
 
@@ -3515,7 +3458,6 @@
 
     const isAnswered = Boolean(inst.ans && inst.ans.checked);
     const isReviewMode = Boolean(isAnswered || inst.peekExplain);
-    const activeLeftTab = inst.reviewLeftTab || 'question';
     const activeRightTab = inst.reviewRightTab || 'explain';
 
     let mainCardHTML = '';
@@ -3527,8 +3469,7 @@
       flipMeta = { topic: dObj.topic, module: dObj.module };
       mainCardHTML = renderInlineDrillCard(inst, dObj, idx + 1, {
         splitReview: isReviewMode,
-        peekExplain: !!inst.peekExplain,
-        activeLeftTab
+        peekExplain: !!inst.peekExplain
       });
     } else {
       qObj = BANK.find(x => x.id === inst.refId) || BANK[0];
@@ -3538,8 +3479,7 @@
         lockAfterAnswer: true,
         instance: inst,
         splitReview: isReviewMode,
-        peekExplain: !!inst.peekExplain,
-        activeLeftTab
+        peekExplain: !!inst.peekExplain
       });
     }
 
@@ -3616,11 +3556,6 @@
       inst.peekExplain = !inst.peekExplain;
       if (!inst.peekExplain) inst._reviewFlipShown = false;
       if (inst.peekExplain) {
-        if (inst.kind === 'drill' || (qObj && qObj.type === 'code' && qObj.subkind === 'write')) {
-          inst.reviewLeftTab = 'code';
-        } else {
-          inst.reviewLeftTab = 'question';
-        }
         inst.reviewRightTab = 'explain';
       }
       renderRandomPracticePaged();
@@ -3680,7 +3615,6 @@
     if (isReviewMode) {
       bindPostAnswerLayout(listEl, {
         stateHolder: inst,
-        initialLeftTab: activeLeftTab,
         onNext: goNext
       });
       if (animateFlipIn) runReviewFlipIn(listEl);
@@ -3833,10 +3767,8 @@
     }).join('');
 
     if (me.submitted) {
-      me.reviewTabByQid = me.reviewTabByQid || {};
       me.reviewRightByQid = me.reviewRightByQid || {};
     }
-    const curLeftTab = me.submitted ? (me.reviewTabByQid[q.id] || 'question') : 'question';
     const curRightTab = me.submitted ? (me.reviewRightByQid[q.id] || 'explain') : 'explain';
     const footerNavHTML = `
       <div class="pager-footer">
@@ -3850,18 +3782,22 @@
     const mockStageBlock = me.submitted
       ? `<div class="practice-split-layout is-review-mode" id="mock-review-split">
            <div class="practice-main-col">
-             <div id="mock-single-stage">${renderQuestionCard(q, idx + 1, { mockMode: true, mockAns, points: pts, hasNext: idx < me.items.length - 1, splitReview: true, activeLeftTab: curLeftTab })}</div>
+             <div id="mock-single-stage">${renderQuestionCard(q, idx + 1, { mockMode: true, mockAns, points: pts, hasNext: idx < me.items.length - 1, splitReview: true })}</div>
              ${footerNavHTML}
            </div>
-           ${buildPostAnswerRightPanelHTML({
-             itemKind: 'question',
-             item: q,
-             saved: mockAns,
-             flipMeta: { topic: q.topic, module: q.module },
-             diffInfo: DIFF_META[2],
-             hasNext: idx < me.items.length - 1,
-             activeRightTab: curRightTab
-           })}
+           ${wrapReviewFlipScene(
+             buildPostAnswerRightPanelHTML({
+               itemKind: 'question',
+               item: q,
+               saved: mockAns,
+               flipMeta: { topic: q.topic, module: q.module },
+               diffInfo: DIFF_META[2],
+               hasNext: idx < me.items.length - 1,
+               activeRightTab: curRightTab
+             }),
+             '',
+             false
+           )}
          </div>`
       : `<div id="mock-single-stage">${renderQuestionCard(q, idx + 1, { mockMode: true, mockAns, points: pts, hasNext: idx < me.items.length - 1 })}</div>
          ${footerNavHTML}`;
@@ -3896,9 +3832,7 @@
     bindQuestionCardEvents(document.getElementById('mock-single-stage'), { mockMode: true, hasNext: idx < me.items.length - 1, onNext: goMNext });
     if (me.submitted) {
       bindPostAnswerLayout(document.getElementById('mock-review-split'), {
-        initialLeftTab: curLeftTab,
         initialRightTab: curRightTab,
-        onLeftTabChange: (t) => { me.reviewTabByQid[q.id] = t; },
         onRightTabChange: (rt) => { me.reviewRightByQid[q.id] = rt; },
         onNext: idx < me.items.length - 1 ? goMNext : null
       });
