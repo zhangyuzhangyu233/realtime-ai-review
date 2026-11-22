@@ -136,16 +136,20 @@
         pre.scrollLeft = ta.scrollLeft;
         gutter.scrollTop = ta.scrollTop;
       });
-      ta.addEventListener('keydown', e => {
-        if (e.key === 'Tab') {
-          e.preventDefault();
-          const s = ta.selectionStart, end = ta.selectionEnd;
-          ta.value = ta.value.slice(0, s) + '    ' + ta.value.slice(end);
-          ta.selectionStart = ta.selectionEnd = s + 4;
-          sync();
-        }
-      });
-      shell._setCode = (val) => { ta.value = val; sync(); };
+      if (window.CodeIntelliSense) {
+        window.CodeIntelliSense.attach(shell, ta, sync, { singleLine: false });
+      } else {
+        ta.addEventListener('keydown', e => {
+          if (e.key === 'Tab') {
+            e.preventDefault();
+            const s = ta.selectionStart, end = ta.selectionEnd;
+            ta.value = ta.value.slice(0, s) + '    ' + ta.value.slice(end);
+            ta.selectionStart = ta.selectionEnd = s + 4;
+            sync();
+          }
+        });
+      }
+      shell._setCode = (val) => { ta.value = val; if (shell._closeIntelliSense) shell._closeIntelliSense(); sync(); };
       shell._getCode = () => ta.value;
     });
   }
@@ -913,7 +917,7 @@
         </div>
         <div class="cs-runner-grid">
           <div class="cs-editor-pane">
-            <div class="cs-editor-bar"><span class="cs-file-caption">${first.title}</span><span>Unity C# · 语法着色可编辑</span></div>
+            <div class="cs-editor-bar"><span class="cs-file-caption">${first.title}</span><span>可编辑 · 支持代码补全与选中包裹</span></div>
             ${buildIdeEditorHTML(first.code, 'cs-ide-box', compact ? 240 : 285)}
           </div>
           <div class="cs-output-pane">
@@ -1796,6 +1800,7 @@
           return `<button class="opt-btn ${cls.trim()}" data-tf="${val}" ${isLocked ? 'disabled' : ''}><span class="opt-key">${i === 0 ? 'T' : 'F'}</span><span>${lbl}</span></button>`;
         }).join('') + `</div>`;
     } else if (q.type === 'fill' || (q.type === 'code' && q.subkind === 'fill')) {
+      const isCodeExprBlank = (q.type === 'code' && q.subkind === 'fill' && q.id !== 'c4');
       const vals = (saved && Array.isArray(saved.userVal))
         ? saved.userVal
         : (Array.isArray(draftVal) ? draftVal : q.blanks.map(() => ''));
@@ -1806,7 +1811,9 @@
             const ok = GRADER ? GRADER.matchFillBlank(vals[i], b.answers) : b.answers.some(a => normalizeAns(a) === normalizeAns(vals[i]));
             cls = ok ? 'ok' : 'bad';
           }
-          return `<div class="blank-field"><label>${b.label}</label><input class="blank-input ${cls}" data-bidx="${i}" value="${escapeHTML(vals[i] || '')}" placeholder="请输入答案..." ${isLocked ? 'disabled' : ''}></div>`;
+          const extraCls = isCodeExprBlank ? ' code-blank-input' : '';
+          const ph = isCodeExprBlank ? '输入 C# 表达式（支持代码补全）...' : '请输入答案...';
+          return `<div class="blank-field"><label>${b.label}</label><input class="blank-input ${cls}${extraCls}" data-bidx="${i}" value="${escapeHTML(vals[i] || '')}" placeholder="${ph}" ${isLocked ? 'disabled' : ''}></div>`;
         }).join('') + `</div>`;
     } else if (q.type === 'code') {
       const fallbackStarter = q.starterCode || '// 在此手写 Unity C# 核心代码（支持 Tab 缩进与实时语法着色）\n';
@@ -1815,7 +1822,7 @@
         : (typeof draftVal === 'string' ? draftVal : fallbackStarter);
       const ideH = q.starterCode ? 265 : 210;
       const starterBar = (q.starterCode && !isLocked)
-        ? `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 12px;background:#0f172a;border-bottom:1px solid #1e2d4a;font-size:12px;color:#94a3b8"><span>代码编写区（已内置逐行提示注释，支持等价写法智能判分）</span><button type="button" class="ctrl-btn q-reset-starter-btn" style="padding:3px 9px;font-size:11px;background:rgba(255,255,255,0.08);color:#e2eeff;border-color:rgba(148,163,184,0.3)">重置提示骨架</button></div>`
+        ? `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 12px;background:#0f172a;border-bottom:1px solid #1e2d4a;font-size:12px;color:#94a3b8"><span>代码编写区（支持代码补全 Ctrl+Space · 选中括号包裹 · 等价写法判分）</span><button type="button" class="ctrl-btn q-reset-starter-btn" style="padding:3px 9px;font-size:11px;background:rgba(255,255,255,0.08);color:#e2eeff;border-color:rgba(148,163,184,0.3)">重置提示骨架</button></div>`
         : '';
       bodyHTML += `<div style="border-radius:12px;overflow:hidden;border:1px solid #1e2d4a;margin-bottom:12px">${starterBar}${buildIdeEditorHTML(txtVal, 'q-code-ide', ideH, isLocked)}</div>`;
     } else {
@@ -2755,6 +2762,19 @@
         }
       }
 
+      if (q.type === 'code' && q.subkind === 'fill' && q.id !== 'c4' && !cardLocked && window.CodeIntelliSense) {
+        card.querySelectorAll('.code-blank-input').forEach(inp => {
+          window.CodeIntelliSense.attach(inp, inp, () => {
+            inp.dispatchEvent(new Event('input', { bubbles: true }));
+          }, { singleLine: true, extraContext: q.codeTemplate || '' });
+        });
+      }
+      if (q.type === 'code' && q.subkind !== 'fill' && !cardLocked) {
+        const stemCodes = ((q.stem || '').match(/<code>(.*?)<\/code>/g) || []).map(s => s.replace(/<\/?code>/g, '')).join(' ');
+        const qTa = card.querySelector('.q-code-ide textarea');
+        if (qTa && stemCodes) qTa._acExtraContext = stemCodes;
+      }
+
       mountExplainWidgets(card, onNext);
 
       const favBtn = card.querySelector('[data-fav]');
@@ -3258,7 +3278,7 @@
         </div>
         <div class="cs-runner-grid">
           <div class="cs-editor-pane">
-            <div class="cs-editor-bar"><span>手写编码区（Tab 缩进 · 支持等价写法与数值仿真自动判定）</span><span>Unity C#</span></div>
+            <div class="cs-editor-bar"><span>手写编码区（支持代码补全 Ctrl+Space · 选中包裹 · Tab 缩进）</span><span>Unity C#</span></div>
             ${buildIdeEditorHTML(curCode, 'drill-ide-box', editorH, isLocked)}
           </div>
           ${outputPaneHTML}

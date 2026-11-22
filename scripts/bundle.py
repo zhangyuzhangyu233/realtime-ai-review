@@ -8,6 +8,7 @@ PARENT_OFFLINE = os.path.join(os.path.dirname(REPO_ROOT), "实时人工智能应
 
 JS_FILES = [
     "code_drills.js",
+    "code_intellisense.js",
     "smart_grader.js",
     "diagram_board.js",
     "csharp_demos.js",
@@ -217,6 +218,9 @@ window.DSH_PET_FALLBACK = {pet_fallback_json};
   </script>
   <script>
 {scripts_content["code_drills.js"]}
+  </script>
+  <script>
+{scripts_content["code_intellisense.js"]}
   </script>
   <script>
 {scripts_content["smart_grader.js"]}

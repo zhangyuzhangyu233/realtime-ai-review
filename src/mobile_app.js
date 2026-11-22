@@ -421,7 +421,8 @@
   ];
 
   function buildSymBarHTML() {
-    return `<div class="m-code-symbar">${CS_SYMS.map((s, i) => `<button type="button" class="m-sym-btn" data-sym-idx="${i}">${escapeHTML(s.lbl)}</button>`).join('')}</div>`;
+    const acBtn = `<button type="button" class="m-sym-btn m-sym-ac" data-sym-ac="1">补全</button>`;
+    return `<div class="m-code-symbar">${acBtn}${CS_SYMS.map((s, i) => `<button type="button" class="m-sym-btn" data-sym-idx="${i}">${escapeHTML(s.lbl)}</button>`).join('')}</div>`;
   }
 
   function buildIdeEditorHTML(initialCode, extraCls = '', height = 220, readOnly = false) {
@@ -444,24 +445,43 @@
       };
       ta.addEventListener('input', sync);
       ta.addEventListener('scroll', () => { pre.scrollTop = ta.scrollTop; pre.scrollLeft = ta.scrollLeft; });
+      if (window.CodeIntelliSense) {
+        window.CodeIntelliSense.attach(shell, ta, sync, { singleLine: false, isMobile: true });
+      }
       shell._getCode = () => ta.value;
-      shell._setCode = (val) => { ta.value = val; sync(); };
+      shell._setCode = (val) => { ta.value = val; if (shell._closeIntelliSense) shell._closeIntelliSense(); sync(); };
 
       // Attach symbol quick-insert bar if adjacent or in parent card
       const cardHost = shell.closest('.cs-runner-card') || shell.parentElement;
       cardHost?.querySelectorAll('.m-sym-btn').forEach(btn => {
         btn.onpointerdown = (e) => e.preventDefault();
+        if (btn.dataset.symAc) {
+          btn.onclick = () => {
+            if (ta.disabled) return;
+            shell._triggerIntelliSense?.();
+          };
+          return;
+        }
         btn.onclick = () => {
           if (ta.disabled) return;
           const spec = CS_SYMS[Number(btn.dataset.symIdx)];
           if (!spec) return;
           const s = ta.selectionStart ?? ta.value.length;
           const en = ta.selectionEnd ?? ta.value.length;
+          if (s < en && spec.ins.length === 2 && spec.back === 1) {
+            const inner = ta.value.slice(s, en);
+            ta.value = ta.value.slice(0, s) + spec.ins[0] + inner + spec.ins[1] + ta.value.slice(en);
+            ta.focus();
+            ta.setSelectionRange(s + 1, en + 1);
+            sync();
+            return;
+          }
           ta.value = ta.value.slice(0, s) + spec.ins + ta.value.slice(en);
           const pos = s + spec.ins.length - (spec.back || 0);
           ta.focus();
           ta.setSelectionRange(pos, pos);
           sync();
+          if (spec.ins.endsWith('.')) shell._refreshIntelliSense?.();
         };
       });
     });
@@ -486,7 +506,7 @@
           </div>
           ${list.length > 1 ? `<div class="cs-tabs">${list.map((id, i) => `<button type="button" class="cs-tab-btn ${i === 0 ? 'active' : ''}" data-demo-tab="${id}">${DEMOS[id].file}</button>`).join('')}</div>` : ''}
         </div>
-        <div class="cs-editor-bar"><span class="cs-file-caption">${first.title}</span><span>可改参运行</span></div>
+        <div class="cs-editor-bar"><span class="cs-file-caption">${first.title}</span><span>可改参 · 补全</span></div>
         ${buildIdeEditorHTML(first.code, 'cs-ide-box', compact ? 200 : 235)}
         ${buildSymBarHTML()}
         <div class="cs-console-box"><div class="cs-console-line info">[就绪] 点击「▶ 运行代码」执行并预览动态效果</div></div>
@@ -1381,13 +1401,16 @@
         return `<button type="button" class="opt-btn ${cls}" data-tf="${val}" ${isLocked ? 'disabled' : ''}><span class="opt-key">${i === 0 ? 'T' : 'F'}</span><span>${lbl}</span></button>`;
       }).join('')}</div>`;
     } else if (q.blanks) {
+      const isCodeExprBlank = (q.type === 'code' && q.subkind === 'fill' && q.id !== 'c4');
       const vals = (saved && Array.isArray(saved.userVal))
         ? saved.userVal
         : (Array.isArray(draftVal) ? draftVal : q.blanks.map(() => ''));
       bodyHTML += `<div class="blanks-wrap">${q.blanks.map((b, i) => {
         let cls = '';
         if (saved && saved.checked) cls = (GRADER ? GRADER.matchFillBlank(vals[i], b.answers) : false) ? 'ok' : 'bad';
-        return `<div class="blank-field"><label>${b.label}</label><input class="blank-input ${cls}" data-bidx="${i}" value="${escapeHTML(vals[i] || '')}" placeholder="输入答案..." ${isLocked ? 'disabled' : ''}></div>`;
+        const extraCls = isCodeExprBlank ? ' code-blank-input' : '';
+        const ph = isCodeExprBlank ? '输入 C# 表达式（支持补全）...' : '输入答案...';
+        return `<div class="blank-field"><label>${b.label}</label><input class="blank-input ${cls}${extraCls}" data-bidx="${i}" value="${escapeHTML(vals[i] || '')}" placeholder="${ph}" ${isLocked ? 'disabled' : ''}></div>`;
       }).join('')}</div>`;
     } else if (q.type === 'code') {
       const fallbackStarter = q.starterCode || '// 在此手写 Unity C# 核心代码\n';
@@ -1396,7 +1419,7 @@
         : (typeof draftVal === 'string' ? draftVal : fallbackStarter);
       const ideH = q.starterCode ? 225 : 195;
       const starterBar = (q.starterCode && !isLocked)
-        ? `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 10px;background:#0f172a;border-bottom:1px solid #1e2d4a;font-size:11.5px;color:#94a3b8"><span>已内置逐行提示注释</span><button type="button" class="ctrl-btn q-reset-starter-btn" style="padding:3px 8px;font-size:11px;background:rgba(255,255,255,0.08);color:#e2eeff;border-color:rgba(148,163,184,0.3)">重置骨架</button></div>`
+        ? `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 10px;background:#0f172a;border-bottom:1px solid #1e2d4a;font-size:11.5px;color:#94a3b8"><span>已内置提示注释 · 支持代码补全</span><button type="button" class="ctrl-btn q-reset-starter-btn" style="padding:3px 8px;font-size:11px;background:rgba(255,255,255,0.08);color:#e2eeff;border-color:rgba(148,163,184,0.3)">重置骨架</button></div>`
         : '';
       bodyHTML += `<div style="border-radius:12px;overflow:hidden;border:1px solid #1e2d4a;margin-bottom:10px">${starterBar}${buildIdeEditorHTML(txtVal, 'q-code-ide', ideH, isLocked)}${!isLocked ? buildSymBarHTML() : ''}</div>`;
     } else {
@@ -1553,6 +1576,19 @@
             syncing = false;
           });
         }
+      }
+
+      if (q.type === 'code' && q.subkind === 'fill' && q.id !== 'c4' && !cardLocked && window.CodeIntelliSense) {
+        card.querySelectorAll('.code-blank-input').forEach(inp => {
+          window.CodeIntelliSense.attach(inp, inp, () => {
+            inp.dispatchEvent(new Event('input', { bubbles: true }));
+          }, { singleLine: true, isMobile: true, extraContext: q.codeTemplate || '' });
+        });
+      }
+      if (q.type === 'code' && q.subkind !== 'fill' && !cardLocked) {
+        const stemCodes = ((q.stem || '').match(/<code>(.*?)<\/code>/g) || []).map(s => s.replace(/<\/?code>/g, '')).join(' ');
+        const qTa = card.querySelector('.q-code-ide textarea');
+        if (qTa && stemCodes) qTa._acExtraContext = stemCodes;
       }
 
       mountExplainWidgets(card, onNext);
