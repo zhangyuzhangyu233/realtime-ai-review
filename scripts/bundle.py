@@ -15,6 +15,7 @@ JS_FILES = [
     "knowledge.js",
     "questions.js",
     "explanations_detail.js",
+    "pet_assistant.js",
     "app.js",
 ]
 
@@ -29,6 +30,8 @@ with open(os.path.join(SRC, "style.css"), encoding="utf-8") as f:
     css = f.read()
 with open(os.path.join(ASSETS, "mascots_b64.json"), encoding="utf-8") as f:
     mascots_json = f.read()
+with open(os.path.join(ASSETS, "pet", "fallback_b64.json"), encoding="utf-8") as f:
+    pet_fallback_json = f.read()
 
 scripts_content = {}
 for jf in JS_FILES:
@@ -205,20 +208,12 @@ html = f"""<!DOCTYPE html>
   <!-- Fullscreen Celebration Fireworks Canvas -->
   <canvas id="fx-fireworks-canvas" aria-hidden="true"></canvas>
 
-  <!-- Floating Interactive Blue Whale-Fish Companion -->
-  <div class="companion-dock" aria-live="polite">
-    <div class="companion-bubble" id="companion-bubble">
-      <button class="companion-bubble-close" id="companion-close" title="收起">×</button>
-      <div id="companion-text">欢迎来到《实时人工智能应用》复习平台，点我听考前必背口诀。</div>
-    </div>
-    <button class="companion-avatar-btn" id="companion-btn" title="点击蓝色大肥鱼听考前必背口诀">
-      <span class="companion-mood-dot" id="companion-mood-tag">元气</span>
-      <img id="companion-img" alt="蓝色大肥鱼小助手">
-    </button>
-  </div>
+  <!-- Floating Context-Aware Animated dsh-pet Study Companion -->
+  <div class="dsh-pet-dock" id="dsh-pet-dock" aria-live="polite"></div>
 
   <script>
 window.MASCOT_SPRITES = {mascots_json};
+window.DSH_PET_FALLBACK = {pet_fallback_json};
   </script>
   <script>
 {scripts_content["code_drills.js"]}
@@ -243,6 +238,9 @@ window.MASCOT_SPRITES = {mascots_json};
   </script>
   <script>
 {scripts_content["explanations_detail.js"]}
+  </script>
+  <script>
+{scripts_content["pet_assistant.js"]}
   </script>
   <script>
 {scripts_content["app.js"]}

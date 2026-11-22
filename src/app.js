@@ -150,25 +150,90 @@
     });
   }
 
-  /* -------------------- Mascot Companion -------------------- */
-  function setCompanion(mood, text, autoHideMs = 4800) {
-    const img = document.getElementById('companion-img');
-    const bubble = document.getElementById('companion-bubble');
-    const bText = document.getElementById('companion-text');
-    const badge = document.getElementById('companion-mood-tag');
-    const labels = { cheer: '元气', teach: '讲课', think: '思考', happy: '超棒', oops: '加油', code: '写码', exam: '考官', search: '寻路', sleepy: '护眼', trophy: '满分' };
-    if (img && MASCOTS[mood]) {
-      img.src = MASCOTS[mood];
-      img.classList.remove('mascot-pop-anim');
-      void img.offsetWidth;
-      img.classList.add('mascot-pop-anim');
+  /* -------------------- Context-Aware dsh-pet Companion -------------------- */
+  function buildPetContext() {
+    const view = state.activeView || 'knowledge';
+    const sec = SECTIONS.find(s => s.id === state.activeSection) || SECTIONS[0];
+    const activeSectionPct = sec ? computeTopicMastery(sec.id).pct : 0;
+
+    let practiceItem = null;
+    if (view === 'practice' && state.practiceSub !== 'mock' && state.practiceHistory.length) {
+      const inst = state.practiceHistory[Math.min(Math.max(0, state.practiceIdx), state.practiceHistory.length - 1)];
+      if (inst) {
+        if (inst.kind === 'drill') {
+          const drill = DRILLS.find(x => x.id === inst.refId) || null;
+          practiceItem = {
+            kind: 'drill', uid: inst.uid, refId: inst.refId, isCoding: true, drill,
+            answered: !!(inst.ans && inst.ans.checked),
+            correct: !!(inst.ans && inst.ans.correct),
+            evalReport: inst.ans ? inst.ans.evalReport : null
+          };
+        } else {
+          const question = BANK.find(x => x.id === inst.refId) || null;
+          practiceItem = {
+            kind: 'question', uid: inst.uid, refId: inst.refId, isCoding: question ? question.type === 'code' : false, question,
+            answered: !!(inst.ans && inst.ans.checked),
+            correct: !!(inst.ans && inst.ans.correct)
+          };
+        }
+      }
     }
-    if (badge) badge.textContent = labels[mood] || '助教';
-    if (text && bubble && bText) {
-      bText.textContent = text;
-      bubble.classList.remove('hidden');
-      clearTimeout(setCompanion._tid);
-      if (autoHideMs > 0) setCompanion._tid = setTimeout(() => bubble.classList.add('hidden'), autoHideMs);
+
+    let mockQuestion = null, mockIndex = 0, mockTotal = 0, mockDoneCount = 0, mockSubmitted = false, mockRemainText = '', mockScorePct = 0;
+    if (state.mockExam && Array.isArray(state.mockExam.items) && state.mockExam.items.length) {
+      const me = state.mockExam;
+      mockTotal = me.items.length;
+      mockIndex = Math.min(Math.max(0, state.mockPageIdx || 0), me.items.length - 1);
+      mockQuestion = me.items[mockIndex] ? me.items[mockIndex].q : null;
+      mockSubmitted = !!me.submitted;
+      const mm = String(Math.floor((me.remainSec || 0) / 60)).padStart(2, '0');
+      const ss = String((me.remainSec || 0) % 60).padStart(2, '0');
+      mockRemainText = `${mm}:${ss}`;
+      mockDoneCount = Object.keys(me.userAnswers || {}).filter(k => {
+        const v = me.userAnswers[k];
+        if (Array.isArray(v)) return v.some(s => String(s).trim().length > 0);
+        if (v && typeof v === 'object') return Boolean((v.diagram?.nodes?.length > 0) || (v.diagram?.path?.length > 1) || String(v.text || '').trim().length > 0);
+        return v !== undefined && v !== null && String(v).trim().length > 0;
+      }).length;
+      if (me.submitted && typeof computeMockScore === 'function') {
+        const sc = computeMockScore(me);
+        mockScorePct = sc.grandTotal ? Math.round((sc.totalScore / sc.grandTotal) * 100) : 0;
+      }
+    }
+
+    const topicRanks = TOPICS.map(tp => ({ id: tp.id, name: tp.name, pct: computeTopicMastery(tp.id).pct })).sort((a, b) => a.pct - b.pct);
+    const ov = computeOverallMastery();
+
+    const wrongQs = BANK.filter(q => state.answers[q.id]?.checked && !state.answers[q.id]?.correct);
+    const wrongByTopic = {};
+    wrongQs.forEach(q => { wrongByTopic[q.topic] = (wrongByTopic[q.topic] || 0) + 1; });
+    const topWrongEntry = Object.entries(wrongByTopic).sort((a, b) => b[1] - a[1])[0] || null;
+    const topWrongTopicName = topWrongEntry ? (TOPIC_NAME[topWrongEntry[0]] || topWrongEntry[0]) : '';
+    const favCount = Object.keys(state.favorites).filter(id => state.favorites[id]).length;
+
+    return {
+      view,
+      practiceSub: state.practiceSub || 'bank',
+      activeSection: state.activeSection,
+      activeSectionObj: sec,
+      activeSectionPct,
+      practiceItem,
+      mockQuestion,
+      mockIndex,
+      mockTotal,
+      mockDoneCount,
+      mockSubmitted,
+      mockRemainText,
+      mockScorePct,
+      topicSummaries: TOPIC_SUMMARIES,
+      masterySummary: { overall: ov.avg, weakest: topicRanks.slice(0, 2) },
+      notebookSummary: { wrongCount: wrongQs.length, favCount, topWrongTopicName }
+    };
+  }
+
+  function setCompanion(mood, text, autoHideMs = 4800) {
+    if (window.DshPetAssistant && typeof window.DshPetAssistant.react === 'function') {
+      window.DshPetAssistant.react(mood, text, autoHideMs);
     }
   }
 
@@ -179,6 +244,7 @@
     const btn = document.getElementById('theme-toggle');
     if (btn) btn.textContent = t === 'dark' ? '冰海浅色' : '深海护眼';
     saveState();
+    if (window.DshPetAssistant) window.DshPetAssistant.onContextChanged({ keepBubble: true });
   }
 
   function spawnOceanBubbles() {
@@ -1412,6 +1478,7 @@
     else if (viewName === 'mastery') { renderMasteryView(); }
     else if (viewName === 'practice') { renderPracticeView(); }
     else if (viewName === 'notebook') { renderNotebookView(); }
+    if (window.DshPetAssistant) window.DshPetAssistant.onContextChanged();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -1622,6 +1689,7 @@
     mountSectionLabs(sec.id);
     refreshTocMasteryTags();
     setCompanion(sec.mascot, sec.tip, 4500);
+    if (window.DshPetAssistant) window.DshPetAssistant.onContextChanged({ keepBubble: true });
     if (window.innerWidth <= 960) {
       const tocSidebar = document.querySelector('.toc-sidebar');
       const tocMobileBtn = document.getElementById('toc-mobile-toggle');
@@ -2832,6 +2900,7 @@
         onNext: goNext
       });
     }
+    if (window.DshPetAssistant) window.DshPetAssistant.onContextChanged();
   }
 
   /* ========================================================================
@@ -3013,6 +3082,7 @@
     host.querySelectorAll('[data-goto-mq]').forEach(b => b.onclick = () => { state.mockPageIdx = Number(b.dataset.gotoMq); renderMockExamView(); });
 
     bindQuestionCardEvents(document.getElementById('mock-single-stage'), { mockMode: true, hasNext: idx < me.items.length - 1, onNext: goMNext });
+    if (window.DshPetAssistant) window.DshPetAssistant.onContextChanged();
   }
 
   /* -------------------- View 4: Mistake Book & Favorites -------------------- */
@@ -3072,12 +3142,20 @@
 
     const setImg = (id, key) => { const el = document.getElementById(id); if (el && MASCOTS[key]) el.src = MASCOTS[key]; };
     setImg('brand-mascot-img', 'cheer'); setImg('hero-mascot-img', 'cheer');
-    setImg('toc-mascot-img', 'teach'); setImg('companion-img', 'cheer');
+    setImg('toc-mascot-img', 'teach');
 
     buildMascotStickerStrip();
     renderKnowledgeSection();
     updateGlobalStats();
-    setTimeout(() => document.getElementById('companion-bubble')?.classList.add('hidden'), 4200);
+    if (window.DshPetAssistant) {
+      window.DshPetAssistant.mount({
+        hostId: 'dsh-pet-dock',
+        isMobile: false,
+        getContext: buildPetContext,
+        isDark: () => state.theme === 'dark'
+      });
+      window.DshPetAssistant.react('cheer', '点我可根据当前浏览或刷题进度给你思路提醒，按住还能拖动位置！', 5200);
+    }
 
     document.querySelectorAll('.nav-tab').forEach(b => b.onclick = () => switchView(b.dataset.view));
     document.getElementById('brand-home').onclick = () => switchView('knowledge');
@@ -3085,7 +3163,7 @@
     document.getElementById('cta-start-mastery').onclick = () => switchView('mastery');
     document.getElementById('cta-start-practice').onclick = () => { state.practiceSub = 'bank'; switchView('practice'); };
 
-    document.querySelectorAll('[data-psub]').forEach(b => b.onclick = () => { state.practiceSub = b.dataset.psub; renderPracticeView(); });
+    document.querySelectorAll('[data-psub]').forEach(b => b.onclick = () => { state.practiceSub = b.dataset.psub; renderPracticeView(); if (window.DshPetAssistant) window.DshPetAssistant.onContextChanged(); });
 
     document.getElementById('theme-toggle').onclick = () => {
       const next = state.theme === 'dark' ? 'light' : 'dark';
@@ -3107,8 +3185,6 @@
     };
     document.getElementById('hero-mascot-img').onclick = cycleMantra;
     document.getElementById('hero-speech').onclick = cycleMantra;
-    document.getElementById('companion-btn').onclick = () => { mantraIdx = (mantraIdx + 1) % MANTRAS.length; setCompanion(MANTRAS[mantraIdx].mood, MANTRAS[mantraIdx].text, 5000); };
-    document.getElementById('companion-close').onclick = e => { e.stopPropagation(); document.getElementById('companion-bubble').classList.add('hidden'); };
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

@@ -15,6 +15,7 @@ JS_FILES = [
     "knowledge.js",
     "questions.js",
     "explanations_detail.js",
+    "pet_assistant.js",
     "mobile_app.js",
 ]
 
@@ -29,6 +30,8 @@ with open(os.path.join(SRC, "mobile.css"), encoding="utf-8") as f:
     css = f.read()
 with open(os.path.join(ASSETS, "mascots_b64.json"), encoding="utf-8") as f:
     mascots_json = f.read()
+with open(os.path.join(ASSETS, "pet", "fallback_b64.json"), encoding="utf-8") as f:
+    pet_fallback_json = f.read()
 
 scripts_content = {}
 for jf in JS_FILES:
@@ -128,10 +131,13 @@ html = f"""<!DOCTYPE html>
     </div>
   </div>
 
+  <div class="dsh-pet-dock is-mobile" id="dsh-pet-dock" aria-live="polite"></div>
+
   <canvas id="fx-fireworks-canvas" aria-hidden="true"></canvas>
 
   <script>
 window.MASCOT_SPRITES = {mascots_json};
+window.DSH_PET_FALLBACK = {pet_fallback_json};
   </script>
   <script>
 {scripts_content["code_drills.js"]}
@@ -156,6 +162,9 @@ window.MASCOT_SPRITES = {mascots_json};
   </script>
   <script>
 {scripts_content["explanations_detail.js"]}
+  </script>
+  <script>
+{scripts_content["pet_assistant.js"]}
   </script>
   <script>
 {scripts_content["mobile_app.js"]}

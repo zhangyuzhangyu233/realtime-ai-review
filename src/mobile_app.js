@@ -260,6 +260,86 @@
     const btn = document.getElementById('m-theme-toggle');
     if (btn) btn.textContent = t === 'dark' ? '浅色' : '护眼';
     saveState();
+    if (window.DshPetAssistant) window.DshPetAssistant.onContextChanged({ keepBubble: true });
+  }
+
+  function buildPetContext() {
+    const view = state.activeView || 'knowledge';
+    const sec = SECTIONS.find(s => s.id === state.activeSection) || SECTIONS[0];
+    const activeSectionPct = sec ? computeTopicMastery(sec.id).pct : 0;
+
+    let practiceItem = null;
+    if (view === 'practice' && state.practiceSub !== 'mock' && state.practiceHistory.length) {
+      const inst = state.practiceHistory[Math.min(Math.max(0, state.practiceIdx), state.practiceHistory.length - 1)];
+      if (inst) {
+        if (inst.kind === 'drill') {
+          const drill = DRILLS.find(x => x.id === inst.refId) || null;
+          practiceItem = {
+            kind: 'drill', uid: inst.uid, refId: inst.refId, isCoding: true, drill,
+            answered: !!(inst.ans && inst.ans.checked),
+            correct: !!(inst.ans && inst.ans.correct),
+            evalReport: inst.ans ? inst.ans.evalReport : null
+          };
+        } else {
+          const question = BANK.find(x => x.id === inst.refId) || null;
+          practiceItem = {
+            kind: 'question', uid: inst.uid, refId: inst.refId, isCoding: question ? question.type === 'code' : false, question,
+            answered: !!(inst.ans && inst.ans.checked),
+            correct: !!(inst.ans && inst.ans.correct)
+          };
+        }
+      }
+    }
+
+    let mockQuestion = null, mockIndex = 0, mockTotal = 0, mockDoneCount = 0, mockSubmitted = false, mockRemainText = '', mockScorePct = 0;
+    if (state.mockExam && Array.isArray(state.mockExam.items) && state.mockExam.items.length) {
+      const me = state.mockExam;
+      mockTotal = me.items.length;
+      mockIndex = Math.min(Math.max(0, state.mockPageIdx || 0), me.items.length - 1);
+      mockQuestion = me.items[mockIndex] ? me.items[mockIndex].q : null;
+      mockSubmitted = !!me.submitted;
+      const mm = String(Math.floor((me.remainSec || 0) / 60)).padStart(2, '0');
+      const ss = String((me.remainSec || 0) % 60).padStart(2, '0');
+      mockRemainText = `${mm}:${ss}`;
+      mockDoneCount = Object.keys(me.userAnswers || {}).filter(k => {
+        const v = me.userAnswers[k];
+        if (Array.isArray(v)) return v.some(s => String(s).trim().length > 0);
+        if (v && typeof v === 'object') return Boolean((v.diagram?.nodes?.length > 0) || (v.diagram?.path?.length > 1) || String(v.text || '').trim().length > 0);
+        return v !== undefined && v !== null && String(v).trim().length > 0;
+      }).length;
+      if (me.scoreSummary && me.scoreSummary.grand) {
+        mockScorePct = Math.round((me.scoreSummary.total / me.scoreSummary.grand) * 100);
+      }
+    }
+
+    const topicRanks = TOPICS.map(tp => ({ id: tp.id, name: tp.name, pct: computeTopicMastery(tp.id).pct })).sort((a, b) => a.pct - b.pct);
+    const ov = computeOverallMastery();
+
+    const wrongQs = BANK.filter(q => state.answers[q.id]?.checked && !state.answers[q.id]?.correct);
+    const wrongByTopic = {};
+    wrongQs.forEach(q => { wrongByTopic[q.topic] = (wrongByTopic[q.topic] || 0) + 1; });
+    const topWrongEntry = Object.entries(wrongByTopic).sort((a, b) => b[1] - a[1])[0] || null;
+    const topWrongTopicName = topWrongEntry ? (TOPIC_NAME[topWrongEntry[0]] || topWrongEntry[0]) : '';
+    const favCount = Object.keys(state.favorites).filter(id => state.favorites[id]).length;
+
+    return {
+      view,
+      practiceSub: state.practiceSub || 'bank',
+      activeSection: state.activeSection,
+      activeSectionObj: sec,
+      activeSectionPct,
+      practiceItem,
+      mockQuestion,
+      mockIndex,
+      mockTotal,
+      mockDoneCount,
+      mockSubmitted,
+      mockRemainText,
+      mockScorePct,
+      topicSummaries: TOPIC_SUMMARIES,
+      masterySummary: { overall: ov.avg, weakest: topicRanks.slice(0, 2) },
+      notebookSummary: { wrongCount: wrongQs.length, favCount, topWrongTopicName }
+    };
   }
 
   /* -------------------- Lightbox Modal (Fullscreen Anim & Diagram Board) -------------------- */
@@ -624,6 +704,7 @@
       state.practiceSub = 'bank';
       switchView('practice');
     });
+    if (window.DshPetAssistant) window.DshPetAssistant.onContextChanged();
   }
 
   /* ==================== QUESTION EVALUATION & RENDERING ==================== */
@@ -992,8 +1073,10 @@
             if (correct) {
               state.streak++;
               FireworksFX.launch(state.streak >= 3 ? 1.8 : 1.1, { x: e.clientX || window.innerWidth * 0.5, y: e.clientY || window.innerHeight * 0.5 });
+              if (window.DshPetAssistant) window.DshPetAssistant.react('happy', state.streak >= 3 ? `连对 ${state.streak} 题！手感和节奏都超棒，点我可以看下题提醒。` : '答对啦！对应小节熟练度已同步上升。', 3600);
             } else {
               state.streak = 0;
+              if (window.DshPetAssistant) window.DshPetAssistant.react('oops', '这题有点容易踩坑，已收入错题本，点我随时看避坑提醒。', 3800);
             }
             if (opts.onAnswerResult) opts.onAnswerResult(correct);
             if (onAfterCheck) onAfterCheck();
@@ -1034,8 +1117,10 @@
         if (correct) {
           state.streak++;
           FireworksFX.launch(1.3, { x: e.clientX || window.innerWidth * 0.5, y: e.clientY || window.innerHeight * 0.5 });
+          if (window.DshPetAssistant) window.DshPetAssistant.react('happy', '判定通过！点开解析动画和分步拆解可以顺手复盘巩固。', 3600);
         } else {
           state.streak = 0;
+          if (window.DshPetAssistant) window.DshPetAssistant.react('oops', '已标出未命中采分项，点我可以看本题易错提示！', 3800);
         }
         if (opts.onAnswerResult) opts.onAnswerResult(correct);
         if (onAfterCheck) onAfterCheck();
@@ -1276,8 +1361,13 @@
           if (ev.pass) state.passedDrills[dObj.id] = true;
           saveState(); updateGlobalStats();
           state.curveLevel = ev.pass ? Math.min(4.0, state.curveLevel + 0.45) : Math.max(1.0, state.curveLevel - 0.55);
-          if (ev.pass) { state.streak++; FireworksFX.launch(1.4, { x: e.clientX, y: e.clientY }); }
-          else state.streak = 0;
+          if (ev.pass) {
+            state.streak++; FireworksFX.launch(1.4, { x: e.clientX, y: e.clientY });
+            if (window.DshPetAssistant) window.DshPetAssistant.react('celebrate', `${dObj.file} 校验通关（${ev.score}%）！继续下一题吧！`, 3800);
+          } else {
+            state.streak = 0;
+            if (window.DshPetAssistant) window.DshPetAssistant.react('oops', `当前得分 ${ev.score}%，点我可以直接告诉你哪一步还没通过哦。`, 4000);
+          }
           renderPracticeView();
         });
       } else {
@@ -1300,6 +1390,7 @@
     host.querySelectorAll('[data-psub]').forEach(b => {
       b.onclick = () => { state.practiceSub = b.dataset.psub; renderPracticeView(); };
     });
+    if (window.DshPetAssistant) window.DshPetAssistant.onContextChanged();
   }
 
   /* -------------------- 100-Point Mock Exam (Mobile) -------------------- */
@@ -1533,6 +1624,7 @@
     else if (viewId === 'practice') renderPracticeView();
     else if (viewId === 'mastery') renderMasteryView();
     else if (viewId === 'notebook') renderNotebookView();
+    if (window.DshPetAssistant) window.DshPetAssistant.onContextChanged();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -1540,6 +1632,15 @@
     applyTheme(state.theme);
     const brandImg = document.getElementById('m-brand-img');
     if (brandImg && MASCOTS.happy) brandImg.src = MASCOTS.happy;
+
+    if (window.DshPetAssistant) {
+      window.DshPetAssistant.mount({
+        hostId: 'dsh-pet-dock',
+        isMobile: true,
+        getContext: buildPetContext,
+        isDark: () => state.theme === 'dark'
+      });
+    }
 
     document.getElementById('m-theme-toggle')?.addEventListener('click', () => applyTheme(state.theme === 'dark' ? 'light' : 'dark'));
     document.getElementById('m-switch-pc')?.addEventListener('click', () => {

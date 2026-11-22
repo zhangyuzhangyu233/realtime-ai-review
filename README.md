@@ -16,12 +16,13 @@
   - `questions.js`：83 道全题型题库（单选 36 + 判断 18 + 填空 10 + 综合大题 10 + 编程填空/手写 9）
   - `code_drills.js`：9 道实战 C# 手写编程训练与行内思路提示注释
   - `explanations_detail.js`：全 92 道题（83 题库 + 9 实战）的结构化深度分步解析（核心原理 / 逐步实现 / 考场避坑）
+  - `pet_assistant.js`：基于开源桌宠 `dsh-pet` 动图素材封装的右下角上下文智能学习助手（可随知识讲解、随机刷题、手写代码、模拟考试、熟练度与错题本实时给出渐进式思路提醒）
   - `smart_grader.js`：灵活智能判分引擎（支持 C# 等价表达式/数值仿真、FSM/BT 拓扑同构、A* 多解与主观语义采分）
   - `diagram_board.js`：Draw.io 风格矢量画板（自由弯折箭头、节点内直编自动扩宽、双指缩放与路径网格画板）
   - `animations.js` & `csharp_demos.js`：9 大交互动画引擎与 18 个 C# 演示沙盒
   - `app.js` / `style.css`：桌面端应用逻辑与样式
   - `mobile_app.js` / `mobile.css`：手机专属底部导航、抽屉目录与全屏画板工作区
-- `assets/`：伴学图鉴轻量资源（`mascots_b64.json`）
+- `assets/`：伴学静态资源（`mascots_b64.json`）与 `assets/pet/` 透明动态大肥鱼素材（基于 [PC2005-cloud/dsh-pet](https://github.com/PC2005-cloud/dsh-pet) MIT 协议转换）
 - `scripts/`：单文件离线打包与发布审计脚本
   - `bundle.py` -> 生成 `index.html`
   - `bundle_mobile.py` -> 生成 `mobile.html`

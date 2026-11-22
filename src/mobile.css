@@ -1141,3 +1141,96 @@ button:disabled { opacity: 0.48; cursor: not-allowed; transform: none; }
 }
 .rubric-list { list-style: none; display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
 .rubric-item { display: flex; align-items: flex-start; gap: 7px; font-size: 12.5px; color: var(--text-sec); line-height: 1.5; }
+
+/* ==========================================================================
+   DSH-PET ANIMATED CONTEXT-AWARE ASSISTANT (Mobile Bottom-Right Floating)
+   ========================================================================== */
+.dsh-pet-dock.is-mobile {
+  position: fixed;
+  right: 8px;
+  bottom: calc(68px + env(safe-area-inset-bottom));
+  z-index: 860;
+  display: flex; flex-direction: column; align-items: flex-end; gap: 5px;
+  pointer-events: none; user-select: none; -webkit-user-select: none;
+}
+.dsh-pet-dock.is-mobile .dsh-pet-stage {
+  position: relative; pointer-events: auto;
+  width: 88px; height: 88px;
+  touch-action: none;
+  display: flex; align-items: flex-end; justify-content: center;
+}
+.dsh-pet-dock.is-mobile .dsh-pet-sprite {
+  width: 100%; height: 100%; object-fit: contain;
+  pointer-events: none;
+  filter: drop-shadow(0 6px 12px rgba(15, 23, 42, 0.24));
+  will-change: transform;
+}
+.dsh-pet-dock.is-mobile .dsh-pet-min-btn {
+  position: absolute; top: 0; right: 0;
+  padding: 2px 6px; border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.14);
+  background: rgba(255, 255, 255, 0.9); color: #334155;
+  font-size: 10px; font-weight: 800; line-height: 1.25;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12);
+}
+[data-theme="dark"] .dsh-pet-dock.is-mobile .dsh-pet-min-btn {
+  background: rgba(20, 37, 69, 0.92); color: #cbd5e1; border-color: rgba(148, 163, 184, 0.3);
+}
+.dsh-pet-dock.is-mobile .dsh-pet-restore-pill {
+  display: none; pointer-events: auto;
+  padding: 6px 12px; border-radius: 999px;
+  border: 1.5px solid var(--primary);
+  background: rgba(255, 255, 255, 0.95); color: var(--primary-deep);
+  font-size: 11.5px; font-weight: 800;
+  box-shadow: var(--shadow-md);
+}
+[data-theme="dark"] .dsh-pet-dock.is-mobile .dsh-pet-restore-pill {
+  background: rgba(20, 37, 69, 0.95); color: #e2e8f0;
+}
+.dsh-pet-dock.is-mobile.is-collapsed .dsh-pet-stage,
+.dsh-pet-dock.is-mobile.is-collapsed .dsh-pet-bubble { display: none !important; }
+.dsh-pet-dock.is-mobile.is-collapsed .dsh-pet-restore-pill { display: inline-flex; align-items: center; }
+
+.dsh-pet-dock.is-mobile .dsh-pet-bubble {
+  position: relative; pointer-events: auto;
+  width: max-content; min-width: 170px; max-width: min(290px, calc(100vw - 24px));
+  padding: 9px 11px 8px; border-radius: 14px;
+  background: rgba(255, 255, 255, 0.95); color: #0f172a;
+  border: 1.5px solid rgba(29, 92, 255, 0.34);
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.2);
+  backdrop-filter: blur(8px);
+  transform: translateX(var(--bub-shift, 0px));
+}
+[data-theme="dark"] .dsh-pet-dock.is-mobile .dsh-pet-bubble {
+  background: rgba(15, 28, 54, 0.95); color: #e2e8f0;
+  border-color: rgba(56, 189, 248, 0.45);
+}
+.dsh-pet-dock.is-mobile .dsh-pet-bubble.hidden { display: none; }
+.dsh-pet-dock.is-mobile .dsh-pet-bubble::after {
+  content: ""; position: absolute; bottom: -7px; right: var(--tail-right, 38px);
+  border: 7px solid transparent;
+  border-top-color: rgba(255, 255, 255, 0.95);
+  border-bottom: none;
+}
+[data-theme="dark"] .dsh-pet-dock.is-mobile .dsh-pet-bubble::after {
+  border-top-color: rgba(15, 28, 54, 0.95);
+}
+.dsh-pet-dock.is-mobile .dsh-bub-top {
+  display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 4px;
+}
+.dsh-pet-dock.is-mobile .dsh-bub-tag {
+  display: inline-flex; padding: 1.5px 7px; border-radius: 999px;
+  background: var(--primary-soft); color: var(--primary); font-size: 10.5px; font-weight: 800;
+}
+.dsh-pet-dock.is-mobile .dsh-bub-close {
+  border: none; background: transparent; color: var(--text-muted);
+  width: 22px; height: 22px; font-size: 15px; line-height: 1;
+}
+.dsh-pet-dock.is-mobile .dsh-bub-body {
+  font-size: 12.2px; font-weight: 600; line-height: 1.55;
+  word-break: break-word; overflow-wrap: break-word;
+}
+.dsh-pet-dock.is-mobile .dsh-bub-foot {
+  margin-top: 5px; padding-top: 4px; border-top: 1px dashed var(--border);
+  font-size: 10px; font-weight: 700; color: var(--text-muted);
+}
