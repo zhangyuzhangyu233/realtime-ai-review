@@ -106,6 +106,19 @@ for (const fnName of [
   assert(inAppOrCss, `Source defines/references layout hook: ${fnName}`);
 }
 
+assert(!appSrc.includes('data-lpanel="anim"'), 'src/app.js merges animation into the unified code tab (no separate anim tab)');
+assert(!appSrc.includes('data-lpanel-body="anim"'), 'src/app.js removes separate anim pane in favor of unified code+anim card');
+assert(
+  appSrc.includes("${buildPostAnswerCodeTabHTML('question', q, saved, opts.instance)}\n          ${buildPostAnswerAnimTabHTML('question', q)}") ||
+  appSrc.includes("${buildPostAnswerCodeTabHTML('question', q, saved, opts.instance)}\r\n          ${buildPostAnswerAnimTabHTML('question', q)}"),
+  'renderQuestionCard renders code + animation inside one unified pane'
+);
+assert(
+  appSrc.includes("${buildPostAnswerCodeTabHTML('drill', d, saved, inst)}\n          ${buildPostAnswerAnimTabHTML('drill', d)}") ||
+  appSrc.includes("${buildPostAnswerCodeTabHTML('drill', d, saved, inst)}\r\n          ${buildPostAnswerAnimTabHTML('drill', d)}"),
+  'renderInlineDrillCard renders reference code + animation inside one unified pane'
+);
+
 const indexPath = path.join(ROOT, 'index.html');
 assert(fs.existsSync(indexPath), 'Bundled index.html exists');
 if (fs.existsSync(indexPath)) {

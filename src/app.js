@@ -1749,7 +1749,7 @@
       : (opts.instance ? opts.instance.ans : (state.answers[q.id] || null));
     const isLocked = (!!opts.lockAfterAnswer && !!(saved && saved.checked)) || (isMock && !!state.mockExam?.submitted);
     const isSplitReview = !!opts.splitReview;
-    const activeLeftTab = opts.activeLeftTab || 'question';
+    const activeLeftTab = opts.activeLeftTab === 'code' ? 'code' : 'question';
     const draftVal = (!saved?.checked && opts.instance && opts.instance.draftVal !== undefined)
       ? opts.instance.draftVal
       : undefined;
@@ -1861,7 +1861,7 @@
           <div class="locked-notice-bar">
             <span>本题已作答锁定（无论对错不可改选），右侧可同步浏览详解与关联知识点</span>
             <div class="post-quick-actions">
-              ${isSplitReview ? `<button type="button" class="secondary-btn" data-jump-lpanel="code" style="padding:7px 13px;font-size:12.5px">切到代码与运行 →</button>` : ''}
+              ${isSplitReview ? `<button type="button" class="secondary-btn" data-jump-lpanel="code" style="padding:7px 13px;font-size:12.5px">切到代码与动画 →</button>` : ''}
               ${opts.hasNext ? `<button class="submit-btn inline-next-q-btn" style="padding:7px 14px;font-size:12.5px">进入下一题 →</button>` : ''}
             </div>
           </div>`;
@@ -1886,7 +1886,7 @@
         <div class="post-quick-bar">
           <span class="post-quick-status ${saved?.correct ? 'ok' : 'bad'}">${saved?.correct ? '本题智能判定已达标' : '本题仍需巩固（详见右侧分步解析）'}</span>
           <div class="post-quick-actions">
-            <button type="button" class="secondary-btn" data-jump-lpanel="code" style="padding:6px 12px;font-size:12px">切到代码与运行 →</button>
+            <button type="button" class="secondary-btn" data-jump-lpanel="code" style="padding:6px 12px;font-size:12px">切到代码与动画 →</button>
             ${opts.hasNext ? `<button type="button" class="submit-btn inline-next-q-btn" style="padding:6px 13px;font-size:12px">下一题 →</button>` : ''}
           </div>
         </div>`;
@@ -1896,14 +1896,13 @@
     if (isSplitReview) {
       const qTabLabel = (q.type === 'code' && q.subkind === 'write') ? '题目与编码' : '题目与作答';
       const codeTabLabel = (q.codeTemplate && q.blanks)
-        ? '完整代码与运行'
-        : (q.modelCode ? '参考代码与运行' : 'C# 示例代码与运行');
-      const codeTabPill = (q.codeTemplate || q.modelCode) ? 'C#' : '沙盒';
+        ? '完整代码与动画演示'
+        : (q.modelCode ? '参考代码与动画演示' : 'C# 代码与动画演示');
+      const codeTabPill = (q.codeTemplate || q.modelCode) ? 'C# · 动画' : '沙盒 · 动画';
       contentAreaHTML = `
         <div class="post-card-tabs" role="tablist" aria-label="作答后视图切换">
           <button type="button" class="post-tab-btn ${activeLeftTab === 'question' ? 'active' : ''}" data-lpanel="question">${qTabLabel}</button>
           <button type="button" class="post-tab-btn ${activeLeftTab === 'code' ? 'active' : ''}" data-lpanel="code">${codeTabLabel} <span class="post-tab-pill">${codeTabPill}</span></button>
-          <button type="button" class="post-tab-btn ${activeLeftTab === 'anim' ? 'active' : ''}" data-lpanel="anim">交互动画演示 <span class="post-tab-pill">动画</span></button>
         </div>
         <div class="post-tab-pane ${activeLeftTab === 'question' ? '' : 'hidden'}" data-lpanel-body="question">
           <div class="q-stem">${q.stem}</div>
@@ -1913,8 +1912,6 @@
         </div>
         <div class="post-tab-pane ${activeLeftTab === 'code' ? '' : 'hidden'}" data-lpanel-body="code">
           ${buildPostAnswerCodeTabHTML('question', q, saved, opts.instance)}
-        </div>
-        <div class="post-tab-pane ${activeLeftTab === 'anim' ? '' : 'hidden'}" data-lpanel-body="anim">
           ${buildPostAnswerAnimTabHTML('question', q)}
         </div>`;
     } else {
@@ -2294,7 +2291,7 @@
     }
 
     if (demoHTML) return demoHTML;
-    return `<div class="trap-callout">本题暂无配套 C# 示例代码，可切回「题目与作答」或查看「交互动画演示」。</div>`;
+    return `<div class="trap-callout">本题暂无配套 C# 示例代码，可在下方观看交互动画演示或切回「题目与作答」。</div>`;
   }
 
   function buildPostAnswerAnimTabHTML(itemKind, item) {
@@ -2302,7 +2299,7 @@
       ? (item.anim ? { ...item.anim, caption: `${item.file} 实时算法动画演示` } : { engine: 'astar', mode: 'ppt', caption: '交互动画演示' })
       : (item.anim || { engine: 'astar', mode: 'ppt', caption: '交互动画演示' });
     return `
-      <div class="explain-anim-wrap" style="margin-top:4px" data-ex-engine="${anim.engine}" data-ex-mode="${anim.mode}" data-ex-params='${JSON.stringify(anim.params || {})}' data-ex-title="${escapeHTML(anim.caption)}">
+      <div class="explain-anim-wrap" style="margin-top:14px" data-ex-engine="${anim.engine}" data-ex-mode="${anim.mode}" data-ex-params='${JSON.stringify(anim.params || {})}' data-ex-title="${escapeHTML(anim.caption)}">
         <div class="explain-anim-bar">
           <span>动画解析：${escapeHTML(anim.caption)}（点击画面全屏放大）</span>
           <div class="ctrl-group">
@@ -2485,7 +2482,7 @@
         </div>
 
         <div class="re-foot">
-          <button type="button" class="secondary-btn" id="btn-re-toggle-left" style="flex:1">在左侧查看代码 →</button>
+          <button type="button" class="secondary-btn" id="btn-re-toggle-left" style="flex:1">在左侧看代码与动画 →</button>
           ${hasNext ? `<button type="button" class="submit-btn inline-next-q-btn" style="flex:1">进入下一题 →</button>` : ''}
         </div>
       </aside>`;
@@ -2532,7 +2529,9 @@
     if (!rootEl) return;
     const onNext = opts.onNext || null;
     const stateHolder = opts.stateHolder || null;
-    let curLeftTab = opts.initialLeftTab || (stateHolder && stateHolder.reviewLeftTab) || 'question';
+    let curLeftTab = (opts.initialLeftTab === 'code' || opts.initialLeftTab === 'anim')
+      ? 'code'
+      : ((stateHolder && (stateHolder.reviewLeftTab === 'code' || stateHolder.reviewLeftTab === 'anim')) ? 'code' : 'question');
 
     const syncReFootBtn = () => {
       const footBtn = rootEl.querySelector('#btn-re-toggle-left');
@@ -2541,30 +2540,28 @@
         footBtn.textContent = '左侧切回题目与作答';
         footBtn.dataset.nextTab = 'question';
       } else {
-        footBtn.textContent = '在左侧查看代码 →';
+        footBtn.textContent = '在左侧看代码与动画 →';
         footBtn.dataset.nextTab = 'code';
       }
     };
 
     const activateLeftTab = (tabKey) => {
       if (!tabKey) return;
-      curLeftTab = tabKey;
-      if (stateHolder) stateHolder.reviewLeftTab = tabKey;
-      if (opts.onLeftTabChange) opts.onLeftTabChange(tabKey);
+      const normKey = (tabKey === 'code' || tabKey === 'anim') ? 'code' : 'question';
+      curLeftTab = normKey;
+      if (stateHolder) stateHolder.reviewLeftTab = normKey;
+      if (opts.onLeftTabChange) opts.onLeftTabChange(normKey);
 
       rootEl.querySelectorAll('.post-tab-btn[data-lpanel]').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.lpanel === tabKey);
+        btn.classList.toggle('active', btn.dataset.lpanel === normKey);
       });
       rootEl.querySelectorAll('.post-tab-pane[data-lpanel-body]').forEach(pane => {
-        const isTarget = pane.dataset.lpanelBody === tabKey;
+        const isTarget = pane.dataset.lpanelBody === normKey;
         pane.classList.toggle('hidden', !isTarget);
-        if (isTarget) {
-          if (tabKey === 'code') {
-            bindCodeRunners(pane);
-            bindIdeEditors(pane);
-          } else if (tabKey === 'anim') {
-            requestAnimationFrame(() => mountExplainWidgets(pane, onNext));
-          }
+        if (isTarget && normKey === 'code') {
+          bindCodeRunners(pane);
+          bindIdeEditors(pane);
+          requestAnimationFrame(() => mountExplainWidgets(pane, onNext));
         }
       });
       syncReFootBtn();
@@ -3196,7 +3193,7 @@
     const saved = inst.ans || null;
     const isLocked = !!(saved && saved.checked);
     const isSplitReview = !!opts.splitReview;
-    const activeLeftTab = opts.activeLeftTab || 'question';
+    const activeLeftTab = opts.activeLeftTab === 'code' ? 'code' : 'question';
     const curCode = isLocked ? (saved.userVal || d.starter) : (inst.draftCode !== null ? inst.draftCode : d.starter);
     const cardCls = isLocked ? (saved.correct ? 'is-correct' : 'is-wrong') : '';
     const ev = saved?.evalReport || null;
@@ -3253,7 +3250,7 @@
         <div class="locked-notice-bar" style="margin-top:12px">
           <span>本题已作答锁定，右侧可同步查看分步剖析与考点诊断清单</span>
           <div class="post-quick-actions">
-            <button type="button" class="secondary-btn" data-jump-lpanel="code" style="padding:7px 13px;font-size:12.5px">切看标准参考代码 →</button>
+            <button type="button" class="secondary-btn" data-jump-lpanel="code" style="padding:7px 13px;font-size:12.5px">切看参考代码与动画 →</button>
             <button class="submit-btn inline-next-q-btn" style="padding:7px 14px;font-size:12.5px">进入下一题 →</button>
           </div>
         </div>`;
@@ -3328,16 +3325,13 @@
       drillContentHTML = `
         <div class="post-card-tabs" role="tablist" aria-label="编程题作答后视图切换">
           <button type="button" class="post-tab-btn ${activeLeftTab === 'question' ? 'active' : ''}" data-lpanel="question">题目与编码</button>
-          <button type="button" class="post-tab-btn ${activeLeftTab === 'code' ? 'active' : ''}" data-lpanel="code">标准参考代码 <span class="post-tab-pill">C#</span></button>
-          <button type="button" class="post-tab-btn ${activeLeftTab === 'anim' ? 'active' : ''}" data-lpanel="anim">运行动画效果 <span class="post-tab-pill">动画</span></button>
+          <button type="button" class="post-tab-btn ${activeLeftTab === 'code' ? 'active' : ''}" data-lpanel="code">参考代码与动画演示 <span class="post-tab-pill">C# · 动画</span></button>
         </div>
         <div class="post-tab-pane ${activeLeftTab === 'question' ? '' : 'hidden'}" data-lpanel-body="question">
           ${mainBodyHTML}
         </div>
         <div class="post-tab-pane ${activeLeftTab === 'code' ? '' : 'hidden'}" data-lpanel-body="code">
           ${buildPostAnswerCodeTabHTML('drill', d, saved, inst)}
-        </div>
-        <div class="post-tab-pane ${activeLeftTab === 'anim' ? '' : 'hidden'}" data-lpanel-body="anim">
           ${buildPostAnswerAnimTabHTML('drill', d)}
         </div>`;
     }
