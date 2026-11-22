@@ -2,7 +2,9 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#102a63">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <title>实时人工智能应用 · 期末冲刺复习与交互动画题库</title>
   <style>
 :root {
@@ -81,7 +83,7 @@
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; overflow-x: clip; -webkit-tap-highlight-color: transparent; }
 body {
   font-family: var(--font-sans);
   background-color: var(--bg-page);
@@ -90,7 +92,7 @@ body {
   color: var(--text);
   line-height: 1.65;
   min-height: 100vh;
-  overflow-x: hidden;
+  overflow-x: clip;
   transition: background-color 0.25s ease, color 0.25s ease;
 }
 
@@ -1752,7 +1754,21 @@ svg text { font-family: var(--font-mono); }
 /* Interactive Pathfinding Grid Board (pathgrid) */
 .pg-stage-host { padding: 16px; min-height: 310px; overflow: auto; }
 .pg-grid-stage { position: relative; display: inline-block; max-width: 100%; }
-.pg-grid { display: grid; gap: 5px; user-select: none; }
+.toc-mobile-toggle {
+  display: none;
+  margin-left: auto;
+  border: 1px solid var(--border-strong);
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 6px 12px;
+  border-radius: 99px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.pg-grid { display: grid; gap: 5px; user-select: none; touch-action: none; }
 .pg-svg {
   position: absolute; inset: 0; width: 100%; height: 100%;
   pointer-events: none; z-index: 4;
@@ -1888,6 +1904,117 @@ svg text { font-family: var(--font-mono); }
   box-shadow: inset 0 0 0 1.5px rgba(16, 185, 129, 0.55);
 }
 
+/* ==========================================================================
+   MOBILE & TABLET RESPONSIVE ADAPTATION (TOUCH-FIRST <= 960px / 760px / 640px)
+   ========================================================================== */
+@media (max-width: 960px) {
+  .toc-mobile-toggle { display: inline-flex; align-items: center; gap: 4px; }
+  .toc-sidebar:not(.mobile-open) #toc-list { display: none; }
+  .toc-sidebar:not(.mobile-open) .toc-header {
+    border-bottom: none; margin-bottom: 0; padding-bottom: 0;
+  }
+  .flip-sidebar { position: static; top: auto; }
+}
+
+@media (max-width: 760px) {
+  .topbar-inner { padding: 8px 12px; gap: 8px; }
+  .brand-avatar { width: 34px; height: 34px; border-radius: 10px; }
+  .brand-avatar img { width: 30px; height: 30px; }
+  .brand-title { font-size: 14px; }
+  .brand-sub { display: none; }
+  .icon-btn { height: 32px; padding: 0 10px; font-size: 12px; }
+  .nav-tabs {
+    width: 100%; order: 3; overflow-x: auto; scrollbar-width: none;
+    -webkit-overflow-scrolling: touch; padding: 3px;
+  }
+  .nav-tabs::-webkit-scrollbar { display: none; }
+  .nav-tab {
+    flex: 1 0 auto; white-space: nowrap; justify-content: center;
+    padding: 7px 9px; font-size: 12.2px; gap: 4px;
+  }
+}
+
+@media (max-width: 720px) {
+  .db-workspace,
+  .diagram-board-wrap.is-zoomed .db-workspace {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+  .db-sidebar { padding: 8px; gap: 7px; }
+  .db-col-stack { flex-direction: row; flex-wrap: wrap; }
+  .db-col-stack .db-btn { width: auto; flex: 1 1 110px; }
+  .db-mini-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .lightbox-overlay {
+    padding: 6px;
+    padding-bottom: calc(6px + env(safe-area-inset-bottom));
+  }
+  .lightbox-dialog,
+  .lightbox-dialog.is-board-zoom {
+    width: 100%; max-width: 100%; max-height: 95dvh; border-radius: 16px;
+  }
+  .lightbox-header { padding: 10px 12px; }
+  .lightbox-body { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .diagram-board-wrap.is-zoomed .db-stage,
+  .diagram-board-wrap.is-zoomed .db-svg { min-height: 52dvh; }
+  .lightbox-body .anim-canvas-box { min-height: 260px; }
+  .lightbox-body .anim-canvas-box canvas { height: 270px !important; }
+  .lightbox-body .anim-side-panel { max-height: 210px !important; }
+}
+
+@media (max-width: 640px) {
+  .app-shell { padding: 12px 12px calc(86px + env(safe-area-inset-bottom)); }
+  .hero-card { padding: 18px 14px; border-radius: 18px; gap: 14px; }
+  .hero-title { font-size: clamp(19px, 5.4vw, 24px); line-height: 1.32; }
+  .hero-desc { font-size: 13px; }
+  .hero-mascot-img { width: 106px; height: 106px; }
+  .hero-cta-row { flex-direction: column; width: 100%; }
+  .hero-cta-row button { width: 100%; justify-content: center; }
+  .stat-strip { gap: 10px; }
+  .stat-card { padding: 12px; gap: 10px; }
+  .stat-val { font-size: 16px; }
+  .compare-table {
+    display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%;
+  }
+  .code-block, .formula-box {
+    font-size: 11.5px; padding: 10px 12px; -webkit-overflow-scrolling: touch;
+  }
+  .q-card { padding: 15px 13px; border-radius: 16px; }
+  .q-stem { font-size: 14px; }
+  .opt-btn { min-height: 44px; padding: 10px 12px; font-size: 13.5px; }
+  .blanks-wrap { grid-template-columns: 1fr; }
+  .search-input { margin-left: 0; width: 100%; min-width: 0; }
+  .blank-input, .essay-textarea, .search-input, .db-pop-input, .db-inline-editor {
+    font-size: 16px;
+  }
+  .practice-mode-bar { width: 100%; flex-wrap: wrap; }
+  .pm-tab { flex: 1 1 auto; text-align: center; font-size: 12.5px; padding: 8px 10px; }
+  .explain-head, .mock-score-banner, .mock-header-card {
+    flex-direction: column; align-items: flex-start; gap: 12px;
+  }
+  .explain-mascot { width: 64px; height: 64px; }
+  .section-pager-bar, .pager-footer { flex-direction: column; align-items: stretch; }
+  .section-pager-bar button, .pager-footer button { width: 100%; justify-content: center; }
+  .db-stage, .db-svg { min-height: 280px; }
+  .pg-stage-host { padding: 10px; min-height: 220px; }
+  .db-popover {
+    left: 50% !important; transform: translateX(-50%);
+    width: min(300px, calc(100% - 16px)); min-width: 0;
+  }
+  .db-head { padding: 8px 10px; }
+  .db-foot { padding: 6px 10px; }
+  .anim-canvas-box { min-height: 230px; }
+  .companion-dock { right: 10px; bottom: calc(10px + env(safe-area-inset-bottom)); }
+  .companion-avatar-btn { width: 54px; height: 54px; border-radius: 18px; }
+  .companion-avatar-btn img { width: 46px; height: 46px; }
+  .companion-bubble { max-width: min(230px, 74vw); font-size: 12px; }
+}
+
+@media (max-width: 420px) {
+  .db-mini-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .nav-tab { padding: 6.5px 6px; font-size: 11.5px; gap: 3px; }
+  .pg-cell { font-size: 10.5px; padding: 3px 4px; }
+}
+
   </style>
 </head>
 <body>
@@ -1981,6 +2108,7 @@ svg text { font-family: var(--font-mono); }
               <h3>知识要点目录</h3>
               <p>6 大章节 · 16 个独立小节</p>
             </div>
+            <button type="button" class="toc-mobile-toggle" id="toc-mobile-toggle" aria-expanded="false">展开目录</button>
           </div>
           <div id="toc-list"></div>
         </aside>
@@ -5976,6 +6104,7 @@ public class RunAway : IState {
     let dragInfo = null;
     let popCid = null;
 
+    const stageHost = containerEl.querySelector('.pg-stage-host');
     const gridEl = containerEl.querySelector('.pg-grid');
     const svgEl = containerEl.querySelector('.pg-svg');
     const cntEl = containerEl.querySelector('.pg-cnt-steps');
@@ -6045,9 +6174,13 @@ public class RunAway : IState {
       const closedSet = new Set(data.closed);
       const pathSet = new Set(data.path);
       const cellStatuses = evalResult?.cellStatuses || {};
-      const cellSz = isZoomed ? 66 : 54;
+      const availW = Math.max(240, (stageHost?.clientWidth || containerEl.clientWidth || 360) - 22);
+      const gap = availW < 340 ? 3 : 5;
+      const maxDesired = isZoomed ? 66 : 54;
+      const cellSz = Math.max(34, Math.min(maxDesired, Math.floor((availW - (cols - 1) * gap) / cols)));
 
       if (gridEl) {
+        gridEl.style.gap = `${gap}px`;
         gridEl.style.gridTemplateColumns = `repeat(${cols}, ${cellSz}px)`;
         gridEl.style.gridAutoRows = `${cellSz}px`;
         let html = '';
@@ -6089,12 +6222,12 @@ public class RunAway : IState {
       }
 
       if (svgEl && gridEl) {
-        const gw = cols * cellSz + (cols - 1) * 5;
-        const gh = rows * cellSz + (rows - 1) * 5;
+        const gw = cols * cellSz + (cols - 1) * gap;
+        const gh = rows * cellSz + (rows - 1) * gap;
         svgEl.setAttribute('viewBox', `0 0 ${gw} ${gh}`);
         const seq = data.path || [];
         if (seq.length) {
-          const step = cellSz + 5;
+          const step = cellSz + gap;
           const pts = seq.map(id => {
             const r = Math.floor(id / cols), c = id % cols;
             return { x: c * step + cellSz / 2, y: r * step + cellSz / 2 };
@@ -6340,6 +6473,15 @@ public class RunAway : IState {
       isLocked, isZoomed, onCloseZoom
     );
 
+    const handlePgResize = () => {
+      if (!containerEl.isConnected) {
+        window.removeEventListener('resize', handlePgResize);
+        return;
+      }
+      render();
+    };
+    window.addEventListener('resize', handlePgResize);
+
     render();
     return {
       getData: () => cloneData(data, boardSpec),
@@ -6385,6 +6527,8 @@ public class RunAway : IState {
     let inlineEdit = null;     // { kind, id, origLabel, preUndoSnap, committed }
     let isComposing = false;
     let lastTap = null;        // { kind, id, time, x, y }
+    const activePointers = new Map();
+    let pinchState = null;     // { dist, midX, midY }
 
     const svg = containerEl.querySelector('.db-svg');
     const stageEl = containerEl.querySelector('.db-stage');
@@ -7255,7 +7399,7 @@ public class RunAway : IState {
             const portHot = isSnapHost && snapHighlight.port === pName;
             portsSVG += `
               <g class="db-port-wrap" data-port-node="${escHtml(n.id)}" data-port="${pName}">
-                <circle cx="${p.x}" cy="${p.y}" r="10" fill="transparent"/>
+                <circle cx="${p.x}" cy="${p.y}" r="14" fill="transparent"/>
                 <circle class="db-port ${portHot ? 'is-hot' : ''}" cx="${p.x}" cy="${p.y}" r="${portHot ? 5.6 : 4.2}"/>
               </g>`;
           }
@@ -7273,15 +7417,15 @@ public class RunAway : IState {
             <g class="db-handles-layer">
               ${!sg.isSelfLoop ? `
                 <g data-edge-handle="start" style="cursor:crosshair">
-                  <circle cx="${sg.sx}" cy="${sg.sy}" r="12" fill="transparent"/>
+                  <circle cx="${sg.sx}" cy="${sg.sy}" r="16" fill="transparent"/>
                   <circle class="db-edge-handle" cx="${sg.sx}" cy="${sg.sy}" r="5.5"/>
                 </g>
                 <g data-edge-handle="end" style="cursor:crosshair">
-                  <circle cx="${sg.ex}" cy="${sg.ey}" r="12" fill="transparent"/>
+                  <circle cx="${sg.ex}" cy="${sg.ey}" r="16" fill="transparent"/>
                   <circle class="db-edge-handle is-end" cx="${sg.ex}" cy="${sg.ey}" r="5.5"/>
                 </g>` : ''}
               <g data-edge-handle="mid" style="cursor:move">
-                <circle cx="${sg.mx}" cy="${sg.my}" r="12" fill="transparent"/>
+                <circle cx="${sg.mx}" cy="${sg.my}" r="16" fill="transparent"/>
                 <polygon class="db-edge-handle is-mid" points="${sg.mx},${sg.my - 6.5} ${sg.mx + 6.5},${sg.my} ${sg.mx},${sg.my + 6.5} ${sg.mx - 6.5},${sg.my}"/>
               </g>
             </g>`;
@@ -7291,10 +7435,23 @@ public class RunAway : IState {
       svg.innerHTML = svgHTML;
     }
 
-    // Unified SVG pointer interactions (Strict hit priority: edge handle -> port -> node -> edge -> canvas pan)
+    // Unified SVG pointer interactions (Strict hit priority: pinch -> edge handle -> port -> node -> edge -> canvas pan)
     svg.addEventListener('pointerdown', (e) => {
       if (isLocked) return;
+      activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (activePointers.size === 2) {
+        const pts = Array.from(activePointers.values());
+        const dist = Math.max(10, Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y));
+        pinchState = { dist, midX: (pts[0].x + pts[1].x) / 2, midY: (pts[0].y + pts[1].y) / 2 };
+        dragState = null;
+        snapHighlight = null;
+        alignGuides = [];
+        render();
+        return;
+      }
       if (inlineEdit && !inlineEdit.committed) commitInlineEdit();
+      const tapTol = e.pointerType === 'touch' ? 24 : 8;
+      const tapDelay = e.pointerType === 'touch' ? 420 : 360;
       const handleEl = e.target.closest('[data-edge-handle]');
       const portEl = e.target.closest('[data-port-node]');
       const nodeEl = e.target.closest('[data-node-id]');
@@ -7366,7 +7523,7 @@ public class RunAway : IState {
           }
           return;
         }
-        if (lastTap && lastTap.kind === 'node' && lastTap.id === nid && (now - lastTap.time) < 360 && Math.hypot(e.clientX - lastTap.x, e.clientY - lastTap.y) < 8) {
+        if (lastTap && lastTap.kind === 'node' && lastTap.id === nid && (now - lastTap.time) < tapDelay && Math.hypot(e.clientX - lastTap.x, e.clientY - lastTap.y) < tapTol) {
           lastTap = null;
           dragState = null;
           e.preventDefault();
@@ -7388,7 +7545,7 @@ public class RunAway : IState {
       // 4. Edge Body -> Double-Click Inline Rename OR Select & Direct Move / Bend Curve
       if (edgeEl) {
         const eid = edgeEl.dataset.edgeId;
-        if (lastTap && lastTap.kind === 'edge' && lastTap.id === eid && (now - lastTap.time) < 360 && Math.hypot(e.clientX - lastTap.x, e.clientY - lastTap.y) < 8) {
+        if (lastTap && lastTap.kind === 'edge' && lastTap.id === eid && (now - lastTap.time) < tapDelay && Math.hypot(e.clientX - lastTap.x, e.clientY - lastTap.y) < tapTol) {
           lastTap = null;
           dragState = null;
           e.preventDefault();
@@ -7437,6 +7594,26 @@ public class RunAway : IState {
     });
 
     svg.addEventListener('pointermove', (e) => {
+      if (activePointers.has(e.pointerId)) {
+        activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      }
+      if (pinchState && activePointers.size >= 2 && !isLocked) {
+        const pts = Array.from(activePointers.values());
+        const dist = Math.max(10, Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y));
+        const midX = (pts[0].x + pts[1].x) / 2;
+        const midY = (pts[0].y + pts[1].y) / 2;
+        const rect = svg.getBoundingClientRect();
+        const scaleX = rect.width ? (VB_W / vp.zoom) / rect.width : 1;
+        const scaleY = rect.height ? (VB_H / vp.zoom) / rect.height : 1;
+        vp.panX = Math.max(-420, Math.min(VB_W * 0.65, vp.panX - (midX - pinchState.midX) * scaleX));
+        vp.panY = Math.max(-260, Math.min(VB_H * 0.65, vp.panY - (midY - pinchState.midY) * scaleY));
+        const vbMid = toVB(midX, midY, false);
+        zoomAt(dist / pinchState.dist, vbMid);
+        pinchState.dist = dist;
+        pinchState.midX = midX;
+        pinchState.midY = midY;
+        return;
+      }
       if (!dragState || isLocked) return;
 
       if (dragState.type === 'pan') {
@@ -7578,6 +7755,8 @@ public class RunAway : IState {
     });
 
     const endDrag = (e) => {
+      if (e && e.pointerId != null) activePointers.delete(e.pointerId);
+      if (activePointers.size < 2) pinchState = null;
       if (!dragState) return;
       if (dragState.type === 'port-connect') {
         const pt = e ? toVB(e.clientX, e.clientY, false) : { x: dragState.curX, y: dragState.curY };
@@ -8403,7 +8582,7 @@ public class GuardSwitchFSM : MonoBehaviour {
   function setupHiDPI(canvas, logicalW, logicalH) {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const rect = canvas.getBoundingClientRect();
-    const w = Math.max(320, Math.round(rect.width || logicalW || 680));
+    const w = Math.max(260, Math.round(rect.width || logicalW || 680));
     const h = Math.max(220, Math.round(rect.height || logicalH || 360));
     if (canvas.width !== w * dpr || canvas.height !== h * dpr) {
       canvas.width = w * dpr;
@@ -14388,6 +14567,17 @@ public class RunAway : IState {
       btn.onclick = () => selectSection(btn.dataset.sec, true);
     });
 
+    const tocSidebar = document.querySelector('.toc-sidebar');
+    const tocMobileBtn = document.getElementById('toc-mobile-toggle');
+    if (tocMobileBtn && tocSidebar) {
+      tocMobileBtn.onclick = () => {
+        const nextOpen = !tocSidebar.classList.contains('mobile-open');
+        tocSidebar.classList.toggle('mobile-open', nextOpen);
+        tocMobileBtn.setAttribute('aria-expanded', String(nextOpen));
+        tocMobileBtn.textContent = nextOpen ? '收起目录' : '展开目录';
+      };
+    }
+
     // Bottom sub-section prev/next navigation
     modHost.querySelectorAll('.go-sec-nav').forEach(btn => {
       btn.onclick = () => selectSection(btn.dataset.navSec, true);
@@ -14434,8 +14624,20 @@ public class RunAway : IState {
     mountSectionLabs(sec.id);
     refreshTocMasteryTags();
     setCompanion(sec.mascot, sec.tip, 4500);
+    if (window.innerWidth <= 960) {
+      const tocSidebar = document.querySelector('.toc-sidebar');
+      const tocMobileBtn = document.getElementById('toc-mobile-toggle');
+      if (tocSidebar) tocSidebar.classList.remove('mobile-open');
+      if (tocMobileBtn) {
+        tocMobileBtn.setAttribute('aria-expanded', 'false');
+        tocMobileBtn.textContent = '展开目录';
+      }
+    }
     if (scrollToTop) {
-      document.getElementById('knowledge-anchor')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const targetEl = window.innerWidth <= 960
+        ? (document.getElementById('module-panels') || document.getElementById('knowledge-anchor'))
+        : document.getElementById('knowledge-anchor');
+      targetEl?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }
 
