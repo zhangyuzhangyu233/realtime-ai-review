@@ -2651,8 +2651,8 @@ svg text { font-family: var(--font-mono); }
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
 }
-.rf-back { transform: rotateY(180deg); }
-.rf-front { pointer-events: none; }
+.rf-back { transform: rotateY(180deg) translateZ(1px); }
+.rf-front { pointer-events: none; transform: translateZ(1px); }
 .rf-front .flip-sidebar { position: static; top: auto; }
 .rf-front .flip-card { animation: none !important; transition: none !important; }
 .review-flip-scene.is-settled .review-flip-card,
@@ -18448,7 +18448,7 @@ public class RunAway : IState {
       syncReFootBtn();
     };
 
-    let curRightTab = (stateHolder && stateHolder.reviewRightTab) || 'explain';
+    let curRightTab = opts.initialRightTab || (stateHolder && stateHolder.reviewRightTab) || 'explain';
     const applyRightPanes = (rKey) => {
       rootEl.querySelectorAll('.re-subtab-btn[data-rpanel]').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.rpanel === rKey);
@@ -19781,6 +19781,7 @@ public class RunAway : IState {
     if (me.submitted) {
       bindPostAnswerLayout(document.getElementById('mock-review-split'), {
         initialLeftTab: curLeftTab,
+        initialRightTab: curRightTab,
         onLeftTabChange: (t) => { me.reviewTabByQid[q.id] = t; },
         onRightTabChange: (rt) => { me.reviewRightByQid[q.id] = rt; },
         onNext: idx < me.items.length - 1 ? goMNext : null

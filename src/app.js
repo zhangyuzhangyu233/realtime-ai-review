@@ -2570,7 +2570,7 @@
       syncReFootBtn();
     };
 
-    let curRightTab = (stateHolder && stateHolder.reviewRightTab) || 'explain';
+    let curRightTab = opts.initialRightTab || (stateHolder && stateHolder.reviewRightTab) || 'explain';
     const applyRightPanes = (rKey) => {
       rootEl.querySelectorAll('.re-subtab-btn[data-rpanel]').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.rpanel === rKey);
@@ -3903,6 +3903,7 @@
     if (me.submitted) {
       bindPostAnswerLayout(document.getElementById('mock-review-split'), {
         initialLeftTab: curLeftTab,
+        initialRightTab: curRightTab,
         onLeftTabChange: (t) => { me.reviewTabByQid[q.id] = t; },
         onRightTabChange: (rt) => { me.reviewRightByQid[q.id] = rt; },
         onNext: idx < me.items.length - 1 ? goMNext : null

@@ -88,7 +88,7 @@ assert(/padding(?:-bottom)?:[^;]*84px/.test(styleCss), 'src/style.css gives .re-
 for (const sel of ['.review-flip-scene', '.review-flip-card.flipped', '.rf-back', '@keyframes reFlipOut', '@keyframes reFlipIn', 'prefers-reduced-motion']) {
   assert(styleCss.includes(sel), `src/style.css defines flip transition rule: ${sel}`);
 }
-for (const fn of ['wrapReviewFlipScene', 'runReviewFlipIn', 'prefersReducedMotion', '_reviewFlipShown', "classList.add('re-flip-out')"]) {
+for (const fn of ['wrapReviewFlipScene', 'runReviewFlipIn', 'prefersReducedMotion', '_reviewFlipShown', "classList.add('re-flip-out')", 'opts.initialRightTab', 'initialRightTab: curRightTab']) {
   assert(appSrc.includes(fn), `src/app.js implements flip transition hook: ${fn}`);
 }
 

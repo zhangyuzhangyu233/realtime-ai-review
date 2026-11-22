@@ -2631,8 +2631,8 @@ svg text { font-family: var(--font-mono); }
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
 }
-.rf-back { transform: rotateY(180deg); }
-.rf-front { pointer-events: none; }
+.rf-back { transform: rotateY(180deg) translateZ(1px); }
+.rf-front { pointer-events: none; transform: translateZ(1px); }
 .rf-front .flip-sidebar { position: static; top: auto; }
 .rf-front .flip-card { animation: none !important; transition: none !important; }
 .review-flip-scene.is-settled .review-flip-card,
