@@ -173,7 +173,9 @@
           practiceItem = {
             kind: 'question', uid: inst.uid, refId: inst.refId, isCoding: question ? question.type === 'code' : false, question,
             answered: !!(inst.ans && inst.ans.checked),
-            correct: !!(inst.ans && inst.ans.correct)
+            correct: !!(inst.ans && inst.ans.correct),
+            userVal: inst.ans ? inst.ans.userVal : null,
+            evalReport: inst.ans ? inst.ans.evalReport : null
           };
         }
       }
@@ -2197,7 +2199,11 @@
               setCompanion(state.streak >= 3 ? 'trophy' : 'happy', state.streak >= 3 ? `礼花绽放！已经连对 ${state.streak} 题，难度曲线正在自动爬升！` : '回答正确！礼花为你绽放，看完解析点击进入下一题。', 3600);
             } else {
               state.streak = 0;
-              setCompanion('oops', '差一点点，本题已锁定并收入错题本，翻开右侧知识卡速记后继续下一题吧！', 4000);
+              if (window.DshPetAssistant && typeof window.DshPetAssistant.onWrongAnswer === 'function') {
+                window.DshPetAssistant.onWrongAnswer({ itemKind: 'question', item: q, userVal: val, evalReport: null, topicSummaries: TOPIC_SUMMARIES });
+              } else {
+                setCompanion('oops', '差一点点，本题已锁定并收入错题本，翻开右侧知识卡速记后继续下一题吧！', 4000);
+              }
             }
             if (opts.onAnswerResult) opts.onAnswerResult(correct);
             if (onAfterCheck) onAfterCheck();
@@ -2252,7 +2258,9 @@
           }
         } else {
           state.streak = 0;
-          if (isObj) {
+          if (window.DshPetAssistant && typeof window.DshPetAssistant.onWrongAnswer === 'function') {
+            window.DshPetAssistant.onWrongAnswer({ itemKind: 'question', item: q, userVal, evalReport, topicSummaries: TOPIC_SUMMARIES });
+          } else if (isObj) {
             setCompanion('oops', '有空填错了，已自动收入错题本！对照解析和右侧翻牌卡片立刻巩固。', 4200);
           } else {
             setCompanion('oops', `智能评分 ${evalReport ? evalReport.score : 0}/${evalReport ? evalReport.maxScore : 10} 分（需 ≥ 6 分），已精准标出缺失要点！`, 4500);
@@ -2739,7 +2747,11 @@
           ev.allOk ? `礼花绽放！${d.file} 全部 ${ev.passCnt} 项考点智能校验通过（100%）！` : `代码检测达标（${ev.score}%），礼花庆祝！`, 4800);
       } else {
         state.streak = 0;
-        setCompanion('oops', `智能检测得分 ${ev.score}%（需 ≥ 60%），本题已锁定，对照诊断与参考代码查漏补缺！`, 4800);
+        if (window.DshPetAssistant && typeof window.DshPetAssistant.onWrongAnswer === 'function') {
+          window.DshPetAssistant.onWrongAnswer({ itemKind: 'drill', item: d, userVal: code, evalReport: ev, topicSummaries: TOPIC_SUMMARIES });
+        } else {
+          setCompanion('oops', `智能检测得分 ${ev.score}%（需 ≥ 60%），本题已锁定，对照诊断与参考代码查漏补缺！`, 4800);
+        }
       }
       adaptDifficultyCurve(ev.pass);
       renderRandomPracticePaged();

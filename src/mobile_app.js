@@ -285,7 +285,9 @@
           practiceItem = {
             kind: 'question', uid: inst.uid, refId: inst.refId, isCoding: question ? question.type === 'code' : false, question,
             answered: !!(inst.ans && inst.ans.checked),
-            correct: !!(inst.ans && inst.ans.correct)
+            correct: !!(inst.ans && inst.ans.correct),
+            userVal: inst.ans ? inst.ans.userVal : null,
+            evalReport: inst.ans ? inst.ans.evalReport : null
           };
         }
       }
@@ -1076,7 +1078,9 @@
               if (window.DshPetAssistant) window.DshPetAssistant.react('happy', state.streak >= 3 ? `连对 ${state.streak} 题！手感和节奏都超棒，点我可以看下题提醒。` : '答对啦！对应小节熟练度已同步上升。', 3600);
             } else {
               state.streak = 0;
-              if (window.DshPetAssistant) window.DshPetAssistant.react('oops', '这题有点容易踩坑，已收入错题本，点我随时看避坑提醒。', 3800);
+              if (window.DshPetAssistant && typeof window.DshPetAssistant.onWrongAnswer === 'function') {
+                window.DshPetAssistant.onWrongAnswer({ itemKind: 'question', item: q, userVal: val, evalReport: null, topicSummaries: TOPIC_SUMMARIES });
+              }
             }
             if (opts.onAnswerResult) opts.onAnswerResult(correct);
             if (onAfterCheck) onAfterCheck();
@@ -1120,7 +1124,9 @@
           if (window.DshPetAssistant) window.DshPetAssistant.react('happy', '判定通过！点开解析动画和分步拆解可以顺手复盘巩固。', 3600);
         } else {
           state.streak = 0;
-          if (window.DshPetAssistant) window.DshPetAssistant.react('oops', '已标出未命中采分项，点我可以看本题易错提示！', 3800);
+          if (window.DshPetAssistant && typeof window.DshPetAssistant.onWrongAnswer === 'function') {
+            window.DshPetAssistant.onWrongAnswer({ itemKind: 'question', item: q, userVal, evalReport, topicSummaries: TOPIC_SUMMARIES });
+          }
         }
         if (opts.onAnswerResult) opts.onAnswerResult(correct);
         if (onAfterCheck) onAfterCheck();
@@ -1366,7 +1372,9 @@
             if (window.DshPetAssistant) window.DshPetAssistant.react('celebrate', `${dObj.file} 校验通关（${ev.score}%）！继续下一题吧！`, 3800);
           } else {
             state.streak = 0;
-            if (window.DshPetAssistant) window.DshPetAssistant.react('oops', `当前得分 ${ev.score}%，点我可以直接告诉你哪一步还没通过哦。`, 4000);
+            if (window.DshPetAssistant && typeof window.DshPetAssistant.onWrongAnswer === 'function') {
+              window.DshPetAssistant.onWrongAnswer({ itemKind: 'drill', item: dObj, userVal: code, evalReport: ev, topicSummaries: TOPIC_SUMMARIES });
+            }
           }
           renderPracticeView();
         });

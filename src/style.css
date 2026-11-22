@@ -911,8 +911,9 @@ button:active { transform: scale(0.95) !important; }
 
 .dsh-pet-bubble {
   position: relative; pointer-events: auto;
-  width: max-content; min-width: 190px; max-width: min(330px, calc(100vw - 32px));
-  padding: 10px 13px 9px;
+  width: max-content; min-width: 210px; max-width: min(370px, calc(100vw - 32px));
+  max-height: 46vh; overflow-y: auto;
+  padding: 11px 14px 10px;
   border-radius: 15px;
   background: rgba(255, 255, 255, 0.94);
   color: #1e293b;
@@ -959,9 +960,11 @@ button:active { transform: scale(0.95) !important; }
 }
 .dsh-bub-close:hover { background: var(--bg-subtle); color: var(--text); }
 .dsh-bub-body {
-  font-size: 12.6px; font-weight: 600; line-height: 1.58;
+  font-size: 12.6px; font-weight: 600; line-height: 1.62;
   word-break: break-word; overflow-wrap: break-word;
 }
+.dsh-bub-p { margin: 0; }
+.dsh-bub-p + .dsh-bub-p { margin-top: 6px; }
 .dsh-bub-foot {
   margin-top: 6px; padding-top: 5px; border-top: 1px dashed var(--border);
   font-size: 10.8px; font-weight: 700; color: var(--text-muted);
