@@ -2026,6 +2026,110 @@ svg text { font-family: var(--font-mono); }
   .pg-cell { font-size: 10.5px; padding: 3px 4px; }
 }
 
+/* ==========================================================================
+   STRUCTURED STEP-BY-STEP EXPLANATION CARD (92-Item Detailed Walkthrough)
+   ========================================================================== */
+.explain-detail-card {
+  margin: 12px 0;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  box-shadow: var(--shadow-sm);
+}
+.ex-detail-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-bottom: 9px;
+  margin-bottom: 10px;
+  border-bottom: 1px dashed var(--border-strong);
+}
+.ex-detail-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 800;
+}
+.ex-detail-sub {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+.ex-sec-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+.ex-sec-tag.why { background: var(--primary-soft); color: var(--primary); }
+.ex-sec-tag.steps { background: var(--accent-soft); color: var(--accent); }
+.ex-sec-tag.pitfall { background: var(--gold-soft); color: var(--gold); margin-bottom: 0; margin-right: 6px; flex-shrink: 0; }
+.ex-why-box { margin-bottom: 10px; }
+.ex-why-text {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.68;
+  color: var(--text-sec);
+  font-weight: 600;
+}
+.ex-steps-box { margin-bottom: 10px; }
+.ex-step-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.ex-step-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 8px 11px;
+  border-radius: 10px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  font-size: 13.2px;
+  line-height: 1.62;
+  color: var(--text);
+}
+.ex-step-num {
+  width: 21px;
+  height: 21px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.ex-pitfall-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: var(--gold-soft);
+  border: 1px solid rgba(217, 119, 6, 0.25);
+  font-size: 12.8px;
+  line-height: 1.6;
+  color: var(--text);
+}
+
   </style>
 </head>
 <body>
@@ -2267,9 +2371,9 @@ window.MASCOT_SPRITES = {"cheer": "data:image/webp;base64,UklGRnBlAABXRUJQVlA4WA
     float dt = Time.deltaTime;
     if (isShoot) {
         Vector2 ballpos = ball.anchoredPosition;
-        // TODO 1: 用加速度与 dt 更新速度 velocity
+        // TODO 1 (提示): 匀加速公式 v = v + a * dt，利用当前 velocity 与 acceleration
         velocity = ;
-        // TODO 2: 用新速度与 dt 更新篮球位置 ball.anchoredPosition
+        // TODO 2 (提示): 位置更新 公式为 原位置 ballpos + 本帧速度 velocity * 帧间时间 dt
         ball.anchoredPosition = ;
         HandleCollision();
     }
@@ -2277,19 +2381,19 @@ window.MASCOT_SPRITES = {"cheer": "data:image/webp;base64,UklGRnBlAABXRUJQVlA4WA
 
 void HandleCollision() {
     if (hitRightWall) {
-        // TODO 3: 撞右竖直墙壁，反转 x 分量
+        // TODO 3 (提示): 右竖直墙法线在 X 轴方向，反射时仅对 velocity.x 取反，y 不变
         
     }
     if (hitCeiling) {
-        // TODO 4: 撞上水平天花板，反转 y 分量
+        // TODO 4 (提示): 上水平板法线在 Y 轴方向，反射时仅对 velocity.y 取反，x 不变
         
     }
     if (hitHoopPoint) {
-        // TODO 5: 撞篮筐点，速度完全反向
+        // TODO 5 (提示): 撞击篮筐点需沿来向原路反弹，将 velocity 整个向量取反
         
     }
     if (hitSlope) {
-        // TODO 6: 撞地面三脚架(单位法向量为 N)，用 Vector2.Dot 计算反射速度
+        // TODO 6 (提示): 已知斜面单位法向量 N，代点积公式 2 * N * (-Vector2.Dot(velocity, N)) + velocity
         
     }
 }`,
@@ -2334,21 +2438,21 @@ void HandleCollision() {
       desc: '已知 prey.position、preyVelocity、predator.position、predatorVelocity、maxSpeed，请手写拦截时间 tc、拦截点 interceptPoint、限幅期望速度及本帧位移更新。',
       hint: 'relativeVelocity = preyVelocity - predatorVelocity；relativeDistance = prey.position - predator.position；tc = dist.magnitude / vel.magnitude；St = prey.position + preyVelocity * tc；ClampMagnitude 限幅。',
       starter: `void UpdateIntercept() {
-    // TODO 1: 计算相对速度 relativeVelocity 与相对距离 relativeDistance
+    // TODO 1 (提示): “相对目标=目标-自身”：relativeVelocity = preyVelocity - predatorVelocity，位置同理
     Vector3 relativeVelocity = ;
     Vector3 relativeDistance = ;
 
-    // TODO 2: 计算拦截时间 interceptTime = 相对距离模长 / 相对速度模长
+    // TODO 2 (提示): 拦截时间 tc = 距离模长(.magnitude) / 相对速度模长(.magnitude)
     float interceptTime = ;
 
-    // TODO 3: 预测未来拦截点 interceptPoint = 目标位置 + 目标速度 * 拦截时间
+    // TODO 3 (提示): 预测目标未来相遇点 = prey.position + 目标速度 * interceptTime
     Vector3 interceptPoint = ;
 
-    // TODO 4: 计算期望速度并调用 Vector3.ClampMagnitude 限制在 maxSpeed 内
+    // TODO 4 (提示): 期望速度 (interceptPoint - predator.position) / interceptTime，并用 Vector3.ClampMagnitude 限幅至 maxSpeed
     Vector3 desiredVelocity = ;
     Vector3 newVelocity = ;
 
-    // TODO 5: 帧率无关更新当前位置 transform.position
+    // TODO 5 (提示): 帧率无关更新 transform.position += newVelocity * Time.deltaTime
     
 }`,
       solution: `void UpdateIntercept() {
@@ -2379,26 +2483,26 @@ void HandleCollision() {
       starter: `void DoPattern(ArrayList patternArray, float dt) {
     ControlData data = (ControlData)patternArray[curIndex];
     monsterAngle += data.fLeftAngle - data.fRightAngle;
-    // TODO 1: 角度取模不超过 360，并处理小于 0 的情况
+    // TODO 1 (提示): 先用 % 360 限制在一圈内；若 < 0（负角度取模在C#仍为负）则 += 360 转正
     monsterAngle = ;
     if (monsterAngle < 0) {
         
     }
     float angle = monsterAngle * Mathf.Deg2Rad;
-    // TODO 2: 将弧度转为二维单位方向向量 v
+    // TODO 2 (提示): 极坐标转二维方向向量 new Vector2(Mathf.Cos(angle), Mathf.Sin(angle))
     Vector2 v = ;
     Vector2 pos = monster.anchoredPosition;
     Vector2 displacement = v * MonsterSpeed * dt;
     stepDistance += displacement.magnitude;
-    // TODO 3: 计算新位置 pos
+    // TODO 3 (提示): 将本帧位移 displacement 加到原坐标 pos 上
     pos = ;
     if (stepDistance >= data.fForwardDis - data.fBackwardDis) {
         ++curIndex;
-        // TODO 4: 对指令数组长度取模循环，并重置 stepDistance 为 0
+        // TODO 4 (提示): curIndex 对 patternArray.Count 取模（%=）实现循环，并重置 stepDistance 为 0
         
         stepDistance = ;
     }
-    // TODO 5: 将 pos 写回 monster.anchoredPosition
+    // TODO 5 (提示): 最终把更新好的坐标写回 UI 属性 monster.anchoredPosition = pos;
     
 }`,
       solution: `void DoPattern(ArrayList patternArray, float dt) {
@@ -2439,12 +2543,12 @@ void HandleCollision() {
       hint: 'for (int i = curDirection + 2; i > curDirection - 6; --i)，walkDir = (i + 8) % 8，if (map.canPassWithRowCol(pt))，target = map.toXY(pt)。',
       starter: `void doWallTracing(float dt) {
     Vector2 curPos = map.toColRow(sprite.anchoredPosition + Canvas.offset);
-    // TODO 1: 从右手方向开始逆时针遍历 8 个方向
+    // TODO 1 (提示): 0~7 顺时针编码下，右手方向为当前方向顺时针转 90° 即 curDirection + 2，随后 --i 逆时针扫 8 个方向
     for (int i = ; i > curDirection - 6; --i) {
-        // TODO 2: 保证方向编号始终落在 0~7
+        // TODO 2 (提示): 避坑负数取模！C# 中 -1 % 8 = -1，必须写成 (i + 8) % 8 才稳落在 0~7
         int walkDir = ;
         Vector2 pt = curPos + dirs[walkDir];
-        // TODO 3: 判断 pt 是否可通行，若可通行则转为像素坐标赋给 target
+        // TODO 3 (提示): 条件用 map.canPassWithRowCol(pt) 判无障碍，进入后用 target = map.toXY(pt) 转回像素中心
         if () {
             target = ;
             monsterState = RoleState.Chasing;
@@ -2483,17 +2587,17 @@ void HandleCollision() {
       starter: `// 已知 weight[0..7] 已按当前方向夹角初始化，maxWeight = 0
 Vector2 curPos = map.toColRow(sprite.anchoredPosition + Canvas.offset);
 
-// TODO 1: 遍历 8 个方向，若不可通行则权重减 10
+// TODO 1 (提示): 算出第 i 个邻格 pnt = curPos + dirs[i]；若 !map.canPassWithRowCol(pnt)，则惩罚 weight[i] -= 10
 for (int i = 0; i < 8; ++i) {
     
 }
 
-// TODO 2: 找出最大权重值，将其对应方向设为 curDirection
+// TODO 2 (提示): 比较 weight[i] > maxWeight，若更大则同步更新 maxWeight = weight[i] 与 curDirection = i
 for (int i = 0; i < 8; ++i) {
     
 }
 
-// TODO 3: 计算下一步格子 pt 并转换为像素目标 target
+// TODO 3 (提示): 算出最佳格 pt = curPos + dirs[curDirection]，再用 map.toXY(pt) 赋给 target
 `,
       solution: `Vector2 curPos = map.toColRow(sprite.anchoredPosition + Canvas.offset);
 
@@ -2529,22 +2633,22 @@ target = map.toXY(pt);`,
       desc: '补全随机移动状态下检测 pos 可通行后的逻辑：移动位置、累加位移、走完步长后恢复 Tracing 状态并重算指向玩家的单位速度；若不可通行则清零需行走步长。',
       hint: 'TileMap.canPass(pos) → anchoredPosition = pos → monsterMovedDis += displacement.magnitude → >= monsterNeedMoveDis → state = Tracing, vr = player - monster, vr.Normalize(), vel = vr * MonsterSpeed; else monsterNeedMoveDis = 0;',
       starter: `Vector2 pos = monster.anchoredPosition + displacement;
-// TODO 1: 判断 pos 是否可通行
+// TODO 1 (提示): 用 tileMap.canPass(pos)（或 TileMap.canPass(pos)）检测试探坐标，能走则移到 pos 并累加 displacement.magnitude
 if () {
     monster.anchoredPosition = ;
     monsterMovedDis = ;
-    // TODO 2: 判断已走距离是否达到所需步长 monsterNeedMoveDis
+    // TODO 2 (提示): 当已走距离 monsterMovedDis >= monsterNeedMoveDis，切回 RoleState.Tracing
     if () {
         monsterState = ;
         monsterMovedDis = 0;
         monsterNeedMoveDis = 0;
-        // TODO 3: 重新计算指向 player 的归一化速度向量
+        // TODO 3 (提示): 方向口诀“目标减自身”：player.anchoredPosition - monster.anchoredPosition，归一化后乘 MonsterSpeed
         Vector2 vr = ;
         vr.Normalize();
         monsterVelocity = ;
     }
 } else {
-    // TODO 4: 不可通行，重置需行走步长为 0
+    // TODO 4 (提示): 碰壁清零需行走距离 monsterNeedMoveDis = 0，触发下一帧重新选随机方向
     
 }`,
       solution: `Vector2 pos = monster.anchoredPosition + displacement;
@@ -2579,13 +2683,13 @@ if (tileMap.canPass(pos)) {
       desc: '手写递归深度优先搜索 doDFSRecursionSearch(MapNode from, MapNode to) 与终点倒推路径 generatePath(MapNode targetNode)。',
       hint: 'from.visited = true; if (from == to) return true; 8方向循环设 next.parent = from 并递归；generatePath 沿 while (node.parent != null) 加入列表最后 path.Reverse()！',
       starter: `bool doDFSRecursionSearch(MapNode from, MapNode to) {
-    // TODO 1: 标记已访问，若到达终点返回 true
+    // TODO 1 (提示): 先置 from.visited = true 防死循环；若抵达终点 (from == to) 直接 return true
     
     for (int i = 0; i < 8; ++i) {
         Vector2Int nextPos = from.pos + dirs[i];
         if (map.canPassWithRowCol(nextPos)) {
             MapNode next = map.getNode(nextPos);
-            // TODO 2: 若未访问，记录父节点并递归调用
+            // TODO 2 (提示): 当 !next.visited 时：记录 next.parent = from，递归调用 if (doDFSRecursionSearch(next, to)) return true;
             if () {
                 
             }
@@ -2598,7 +2702,7 @@ ArrayList generatePath(MapNode targetNode) {
     ArrayList path = new ArrayList();
     MapNode node = targetNode;
     path.Add(node);
-    // TODO 3: 沿 parent 倒推至起点，最后反转路径返回
+    // TODO 3 (提示): 用 while (node.parent != null) 将 node.parent 加入 path 并 node = node.parent；循环后别忘 path.Reverse() 反转！
     
     return path;
 }`,
@@ -2645,17 +2749,17 @@ ArrayList generatePath(MapNode targetNode) {
       hint: '创建 Queue<MapNode>；start.visited = true; queue.Enqueue(start); while (queue.Count > 0) 出队 Dequeue()，遍历 8 邻接点标已访、记 parent、判终点或入队。',
       starter: `bool doBFSSearch(MapNode start, MapNode target) {
     if (start == target) return true;
-    // TODO 1: 定义队列，将起点标已访问并入队
+    // TODO 1 (提示): new Queue<MapNode>() 创建队列；切记先标 start.visited = true 再 queue.Enqueue(start)（防重复入队）
     Queue<MapNode> queue = ;
     
-    // TODO 2: 队列非空循环：队头出队并遍历 8 个邻接点
+    // TODO 2 (提示): 队列非空循环 while (queue.Count > 0)，队头出队 MapNode cur = queue.Dequeue()
     while () {
         MapNode cur = ;
         for (int i = 0; i < 8; ++i) {
             Vector2Int nextPos = cur.pos + dirs[i];
             if (!map.canPassWithRowCol(nextPos)) continue;
             MapNode next = map.getNode(nextPos);
-            // TODO 3: 若未访问 -> 标已访、记父节点、判终点、入队
+            // TODO 3 (提示): 当 !next.visited 时：设 visited=true 与 next.parent=cur；若 next==target 生成路径返回 true，否则 Enqueue(next)
             if () {
                 
             }
@@ -2701,7 +2805,7 @@ ArrayList generatePath(MapNode targetNode) {
       difficulty: '大题必练',
       desc: '编写标准状态模式三要素：IState 接口（Enter/Execute/Exit）、Monster 上下文类的 ChangeState（旧退出 → 切换 → 新进入）以及 RunAway 具体状态类。',
       hint: 'ChangeState 严格按三步：_currentState?.Exit(this); _currentState = newState; _currentState.Enter(this); RunAway.Execute 判断 IsSafe() 切 new Patrol() 否则 LeaveEnemy()。',
-      starter: `// TODO 1: 定义抽象状态接口 IState（Enter / Execute / Exit）
+      starter: `// TODO 1 (提示): 在 IState 中声明 Enter(Monster m)、Execute(Monster m)、Exit(Monster m) 三个无返回值方法
 public interface IState {
     
 }
@@ -2710,13 +2814,13 @@ public class Monster {
     private IState _currentState;
     public void Update() { _currentState?.Execute(this); }
 
-    // TODO 2: 编写标准状态切换 ChangeState（退旧 -> 切换 -> 进新）
+    // TODO 2 (提示): 严格按顺序编写三步：① _currentState?.Exit(this); ② _currentState = newState; ③ _currentState.Enter(this);
     public void ChangeState(IState newState) {
         
     }
 }
 
-// TODO 3: 实现 RunAway 具体状态（安全切 Patrol，否则 LeaveEnemy）
+// TODO 3 (提示): Execute 中用 if (m.IsSafe()) m.ChangeState(new Patrol()); 否则执行 else m.LeaveEnemy();
 public class RunAway : IState {
     public void Enter(Monster m) { }
     public void Execute(Monster m) {
@@ -5475,20 +5579,24 @@ public class RunAway : IState {
     const diagram = isHybridObj ? (rawInput.diagram || null) : null;
 
     const cleaned = rawText.replace(/\/\/\s*在此手写[^\n]*/g, '').trim();
-    const compact = compactText(cleaned);
+    const compact = CODE_WRITE_MAP[q.id] ? compactText(stripCSharpComments(cleaned)) : compactText(cleaned);
     const hasText = compact.length >= 6;
     const diaEval = evaluateDiagram(q, diagram);
 
     if (!hasText && !diaEval) {
       const spec = ESSAY_RUBRICS[q.id];
       const basePts = spec ? (spec.branchSets ? spec.branchSets[0].points : spec.points) : [];
+      const cwPts = CODE_WRITE_MAP[q.id] ? DRILL_EVALUATORS[CODE_WRITE_MAP[q.id]]('') : [];
+      const usePts = CODE_WRITE_MAP[q.id]
+        ? cwPts.map(c => ({ label: c.label, weight: Number((10 / cwPts.length).toFixed(2)), earned: 0, status: 'miss', hits: [], missHint: c.hint || '' }))
+        : basePts.map(p => ({ label: p.label, weight: p.weight, earned: 0, status: 'miss', hits: [], missHint: p.missHint || '' }));
       return {
         score: 0, maxScore: 10, pass: false, ratio: 0, tooShort: true,
         diagramEval: null,
         summary: q.board
           ? '画板与文字作答均为空或过短，未能命中采分要点，请使用画板绘制状态/树结构并补充要点！'
           : '作答内容为空或过短，未能命中采分要点，请对照下方逐项解析学习后再攻克同类题！',
-        details: basePts.map(p => ({ label: p.label, weight: p.weight, earned: 0, status: 'miss', hits: [], missHint: p.missHint || '' }))
+        details: usePts
       };
     }
 
@@ -12719,17 +12827,23 @@ window.QUESTION_BANK = [
     float dt = Time.deltaTime;
     if (isShoot) {
         Vector2 ballpos = ball.anchoredPosition;
-        velocity = [___空1___];                   // 篮球速度更新
-        ball.anchoredPosition = [___空2___];      // 篮球新位置
+        // 提示1：由 v = v0 + a * dt 计算本帧最新速度（利用 velocity 与 acceleration）
+        velocity = [___空1___];
+        // 提示2：由位置 = 原位置 + 速度 * 帧间时间 dt 更新 UI 坐标
+        ball.anchoredPosition = [___空2___];
         HandleCollision();
     }
 }
 void HandleCollision() {
-    if (碰到右竖直墙壁) { [___空3___]; }          // 竖直墙反射
-    if (碰到上水平天花板) { [___空4___]; }        // 水平天花板反射
-    if (碰到篮筐上的某个点) { [___空5___]; }      // 撞点原路反弹
-    if (碰到地面的三脚架) {                       // 单位法向量为 N
-        [___空6___];                             // 非轴平行斜面反射
+    // 提示3：撞右竖直墙（法线沿 X 轴），仅使速度水平分量 x 取反，y 保持不变
+    if (碰到右竖直墙壁) { [___空3___]; }
+    // 提示4：撞上水平板（法线沿 Y 轴），仅使速度竖直分量 y 取反，x 保持不变
+    if (碰到上水平天花板) { [___空4___]; }
+    // 提示5：撞击篮筐边缘点，速度沿来向原路全向量取反
+    if (碰到篮筐上的某个点) { [___空5___]; }
+    if (碰到地面的三脚架) {                       // 已知斜面单位法向量为 N
+        // 提示6：向量反射公式 v' = 2 * N * (-Vector2.Dot(velocity, N)) + velocity（或 Vector2.Reflect）
+        [___空6___];
     }
 }`,
     blanks: [
@@ -12749,22 +12863,29 @@ void HandleCollision() {
     codeTemplate: `void DoPattern(ArrayList patternArray, float dt) {
     ControlData data = (ControlData)patternArray[curIndex];
     monsterAngle += data.fLeftAngle - data.fRightAngle;
-    monsterAngle = [___空1___];            // 角度不超过一圈(0~360)
+    // 提示1：对一圈 360° 取模（% 360），防止多圈累加溢出
+    monsterAngle = [___空1___];
     if (monsterAngle < 0) {
-        [___空2___];                       // 负角度修正
+        // 提示2：C# 中负角度取模仍为负值，小于 0 时需加上 360 转为 [0, 360)
+        [___空2___];
     }
     float angle = monsterAngle * Mathf.Deg2Rad;
-    Vector2 v = [___空3___];               // 角度转为单位速度方向
+    // 提示3：极坐标转二维单位方向向量 new Vector2(Mathf.Cos(弧度), Mathf.Sin(弧度))
+    Vector2 v = [___空3___];
     Vector2 pos = monster.anchoredPosition;
     Vector2 displacement = v * MonsterSpeed * dt;
     stepDistance += displacement.magnitude;
-    pos = [___空4___];                     // 计算即将到达的位置
+    // 提示4：将本帧位移向量 displacement 累加到当前位置 pos
+    pos = [___空4___];
     if (stepDistance >= data.fForwardDis - data.fBackwardDis) {
         ++curIndex;
-        [___空5___];                       // 指令索引循环取模
-        stepDistance = [___空6___];        // 重置本步累计距离
+        // 提示5：对指令集合长度 patternArray.Count 取模（%=），实现循环巡逻
+        [___空5___];
+        // 提示6：当前段距离已走完，累计步长 stepDistance 重置归零
+        stepDistance = [___空6___];
     }
-    [___空7___];                           // 更新 Monster 位置
+    // 提示7：将算好的新位置 pos 写回怪物 UI 组件属性 monster.anchoredPosition
+    [___空7___];
     SetMonsterDirection(monsterAngle);
 }`,
     blanks: [
@@ -12785,11 +12906,15 @@ void HandleCollision() {
     codeTemplate: `void doWallTracing(float dt) {
     case RoleState.ReachTarget:
         Vector2 curPos = map.toColRow(sprite.anchoredPosition + Canvas.offset);
-        for (int i = [___空1___]; i > curDirection - 6; --i) { // 从右手方向开始逆时针试探
-            int walkDir = [___空2___];                         // 保证方向编号在 0~7
+        // 提示1：8方向顺时针编号时，右手方向(+90°)为 curDirection + 2（随 --i 逆时针扫 8 格）
+        for (int i = [___空1___]; i > curDirection - 6; --i) {
+            // 提示2：防止负数下标，先加周期 8 再对 8 取模：(i + 8) % 8
+            int walkDir = [___空2___];
             Vector2 pt = curPos + dirs[walkDir];
-            if ([___空3___]) {                                 // 判断试探格是否可通行
-                target = [___空4___];                          // 转为像素坐标设为目标
+            // 提示3：调用地图接口 map.canPassWithRowCol(pt) 检查探测格是否无障碍
+            if ([___空3___]) {
+                // 提示4：调用地图接口 map.toXY(pt) 将行列格转为中心像素坐标
+                target = [___空4___];
                 monsterState = RoleState.Chasing;
                 curDirection = walkDir;
                 break;
@@ -12811,11 +12936,11 @@ void HandleCollision() {
     stem: '【编程填空】沿路径走算法 <code>doPathFollowing</code>，从给定代码片选项中拼接 3 处逻辑（直接输入字母序列，如 AMDBCN）：<br>A. <code>for(int i=0;i&lt;8;++i)</code> &nbsp; B. <code>if(!map.canPassWithRowCol(pnt))</code> &nbsp; C. <code>weight[i]-=10;</code> &nbsp; D. <code>Vector2 pnt=curPos+dirs[i];</code> &nbsp; E. <code>if(weight[i]&gt;maxWeight)</code> &nbsp; F. <code>for(int i=0;i&lt;8;++i)</code> &nbsp; G. <code>maxWeight=weight[i];</code> &nbsp; H. <code>curDirection=i;</code> &nbsp; I. <code>Vector2 pt=curPos+dirs[curDirection];</code> &nbsp; J. <code>target=map.toXY(pt);</code> &nbsp; M. <code>{</code> &nbsp; N. <code>}</code>',
     codeTemplate: `// 已按当前方向初始化 weight[0..7] = 10,9,8,7,6,7,8,9
 Vector2 curPos = map.toColRow(sprite.anchoredPosition + Canvas.offset);
-// 空1：遍历8方向，若障碍物则 weight[i] -= 10
+// 提示1（代码拼接）：for(8格) { 求邻格 pnt; 若 !canPass(pnt) 执行减权 weight[i]-=10; }（注意大括号 M/N）
 [___空1___]
-// 空2：找最大权重，更新 maxWeight 和 curDirection
+// 提示2（代码拼接）：for(8格) { if(weight[i]>maxWeight) { 更新 maxWeight; 记录 curDirection=i; } }
 [___空2___]
-// 空3：计算下一个格子 pt 并转为像素目标 target
+// 提示3（代码拼接）：先按最佳方向算出行列坐标 pt，再调用 map.toXY(pt) 赋给像素目标 target
 [___空3___]
 monsterState = RoleState.Chasing;`,
     blanks: [
@@ -12830,18 +12955,26 @@ monsterState = RoleState.Chasing;`,
     id: 'c5', topic: 't_avoid', demo: 'random_bypass', type: 'code', subkind: 'fill', module: 'm3', tag: '真题编程填空·核心',
     stem: '【编程填空】随机移动避障 <code>DoRandomPathFinding</code>（RandomMoving 分支，填写核心 C# 表达式，不写分号）：',
     codeTemplate: `// 随机移动状态：已算出下一步位置 pos = pos + displacement
-if ([___空1___]) {                          // 判断下一步 pos 是否可通行
-    monster.anchoredPosition = [___空2___]; // 移动到 pos
-    monsterMovedDis = [___空3___];          // 累加已行走距离
-    if ([___空4___]) {                      // 判断是否走完设定步长
-        monsterState = [___空5___];         // 恢复朝目标追踪状态
+// 提示1：调用 TileMap.canPass(pos)（或 tileMap.canPass(pos)）检测试探位置是否无障碍
+if ([___空1___]) {
+    // 提示2：位置合法，直接把试探点 pos 赋给 monster.anchoredPosition
+    monster.anchoredPosition = [___空2___];
+    // 提示3：在原累计距离 monsterMovedDis 上累加本次位移模长 displacement.magnitude
+    monsterMovedDis = [___空3___];
+    // 提示4：判断是否已走完随机步长（monsterMovedDis >= monsterNeedMoveDis）
+    if ([___空4___]) {
+        // 提示5：随机段完成，切回追踪玩家状态 RoleState.Tracing（或 Tracing）
+        monsterState = [___空5___];
         monsterMovedDis = 0; monsterNeedMoveDis = 0;
-        Vector2 vr = [___空6___];           // 重新计算指向玩家的方向向量
+        // 提示6：向量相减口诀“终点减起点”：player.anchoredPosition - monster.anchoredPosition
+        Vector2 vr = [___空6___];
         vr.Normalize();
-        monsterVelocity = [___空7___];      // 重设追踪速度
+        // 提示7：归一化方向向量 vr 乘以移动速率 MonsterSpeed 得到速度向量
+        monsterVelocity = [___空7___];
     }
 } else {
-    [___空8___];                            // 碰障则将需行走步长清零，下帧重选随机角
+    // 提示8：遇障无法前进，立即将需行走步长 monsterNeedMoveDis 清 0，触发下帧重新随机旋转
+    [___空8___];
 }`,
     blanks: [
       { label: '空1 (可通行判断)', answers: ['TileMap.canPass(pos)', 'tileMap.canPass(pos)'] },
@@ -12859,6 +12992,18 @@ if ([___空1___]) {                          // 判断下一步 pos 是否可通
   {
     id: 'c6', topic: 't_intercept', demo: 'space_intercept', type: 'code', subkind: 'write', module: 'm2', tag: '程序编码·必练',
     stem: '【程序编码】请编写 Unity C# 拦截算法核心代码片段：已知目标位置 <code>prey.position</code>、目标速度 <code>preyVelocity</code>、追逐者位置 <code>predator.position</code>、追逐者当前速度 <code>predatorVelocity</code> 与最大速度 <code>maxSpeed</code>，请计算拦截时间、拦截点、限幅期望速度并更新本帧位置。',
+    starterCode: `void UpdateIntercept() {
+    // 提示1：分别计算相对速度 (preyVelocity - predatorVelocity) 与相对距离 (prey.position - predator.position)
+
+    // 提示2：拦截时间 interceptTime = 相对距离.magnitude / 相对速度.magnitude（可加极小值防除零）
+
+    // 提示3：预测未来交汇点 interceptPoint = 目标当前位置 + 目标速度 * interceptTime
+
+    // 提示4：期望速度 = (拦截点 - 追逐者位置) / interceptTime，并用 Vector3.ClampMagnitude(..., maxSpeed) 限幅
+
+    // 提示5：使用 newVelocity * Time.deltaTime 实现帧率无关位置更新（更新 predator.position）
+
+}`,
     rubric: [
       '计算相对速度 relativeVelocity = preyVelocity - predatorVelocity 与相对距离 relativeDistance = prey.position - predator.position',
       '计算拦截时间 interceptTime = relativeDistance.magnitude / relativeVelocity.magnitude（可加除零保护）',
@@ -12891,6 +13036,27 @@ if ([___空1___]) {                          // 判断下一步 pos 是否可通
   {
     id: 'c7', topic: 't_dfs_bfs', demo: 'dfs_bfs', type: 'code', subkind: 'write', module: 'm4', tag: '程序编码·高频',
     stem: '【程序编码】请写出实验课框架下的【DFS 递归寻路函数 <code>doDFSRecursionSearch(MapNode from, MapNode to)</code>】及【父节点路径回溯生成函数 <code>generatePath(MapNode targetNode)</code>】完整 Unity C# 核心代码。',
+    starterCode: `bool doDFSRecursionSearch(MapNode from, MapNode to) {
+    // 提示1：先设 from.visited = true 防死循环；若抵达终点 (from == to) 直接 return true
+
+    for (int i = 0; i < 8; ++i) {
+        Vector2Int nextPos = from.pos + dirs[i];
+        // 提示2：若 map.canPassWithRowCol(nextPos) 为真，取节点 MapNode next = map.getNode(nextPos)
+        //       当 !next.visited 时：记录 next.parent = from，再递归调用 doDFSRecursionSearch(next, to)
+
+    }
+    return false;
+}
+
+ArrayList generatePath(MapNode targetNode) {
+    ArrayList path = new ArrayList();
+    MapNode node = targetNode;
+    path.Add(node);
+    // 提示3：while (node.parent != null) 沿父指针倒推加入 path 并更新 node = node.parent
+
+    // 提示4：此时 path 为「终点 -> 起点」，需调用 path.Reverse() 反转为正向路径！
+    return path;
+}`,
     rubric: [
       '标记 from.visited = true，判断递归基 if (from == to) return true',
       'for (int i = 0; i < 8; ++i) 计算邻接点坐标，判断是否可通行且 !next.visited',
@@ -12931,6 +13097,18 @@ ArrayList generatePath(MapNode targetNode) {
   {
     id: 'c8', topic: 't_dfs_bfs', demo: 'dfs_bfs', type: 'code', subkind: 'write', module: 'm4', tag: '程序编码·高频',
     stem: '【程序编码】请使用队列 <code>Queue&lt;MapNode&gt;</code> 编写【广度优先搜索 (BFS) 网格寻路函数 <code>doBFSSearch(MapNode start, MapNode target)</code>】核心 C# 代码片段。',
+    starterCode: `bool doBFSSearch(MapNode start, MapNode target) {
+    if (start == target) return true;
+    // 提示1：初始化 Queue<MapNode>，必须先标 start.visited = true 再 Enqueue(start) 入队（防重复入队！）
+
+    // 提示2：while (queue.Count > 0) 循环，每次 Dequeue() 取出队头节点 cur
+
+        // 提示3：遍历 8 方向 dirs[i]，检查 map.canPassWithRowCol(nextPos) 且 !next.visited
+
+            // 提示4：邻接格在【入队前】设 visited = true 与 next.parent = cur；若 next == target 生成路径返回 true，否则 Enqueue(next)
+
+    return false;
+}`,
     rubric: [
       '判起点即终点；初始化 Queue<MapNode>，起点标记 visited=true 并 Enqueue 入队',
       'while (queue.Count > 0) 循环，MapNode cur = queue.Dequeue() 出队',
@@ -12969,6 +13147,29 @@ ArrayList generatePath(MapNode targetNode) {
   {
     id: 'c9', topic: 't_fsm_pattern', demo: 'fsm_state_pattern', type: 'code', subkind: 'write', module: 'm5', tag: '程序编码·状态模式',
     stem: '【程序编码】请使用【标准状态设计模式】编写游戏怪物 AI 框架（包含 <code>IState</code> 接口的 Enter/Execute/Exit、<code>Monster</code> 上下文类的 Update 与 ChangeState，以及 <code>RunAway</code> 具体状态类：安全则切 Patrol，否则执行 LeaveEnemy）。',
+    starterCode: `// 提示1：在 IState 接口中声明三生命周期方法（无返回值 void，参数均为 Monster）
+public interface IState {
+    // Enter / Execute / Exit
+}
+
+public class Monster {
+    private IState _currentState;
+    public void Update(float dt) {
+        // 提示2：每帧委托当前状态执行逻辑（使用 _currentState?.Execute(this)）
+    }
+
+    public void ChangeState(IState newState) {
+        // 提示3：状态切换严格三步顺序：先 Exit(this) 退出旧态 -> 再赋值给 _currentState -> 最后 Enter(this) 进入新态！
+    }
+}
+
+public class RunAway : IState {
+    public void Enter(Monster m) { }
+    public void Execute(Monster m) {
+        // 提示4：调用 m.IsSafe() 判断，安全则 m.ChangeState(new Patrol())，否则执行 m.LeaveEnemy()
+    }
+    public void Exit(Monster m) { }
+}`,
     rubric: [
       '定义 public interface IState，包含 Enter(Monster m)、Execute(Monster m)、Exit(Monster m) 三个方法',
       'Monster 类持有 private IState _currentState；Update 调用 _currentState?.Execute(this)',
@@ -13009,6 +13210,865 @@ public class RunAway : IState {
     anim: { engine: 'fsm', mode: 'guard', caption: '状态模式实时演示：点击事件看右侧 Exit → ChangeState → Enter 同步执行！' }
   }
 ];
+
+  </script>
+  <script>
+/* ==========================================================================
+   Structured Step-by-Step Explanations for ALL 92 Exam Bank & Drill Items
+   Covers: s1..s36 (36) + tf1..tf18 (18) + f1..f10 (10) + e1..e10 (10)
+           + c1..c9 (9) + d1..d9 (9) = 92 items
+   Each entry explains: (1) Why (核心原理), (2) Steps (逐步推导/实现), (3) Pitfall (避坑)
+   ========================================================================== */
+(function (global) {
+  'use strict';
+
+  const EXPLAIN_DETAILS = {
+    /* -------------------- 一、单项选择题 (s1..s36) -------------------- */
+    s1: {
+      why: '本题考查牛顿第二定律与匀加速直线运动位移公式的联动推导：先由外力和质量确定加速度 a，再结合静止初速度 v0 = 0 代入运动学公式求位移，无需逐帧积分即可精确求解。',
+      steps: [
+        '第一步（求瞬时加速度）：根据牛顿第二定律 F = ma，代入推力 F = 2 N、冰块质量 m = 1 kg，计算得到加速度 a = F / m = 2 / 1 = 2 m/s^2。',
+        '第二步（确认初始条件与无摩擦条件）：题目说明“冰块获得了瞬间加速度”且“不考虑摩擦力”，即合外力全程恒为 2 N、初速度 v0 = 0、运动时间 t = 3 s。',
+        '第三步（代位移公式计算结果）：使用匀加速位移公式 s = v0 * t + 0.5 * a * t^2，代入数值 s = 0 + 0.5 * 2 * 3^2 = 1 * 9 = 9 米，因此对应选项 D。'
+      ],
+      pitfall: '常见失分点是把公式里的系数 1/2 漏掉（误算成 2 * 3^2 = 18），或者错用速度公式 v = at = 6 m/s 或误代入 t = 1.5；遇到 t^2 一定先平方再乘 0.5 * a。'
+    },
+    s2: {
+      why: 'Unity 采用左手三维笛卡尔坐标系（+X 向右、+Y 向上、+Z 向前），为减少手动写 new Vector3(...) 的样板代码，引擎内置了常见轴向与常量单位向量，理解每个静态只读属性对应的坐标分量是 3D/2D 向量运算的基础。',
+      steps: [
+        '第一步（拆解各内置常量定义）：Unity 官方约定 Vector3.right = (1, 0, 0)、Vector3.up = (0, 1, 0)、Vector3.forward = (0, 0, 1)。',
+        '第二步（排除其余干扰项）：Vector3.one 表示全 1 向量 (1, 1, 1) 而非沿某单一坐标轴；Vector3.zero 表示零向量 (0, 0, 0)。',
+        '第三步（对应题干锁定答案）：题干要求“沿 X 轴正方向”，与 (1, 0, 0) 完全匹配，因此正确答案为 Vector3.right（选项 D）。'
+      ],
+      pitfall: '注意审题看清坐标系：2D 中的 Vector2.up 是 (0, 1)、Vector2.right 是 (1, 0)；3D 中前后轴才是 Z 轴（Vector3.forward），不要把 up 当成 Z 轴或把 right 记成 Z 轴。'
+    },
+    s3: {
+      why: '瀑布水滴、喷泉与炮弹这类只受恒定竖直重力作用的粒子，水平方向分速度保持恒定、竖直方向做自由落体/匀加速下落，将两个正交分量合并消去参数 t 后，轨迹方程 y(x) 天然是一条二次抛物线，实现逼真物理感的同时计算量极低。',
+      steps: [
+        '第一步（分解水平运动）：粒子飞出崖口后，在不计空气阻力时水平方向合力为 0，做匀速直线运动 x(t) = vx0 * t。',
+        '第二步（分解竖直运动）：竖直方向仅受重力加速度 g 作用，位置随时间平方增长 y(t) = y0 + vy0 * t - 0.5 * g * t^2。',
+        '第三步（消参识别曲线形状）：将 t = x / vx0 代入 y(t) 可得关于 x 的二次函数，因此瀑布粒子群整体勾勒出标准抛物线轨迹，选 D。'
+      ],
+      pitfall: '不要被“瀑布水流速度变化”误导去选直线或三角函数曲线；只要初速度方向与重力不共线且仅受恒定重力，粒子轨迹在空间上必为抛物线。'
+    },
+    s4: {
+      why: '三维空间中的恒定加速度向量运动满足“正交独立叠加原理”，即 X、Y、Z 三个坐标轴的位移互不干扰，可以直接把标量位移公式写成向量形式 Δr = v0 * t + 0.5 * a * t^2 一次性按分量数乘求解。',
+      steps: [
+        '第一步（列出已知向量与标量）：等待出发说明初速度 v0 = [0, 0, 0]，加速度向量 a = [5, 0, -3]，无摩擦力意味着合加速度保持不变，时间 t = 4 s。',
+        '第二步（计算时间因子 0.5 * t^2）：先把标量时间系数算出来：0.5 * 4^2 = 0.5 * 16 = 8。',
+        '第三步（逐分量数乘得位移向量）：Δr = 8 * [5, 0, -3] = [8 * 5, 8 * 0, 8 * (-3)] = [40, 0, -24]，因此选 B。'
+      ],
+      pitfall: '高频错选 [20, 0, -12] 是因为直接算了 v * t（只算到末速度 v = a * t = [20, 0, -12]，忘记乘 t 再除以 2）；记住求位移不是 a * t，而是 0.5 * a * t^2。'
+    },
+    s5: {
+      why: 'Unity C# 对不同维度和用途的向量严格区分了具体结构体类型（Vector2、Vector3、Vector4），并不存在一个叫“Vector”的通用三维向量类；掌握常用静态工具类的实例化权限和职责是 Unity 编程基础考点。',
+      steps: [
+        '第一步（核对 A、B、C 三项）：Input Manager 确实统一管理键鼠与手柄输入；Random 与 Time 在 Unity 中均为静态工具属性/方法集合（无需也不能 new Random()）；Time.deltaTime/timeScale 支持计时与倒计时。',
+        '第二步（定位 D 项概念错误）：Unity 中 2D 向量使用 Vector2（含 x, y），3D 向量与空间点使用 Vector3（含 x, y, z），没有名为“Vector”的类型来表示 3D 向量。',
+        '第三步（按题意选出错误描述）：题目要求选择“描述不正确”的一项，因此锁定 D。'
+      ],
+      pitfall: '部分同学容易怀疑 B 选项“Random 不可以实例化”——注意在 UnityEngine 命名空间中 UnityEngine.Random 全是静态成员，不能用 new 创建（有别于 System.Random）。'
+    },
+    s6: {
+      why: '当碰撞面平行于坐标轴时，法线与某一坐标轴完全重合，基于通用向量反射公式 v\' = v - 2(v·N)N 可以直接简化为“平行表面分量不变、垂直表面分量取反”，从而在 2D 物理碰撞中省去三角函数计算。',
+      steps: [
+        '第一步（确定水平边栏的法线方向）：水平边栏沿 X 轴方向延展，因此它的单位法向量 N 为垂直方向的 [0, ±1]（沿 Y 轴）。',
+        '第二步（应用坐标分量反转规则）：沿墙面切线方向的 x 分量不受弹力冲量影响保持 vx = 6 不变；垂直于墙面的 y 分量因完全弹性碰撞反号为 vy = -4。',
+        '第三步（组合新速度向量）：碰撞后速度向量为 [6, -4]，对应选项 A。'
+      ],
+      pitfall: '口诀“撞水平改 y，撞竖直改 x”——千万不要记反成“撞水平就改水平分量 x”！想象篮球垂直砸向地面（水平面），反弹后上下方向(y)反向，前后左右滑行方向(x)不变。'
+    },
+    s7: {
+      why: '碰撞反射规律同样服从法线投影取反原则：垂直墙面本身沿 Y 轴方向放置，垂直于墙面的冲量只改变 X 轴速度分量，Y 轴切向分速度继续保持原有下落或上升趋势。',
+      steps: [
+        '第一步（识别墙面法线方向）：垂直墙面竖立在 Y 轴方向上，因此墙面的法线方向平行于 X 轴（N = [±1, 0]）。',
+        '第二步（分别处理两分量）：已知碰撞前速度 v = [5, -3]，水平分量 vx = 5 垂直撞向墙面而反转为 -5；竖直分量 vy = -3 平行于墙面，保持 -3 不变。',
+        '第三步（写出反射后速度）：合成得到反射速度 [-5, -3]，对应选项 D。'
+      ],
+      pitfall: '这是往年单选头号陷阱题！很多同学一看到负号就想把 -3 也改成 +3，或者只记得改 y；验证方法是在草稿纸画一堵竖墙，球往右下 [5, -3] 撞上去，弹开后自然是往左下 [-5, -3] 飞！'
+    },
+    s8: {
+      why: 'Transform 是 Unity GameObject 最核心、唯一不可移除的必备组件，在三维/二维渲染管线中通过 4×4 齐次变换矩阵统一维护对象的世界与局部 Position（平移）、Rotation（旋转）和 Scale（缩放）三大变换自由度。',
+      steps: [
+        '第一步（逐项验证 Transform 职责）：A 正确（Inspector 面板直接展示 Position/Rotation/Scale 三栏）；B 正确（Transform.Rotate 与 Translate 均为成员方法）；C 正确（任何 Scene 里的 GameObject 都自带且无法删除 Transform）。',
+        '第二步（识别 D 项以偏概全）：D 称“主要负责游戏对象的位置控制”，忽略了它同等重要的旋转（Rotation）和缩放（Scale）控制以及父子层级矩阵传播作用。',
+        '第三步（选出不正确项）：因此 D 描述不准确，符合题干“不正确”的要求。'
+      ],
+      pitfall: '做概念辨析题时注意“主要/仅仅/只能”等绝对或缩小范围的词；Transform = 位置 + 旋转 + 缩放 + 层级关系，缺一不可。'
+    },
+    s9: {
+      why: '向量点积公式 v1 · v2 = |v1| |v2| cosθ 在游戏 AI 中常用于视野判定与投影分解：当其中一个是单位向量时，点积在几何上就退化为另一个向量在该方向上的有向投影长度，从而一眼看出正负代表前后朝向。',
+      steps: [
+        '第一步（代入单位向量条件）：已知 v1 是单位向量，即模长 |v1| = 1，代回点积定义式得 v1 · v2 = 1 * |v2| * cosθ = |v2| cosθ。',
+        '第二步（解读几何投影意义）：在直角三角形中，斜边 |v2| 乘以夹角余弦 cosθ 恰好是 v2 在 v1 所在直线上的投影长度，因此“v1 · v2 为 v2 在 v1 上的投影”。',
+        '第三步（判断夹角正负排除错误项）：题目给定 v1 · v2 > 0，则 cosθ > 0 → 0° <= θ < 90°（锐角），故 A（θ > 90°）和 C（垂直点积应为 0）都错；B 把投影主体与被投影方向颠倒了（应是 v2 投影到单位向量 v1 上，若反过来还需除以 |v2|），所以选 D。'
+      ],
+      pitfall: '极易混淆 B 与 D！牢记：b 在单位向量 u 上的投影 = b · u；如果写成 u 在任意非单位向量 v 上的投影，数值其实是 (u · v) / |v|，少了归一化不能直接等于点积。'
+    },
+    s10: {
+      why: '物理功 W = F · s（合力在位移方向上的分力乘以位移大小）。当推力斜向上作用时，垂直地面的分力被支持力抵消且与位移垂直不做功；只有把推力正交分解到水平方向后扣除反向摩擦力，才能得到真正的合外力及其做的功。',
+      steps: [
+        '第一步（计算推力的水平有效分力）：斜向右上 60° 推力 F = 1100 N，水平方向分力 Fx = F * cos(60°) = 1100 * 0.5 = 550 N。',
+        '第二步（计算水平合外力）：马车在地面向右滑动时还受到向左的摩擦力 f = 50 N，因此合外力 F合 = Fx - f = 550 - 50 = 500 N（方向沿位移正方向）。',
+        '第三步（求合力所做的总功）：已知位移 s = 5 m，W = F合 * s = 500 * 5 = 2500 焦耳，选 A。'
+      ],
+      pitfall: '两个高频陷阱：① 忘乘 cos60°（错算成 (1100 - 50) * 5 = 5250 J）；② 用成 sin60° 或忘记减去摩擦力 50 N；记住只有沿位移方向的分力才会影响做功。'
+    },
+    s11: {
+      why: '不同玩家设备的刷新率可能是 30fps、60fps 或 144fps，如果每帧直接 position += speed 就会导致高帧率设备角色跑得飞快；乘以 Time.deltaTime（上一帧耗时秒数）相当于做时间步长 dt 积分，把“像素/帧”统一成客观物理的“米/秒”。',
+      steps: [
+        '第一步（区分 Update 与 FixedUpdate）：题干问游戏循环中常用的帧间时间，Time.deltaTime 返回当前渲染帧与上一帧之间的真实间隔（秒）。',
+        '第二步（排查其它选项）：A（Time.fixedDeltaTime）用于物理固定步长 FixedUpdate（默认 0.02s 恒定），不用于常规帧渲染同步；C 和 D 分别是坐标属性和距离方法，与时间无关。',
+        '第三步（确认结论）：因此帧率无关平滑运动应乘以 Time.deltaTime，选 B。'
+      ],
+      pitfall: '注意不要见到 Time.fixedDeltaTime 就盲选：题目若没强调“物理引擎 FixedUpdate 中的固定步长”，一般实现帧率无关平滑运动选 Time.deltaTime。'
+    },
+    s12: {
+      why: '理解 Unity Input 类的返回坐标空间对鼠标拾取、点选寻路目标格非常关键：屏幕鼠标位置基于显示器左下角像素分辨率，若直接当成 3D/2D 世界坐标会让角色位置瞬间错乱。',
+      steps: [
+        '第一步（核对按键和轴向接口）：GetKeyDown 在按下首帧返回 true（A 对）；GetAxis("Horizontal") 平滑输出 [-1, 1]（B 对）；GetMouseButton(0) 按住左键每帧持续返回 true（D 对）。',
+        '第二步（剖析 C 项核心错误）：Input.mousePosition 返回的是屏幕坐标系（Screen Space）下的像素坐标 (px, py, 0)，左下角为 (0,0)、右上角为 (Screen.width, Screen.height)，并非世界坐标系；必须经过 Camera.main.ScreenToWorldPoint(...) 才能转为世界坐标。',
+        '第三步（选择错误选项）：题目选错误项，因此答案为 C。'
+      ],
+      pitfall: '牢记三个输入函数区别：GetKeyDown 仅触发一帧、GetKey 持续触发、GetKeyUp 松开一帧；mousePosition 是屏幕像素坐标，左下角为原点。'
+    },
+    s13: {
+      why: '光滑水平面意味着滑动摩擦力为 0，物体在水平方向只受单一拉力 F，直接根据牛顿第二定律 a = F / m 求出合加速度，是游戏刚体受恒力推进的最基本计算。',
+      steps: [
+        '第一步（提取已知量）：物体质量 m = 2 kg，水平拉力 F = 10 N，“光滑水平面”说明摩擦力 f = 0，合外力 F合 = 10 N。',
+        '第二步（应用牛顿第二定律）：由 F合 = m * a 变形为 a = F合 / m = 10 / 2 = 5 m/s^2。',
+        '第三步（对照选项）：结果为 5 m/s^2，选 B。'
+      ],
+      pitfall: '注意别粗心把 F/m 算反成 m/F（0.2 m/s^2），或错写成乘法 10 * 2 = 20；可通过量纲验证：1 N = 1 kg·m/s^2，除以 kg 正好剩下 m/s^2。'
+    },
+    s14: {
+      why: '依据运动独立性原理，抛体在离开抛射装置后（忽略空气阻力）仅受到竖直向下的重力，水平方向合外力为零，加速度 ax = 0，因此水平方向速度永远保持抛出瞬间的 vx0 不变。',
+      steps: [
+        '第一步（受力分析）：只受竖直向下重力 mg，水平轴上无任何推进力或阻力。',
+        '第二步（判断水平加速度与速度变化）：ax = Fx / m = 0，因此水平分速度 vx(t) = v0 * cosθ 保持常数。',
+        '第三步（确定运动性质）：速度恒定不变的直线运动称为“匀速直线运动”（竖直方向才是受重力影响的匀变速直线运动），选 C。'
+      ],
+      pitfall: '不要把整条斜抛运动的“匀变速曲线运动”性质硬套到单个水平分运动上：水平分运动是匀速直线，竖直分运动才是匀加速/竖直上抛。'
+    },
+    s15: {
+      why: '物理碰撞（例如两颗台球相撞或飞船弹性撞击）在无外力合冲量时，系统的总动量 P = ∑(m_i * v_i) 在碰撞前后严格守恒，这也是游戏物理引擎求解碰撞冲量后双方各自速度的基础。',
+      steps: [
+        '第一步（匹配核心前提）：“在无外力作用下”（合外力为零 / 外冲量可忽略）是动量守恒定律成立的充要条件。',
+        '第二步（区分四大定律）：牛顿第一定律讨论单个物体的惯性与静止/匀速状态；能量守恒涉及多种能量相互转化（非弹性碰撞机械能会损失但动量仍守恒）；功能原理讨论合外力功与动能变化；只有动量守恒指“无外力时系统总动量保持不变”。',
+        '第三步（选定答案并联系物理直觉）：题干“无外力作用下系统总动量保持不变”完整匹配动量守恒定律定义，因此选 B。'
+      ],
+      pitfall: '记住非弹性碰撞也会损失动能（转化为内能），但只要系统所受合外力为零，系统“总动量”仍然绝对守恒！'
+    },
+    s16: {
+      why: '重力本质是地球（或星球）万有引力的分力，方向始终指向地心（竖直向下），在游戏力学中作为施加在质量 m 上的力向量 W = [0, -m*g]（单位牛顿 N）来改变物体的速度或产生重量感。',
+      steps: [
+        '第一步（逐项纠偏）：A 错在“电磁作用”，重力源自地球引力；B 错在“竖直向上”，重力方向始终竖直向下；D 错在“千克(kg)”，千克是质量单位，力（重力）的单位是牛顿(N)。',
+        '第二步（验证公式 C）：w = mg 中 m 为质量 (kg)、g ≈ 9.8 m/s^2 为重力加速度，乘积量纲正是 N，描述准确。',
+        '第三步（确认正确项）：只有 C 准确写出重力公式 w = mg 且各物理量定义严谨，因此选 C。'
+      ],
+      pitfall: '考试最易混淆“质量 (m, 标量, 单位 kg)”和“重力 (w = mg, 矢量力, 单位 N)”——Unity 中 Rigidbody.mass 填的是质量 m 而非重力 w。'
+    },
+    s17: {
+      why: '随机算法在求解过程中显式引入随机数来做分支决策或采样（如蒙特卡罗以时间换精度、拉斯维加斯以正确性保准确结果、舍伍德消除最坏情况依赖）；而动态规划通过严格确定的状态转移方程自底向上填表，全过程没有任何随机性。',
+      steps: [
+        '第一步（回顾四大经典随机算法）：课件讲授的四大经典随机算法是：① 蒙特卡罗（Monte Carlo）② 拉斯维加斯（Las Vegas）③ 舍伍德（Sherwood）④ 数值概率算法。',
+        '第二步（识别确定性算法）：动态规划算法（Dynamic Programming）每一步都由确定性的最优子结构与状态转移方程决定，同样输入必走相同计算路径、得相同输出。',
+        '第三步（确认否定选项）：因此“不是随机算法”的是 C（动态规划算法）。'
+      ],
+      pitfall: '记住三个外国人名（蒙特卡罗、拉斯维加斯、舍伍德）全是随机算法（用著名赌城/森林隐喻随机性），而动态规划、贪心、A* 属于确定性算法。'
+    },
+    s18: {
+      why: '游戏 AI 区分于普通脚本对象的分水岭在于“主动态感知-决策-行动闭环”：普通对象只能等待外部调用其方法并固定返回结果；智能体（Agent）则是驻留在环境中、能独立感知周边态势并在内部状态驱动下自主挑选行为的实体。',
+      steps: [
+        '第一步（明确智能体五大特性）：课程定义智能体具备自治性 (Autonomy)、反应性 (Reactivity)、主动性 (Proactiveness)、社会性 (Social) 与进化/学习能力。',
+        '第二步（反驳错误选项）：B 与 C 把“对象”与“智能体”的特征彻底说反了；D 否定本质区别也是错误的。',
+        '第三步（锁定正解）：唯有 A 准确概括了智能体的自治、反应与主动决策特性。'
+      ],
+      pitfall: '若把判断重点记成“会移动的就是智能体”会出错：预设直线飞行的子弹只是物理对象，能看血量判断逃跑或攻击的守卫才是智能体。'
+    },
+    s19: {
+      why: '操控行为（Steering Behavior）的本质不是瞬移改速度，而是先求出指向目标的期望速度 Vdesired，再用矢量减法求出把“当前速度 Vcurrent 拉向 Vdesired”的修正增量（操控力 Fsteer = Vdesired - Vcurrent），最后累加给加速度使其转弯呈自然弧线。',
+      steps: [
+        '第一步（回忆矢量三角形减法）：欲使当前向量 A 变成目标向量 B，所需附加向量 Δ = B - A，因为 A + (B - A) = B。',
+        '第二步（代入速度概念）：此处的 A 是当前速度 currentVelocity，B 是最大速率朝向目标的期望速度 desiredVelocity。',
+        '第三步（得到操控力公式）：SteeringForce = 期望速度 - 当前速度（即 desiredVelocity - velocity），选 D。'
+      ],
+      pitfall: '极易选错 A（当前速度 - 期望速度）：方向恰好反了 180 度，算出来的结果会让 AI 掉头远离目标而不是平滑转向靠近！'
+    },
+    s20: {
+      why: '基础向量追逐（Basic Vector Tracking）没有任何运动预测能力，每帧只盲目把期望方向对准目标当前所在坐标；当标量速率 |Vpred| < |Vprey| 时，目标每帧拉开的绝对位移永远大于追逐者缩短的距离。',
+      steps: [
+        '第一步（分析运动几何）：设初始相距 d > 0，追逐者以速度 vp 直指目标当前位置，目标以更大速度 vt > vp 直线逃离。',
+        '第二步（推导距离变化趋势）：在任意 dt 内，距离最小变化量也不小于 (vt - vp) * dt > 0（即使同向直线追击也越追越远，斜向尾随则距离更远）。',
+        '第三步（得出结论）：既无预判提前量、速度又居下风，追逐者永远无法追上目标，选 A。'
+      ],
+      pitfall: '注意不要选 C（提前预判拦截点）：题干明确问的是“向量追逐算法”而非“拦截算法”；而且若无角速度抄近道或更高速度，在目标速度更快且持续远遁时拦截也追不上。'
+    },
+    s21: {
+      why: '如果仅仅朝目标当前坐标追赶，轨迹会产生明显的“尾巴曲线”且绕远路；拦截算法通过引入一阶线性外推——用闭合时间 tc 乘以目标当前速度预测出“未来交汇点 St”，然后直奔 St 切弦直取，本质上仍归属于追踪类控制技术的高阶形式。',
+      steps: [
+        '第一步（把握拦截的本质分类）：课程讲义明确指出拦截算法本质是“高级追踪算法”——从追踪当前位置升级为追踪未来位置 St。',
+        '第二步（剖析实现机理）：先求相对速度 Vr = Vprey - Vpred 与相对距离 Sr = Sprey - Spred，算出 tc = |Sr| / |Vr|，再利用目标速度外推交汇点 St = Sprey + Vprey * tc。',
+        '第三步（排除干扰项）：A 描述的是普通向量追逐，C（Flee 逃离）方向相反，D 忽略了拦截最关键的输入 Vprey，只有 B 完全符合。'
+      ],
+      pitfall: '不要把“拦截点”记成垂足最近点：拦截点是双方按各自速率沿各自路径能够“同时抵达”的未来时空交汇点 St。'
+    },
+    s22: {
+      why: '小兵巡逻、弹幕固定编队等场景需要高度可控、零路径搜索开销且严格按关卡策划节奏演出的移动轨迹，“模式移动”正是用静态预编程指令或固定路点阵列来驱动角色，以最低 CPU 成本实现确定性循环动作。',
+      steps: [
+        '第一步（理解模式移动机制）：开发者在代码或配置表中提前录入转角、前进距离或状态指令数组，游戏运行时顺序读取并循环回绕。',
+        '第二步（逐一否定干扰项）：A 错（完全静态预设，不是动态决策）；B 错（玩家剧情动画、机关平台、特效也能用）；C 错（基础模式是预设确定轨迹）。',
+        '第三步（确认选项 D）：符合“按照开发者预设的指令或路径移动”，选 D。'
+      ],
+      pitfall: '模式移动与动态寻路的区分非常考重点：看到“预设路径/预设指令序列/极低算力开销”就是模式移动。'
+    },
+    s23: {
+      why: '课程第 5 讲把“控制指令法”和“模式指令法”当作两种具体编程实现对照讲授：控制指令法每一条数据对象同时携带四项原子移动分量（允许一边旋转一边直线走），而模式指令法类似汇编操作码 + 单操作数。',
+      steps: [
+        '第一步（回想 ControlData 类源码成员）：真题 c2/d3 中反复出现 `data.fLeftAngle`（左转角度）、`data.fRightAngle`（右转角度）、`data.fForwardDis`（前进距离）、`data.fBackwardDis`（后退距离）。',
+        '第二步（排查模式指令法混淆项）：C 项“指令类型、操作数”对应的是另一套类 `InstructionData(eType, value)`（比如枚举左转/前进配合一个数值），不是 ControlData！',
+        '第三步（匹配正确选项）：选 B（前进距离、后退距离、左转角度、右转角度）。'
+      ],
+      pitfall: '高频区分题！背口诀：“控制法 ControlData 有四字段（前后+左右角）；模式指令法 InstructionData 只有两字段（类型 enum + 操作数 value）”。'
+    },
+    s24: {
+      why: '阅读构造函数签名 ConData(float leftAngle, float rightAngle, float forward, float backward) 并准确映射形参顺序与正负语义，直接决定了 DoPattern 算法能否按设想在矩形拐角正确转弯前行。',
+      steps: [
+        '第一步（对齐四个形参位置）：第 1 参 leftAngle = 左转角度；第 2 参 rightAngle = 右转角度；第 3 参 forward = 前进距离；第 4 参 backward = 后退距离。',
+        '第二步（填入题目目标动作）：“左转 90 度的同时前进 50 步”，因此第 1 参填 90，第 2 参右转不动填 0，第 3 参填 50，第 4 参后退不动填 0。',
+        '第三步（匹配实参元组）：严格对应为 (90, 0, 50, 0)，选 D。'
+      ],
+      pitfall: '考场极易看串第 1/2 参（误把左转填在第 2 参变成右转 90°）或把第 3/4 参看反，建议直接在试卷形参名下面依次标上 1、2、3、4 序号再对号入座。'
+    },
+    s25: {
+      why: '游戏 2D 网格地图把连续像素平面离散为固定宽高的瓦片单元格 (row, col)：屏幕/地图的水平轴 x 决定从左到右第几列（col），竖直轴 y 决定第几行（row），两者整除瓦片大小即可完成像素坐标向逻辑数组下标映射。',
+      steps: [
+        '第一步（提取已知条件）：瓦片宽度 W = 64 px，瓦片高度 H = 64 px，精灵像素坐标为 (x, y) = (128, 192)。',
+        '第二步（分别计算 col 与 row）：列号 col = x / W = 128 / 64 = 2；行号 row = y / H = 192 / 64 = 3。',
+        '第三步（核对表述顺序选出正解）：题目选项按“行号在前、列号在后”写为“行号=3, 列号=2”，因此选 B，不要盲选成“行号=2, 列号=3”！'
+      ],
+      pitfall: '全卷易错率 Top 3！大脑习惯从左到右把算出的 (2, 3) 读成 (行, 列)，实际上 x 是列 (col=2)、y 是行 (row=3)，行号必须在后面看 y！'
+    },
+    s26: {
+      why: '实验课 TileMap 与 8 连通域寻路采用标准二维直角坐标（以左下角为原点时，x 向右递增、y 向上递增，与屏幕顶部向下递增的常见图像坐标系不同），确定左下偏移必须两个坐标同时减 1。',
+      steps: [
+        '第一步（确定坐标系正方向）：课程讲义及 c3/s26 均采用标准数学笛卡尔坐标系：右 = +X，左 = -X，上 = +Y，下 = -Y。',
+        '第二步（合成“左下”方向偏移矢量）：向左移动 1 格即 Δx = -1，向下移动 1 格即 Δy = -1，偏移量 dirs = (-1, -1)。',
+        '第三步（叠加当前坐标）：(10, 10) + (-1, -1) = (9, 9)，对应选项 B。'
+      ],
+      pitfall: '若误用了桌面屏幕坐标系（y 向下递增）会错选成 (9, 11)；但在本课程 8 连通域真题体系下，左下角固定对应 (-1, -1) → (9, 9)。'
+    },
+    s27: {
+      why: '“沿路径走算法”是一种轻量级的局部启发式导航方案：把“保持原有航向”和“避开前方障碍物”量化为可加减的整数得分，只需扫一遍周围 8 个格子选出最高分，无需维护 Open/Close 全局表就能顺着走廊平滑拐弯。',
+      steps: [
+        '第一步（回忆算法赋权机制）：每步对当前点周围 8 邻域各自评分——夹角越接近当前前进方向初始分越高（10, 9, 8, 7, 6），遇到不可通行障碍格则大幅扣分（weight -= 10）。',
+        '第二步（逐项对照排除其它基础寻路法）：A 是随机移动特征；C 描述的是沿墙走算法的特征；D 完全不避障不是寻路。',
+        '第三步（锁定描述准确项）：选项 B 完整覆盖“前进方向权重 + 地形可通行性 + 择优最高分方向”，选 B。'
+      ],
+      pitfall: '记住四个基本寻路法的关键词辨识：随机角度=随机避障；记录已访绕边=绕行避障；左/右手固定顺序=沿墙走；8格打分取maxWeight=沿路径走。'
+    },
+    s28: {
+      why: '简单绕行如果只按固定顺/逆时针转角而不记住曾经踏足的格，一旦面对凹形障碍或长墙就会在障碍两端来回往复永不终止；加入 visited 已访问表“不走回头格”并在绕开障碍边角后即时向目标回归，是保证局部绕行推进的关键。',
+      steps: [
+        '第一步（剖析死循环根源）：若不记录已访问节点，AI 绕了一步离开障碍后下一帧又被目标引力拉回同一个撞墙点，形成乒乓震荡。',
+        '第二步（定位绕行避障两大特征）：① 维护已访问集合避免重复进入同一格；② 在绕行同时不断试探无障且未访的方向回归目标，提高寻路效率。',
+        '第三步（排查干扰选项）：A 错在直接结束、C 加速无效、D 不记路必陷入兜圈，因此选 B。'
+      ],
+      pitfall: '注意区分：绕行避障记录“已访问”能防止在障碍边缘原地无限打转，但面对全封闭只留后路的深“死胡同”且无全局回溯栈时，周围全已访或被堵仍会卡死（见判断题 tf10）。'
+    },
+    s29: {
+      why: '大型 3D 开放世界或固定轨道竞速游戏如果全场跑高频实时 A* 成本过高，设计师直接在可行通道的关键转角提前布置好路点图（Waypoint Graph），运行期 NPC 只需跟着预先算好的连接节点走即可，用可控的离线手工/烘焙工作量换取极高的运行性能。',
+      steps: [
+        '第一步（总结路点导航特点）：关卡设计师手动摆放相连的路点，路径几乎确定且很少出现不可控卡死，计算量极低。',
+        '第二步（核对缺点反推排除项）：A 错（地图一改旧路点就失效，无法动态适应随机地图）；C 错（最主要缺点就是依赖人工设置路点）；D 错（不适合高速变化的动态避障追踪）。',
+        '第三步（确认核心优势）：选项 B 准确指出“性能高、路线可控、极少死循环”。'
+      ],
+      pitfall: '路点导航常考优缺点对照：优点 = 性能极高/省内存/少死循环；缺点 = 不适应动态/随机地图、人工布置成本高、路线僵硬。'
+    },
+    s30: {
+      why: 'A* 之所以能既比 Dijkstra 快又不错过真正最优路径，全靠“可采纳性（Admissibility）”不等式 h(n) <= h*(n)：它保证当前估计总代价 f(n) = g(n) + h(n) 永远是经过 n 到终点的真实最小代价的下界，从而防止算法因过度乐观高估捷径而过早忽略了真正最短路径上的节点。',
+      steps: [
+        '第一步（定义符号物理意义）：g(n) 为起点到当前格的已知确切代价，h*(n) 为当前格到终点的客观最小真实代价，h(n) 为启发函数给出的估价值。',
+        '第二步（验证 h(n) > h*(n) 的反例危害）：若某个在真最短路上的关键节点被 h 高估了，它的 f 会很大一直沉在 Open 堆底，算法反倒先顺着另一条次优路线撞进终点并误报结束，破坏最优性。',
+        '第三步（得出数学准则）：必须满足 h(n) <= h*(n)（绝不高估），此时即使采用稍微偏小的估值也绝对安全，选 B。'
+      ],
+      pitfall: '记住口诀：“h 不能高估（h <= h*），低估安全但可能多搜几个格子；高估就可能错过真最短路变贪心”。'
+    },
+    s31: {
+      why: '标准数组实现每步都要 O(n) 扫描整张 Open 表找最小 f(n)，在大地图下极度拖慢帧率；改用优先队列（二叉最小堆）可把提取最小值的代价压到 O(log n)。同时若大量无障碍方格恰好具有完全相同的 f 值，优先扩张 h 更小者（即离终点更近者）能大幅削减无关枝叶扩展。',
+      steps: [
+        '第一步（优化第一个瓶颈——查找最小 f 节点）：线性遍历 O(n) 改为最小堆 / 优先队列（PriorityQueue / MinHeap），每次弹出堆顶 O(1) ~ O(log n) 即可拿到最小 f 节点。',
+        '第二步（优化第二个瓶颈——f 值相等时的打破平局策略）：当 f = g + h 相等时，g 大而 h 小意味着已经非常贴近终点（剩余未知风险最少），优先挑 h 最小的节点能直线穿过开阔区而避免“画大饼”。',
+        '第三步（匹配选项）：同时命中“优先队列（最小堆）”和“选择 h 值最小的节点”的是 B。'
+      ],
+      pitfall: '容易把第二个空误猜成“选 g 值最小的”——想一想如果 f=100 时挑 g=10, h=90 的点，它还远在起点附近刚迈出一步；挑 g=90, h=10 的点只差最后一步就进终点了，当然应该选 h 最小的！'
+    },
+    s32: {
+      why: '当游戏角色（怪物/Boss）拥有五六种以上状态且转换网错综复杂时，传统 switch-case 把全部逻辑挤在同一函数里导致牵一发而动全身；状态设计模式运用面向对象多态性，将“行为随状态改变”的判断转移到各个独立的 ConcreteState 子类内部，从而达到高内聚、低耦合。',
+      steps: [
+        '第一步（理解状态模式结构）：包含 Context 上下文（持有一个 currentState 引用）、IState 抽象状态接口（Enter/Execute/Exit）以及各 ConcreteState 具体子类（Patrol/Chase/Attack/RunAway）。',
+        '第二步（逐项甄别选项）：A 错（恰好相反，每个状态拆分给独立子类）；C 错（扩展新状态只需增加新子类，符合开闭原则）；D 与业务完全无关。',
+        '第三步（验证正解 B）：状态转移逻辑分布到各 State 子类中减少上下文集中依赖，正是解决庞大状态分支代码的核心优势，选 B。'
+      ],
+      pitfall: '注意不要觉得状态模式“零缺点”——状态模式会造成类数量略微增多；但在考试题问“优点与适用场景”时，核心关键词就是“分布转换逻辑、消除庞大分支、解耦符合开闭原则”。'
+    },
+    s33: {
+      why: '行为树严格划分为三大功能层：内部的“组合节点/修饰节点”只充当控制流路由器（决定执行谁），而真正负责检验世界状态（条件节点 Condition）和实际操控角色动作/动画（行为节点 Action）的逻辑全部沉在最底端的叶节点，根节点没有任何实质业务行为。',
+      steps: [
+        '第一步（明确行为树叶节点分类）：叶节点（没有子节点的终端）只有两类——条件节点（只读判断）与行为节点（实际干活），控制节点（选择/顺序/并行/修饰）全是内部非叶节点。',
+        '第二步（判断正误命题）：如果题干中某说法声称“行为树真正的行为是在根节点上”，那是完全错误的——根节点只是每帧 Tick 遍历的起点入口，真正触发开火、移动的是底部叶节点。',
+        '第三步（对照组合答案）：完全匹配选项 A（条件节点+行为节点；错误说法“真正的行为是在根节点上”）。'
+      ],
+      pitfall: '易错选项是 B（把修饰节点误认为叶节点）：记住修饰节点必须包裹 1 个子节点来修饰它的结果，所以修饰节点有孩子，绝对不是叶节点！'
+    },
+    s34: {
+      why: '行为树的灵魂在于用少数语义清晰的控制节点组合出复杂 AI：Selector（?）体现“优先备选 / 逻辑或”，从左到右找到第一条能走通或正在跑的分支就立刻接管控制权；Parallel（⇉）体现“多线程同时生效 / 条件实时哨兵”，所有子节点并肩执行。',
+      steps: [
+        '第一步（剖析 Selector 选择节点规则）：按从左到右顺序依次 Tick 子节点；一旦遇到某个子节点返回 Success（已成功）或 Running（正在执行），立即停止后续分支并向上返回对应状态；全部失败才返 Failure。',
+        '第二步（剖析 Parallel 并行节点规则）：每帧同时对所有子节点执行 Tick，若全部返回 Success 则整体成功，只要任一关键监视子节点返回 Failure 则可中止整组分支并返回 Failure（部分策略也支持容错阈值）。',
+        '第三步（锁定匹配选项）：只有 B 同时精准描述了两类控制节点的返回终止条件。'
+      ],
+      pitfall: '注意别把 Selector 与 Sequence 搞混：记忆窍门“Selector 像问号 `?`（找一个行就成：遇 Success 停）；Sequence 像箭头 `→`（一步接一步必须全成：遇 Failure 停）”！'
+    },
+    s35: {
+      why: 'FSM 本质是一张平面有向图，节点与节点之间两两连线形成网状依赖，一旦增加 1 个全局状态（如中毒/眩晕）就要给老状态逐个连边引发“状态爆炸”；BT 强迫逻辑按自顶向下的树形层次组织，每棵子树天然封装成独立黑盒，可直接跨角色模块化拼装复用。',
+      steps: [
+        '第一步（对比核心拓扑结构）：行为树采用层级化的树形结构（单父多子、单向自顶向下 Tick 驱动），而 FSM 采用网状图结构（状态圈互相指向构成环状跳转图）。',
+        '第二步（纠偏其余三个错误说法）：B 错（BT 原生内置 Parallel 并行节点）；C 错（正是因为 FSM 状态数一多耦合度飙升，BT 可扩展性才大幅优于 FSM）；D 错（状态爆炸是 FSM 的典型痛点）。',
+        '第三步（得出结论）：主要拓扑与架构区别正对应选项 A。'
+      ],
+      pitfall: '实际大型商业游戏（如 Unity 复杂 Boss AI）也常用混合架构：顶层用极简的 3 态 FSM 管大阶段（如 P1/P2/死亡），每个阶段内部挂载一棵 BT 行为树控细节出招。'
+    },
+    s36: {
+      why: 'Craig Reynolds 在 1987 年提出的 Boids 模型证明：无需中央大脑统筹，每个个体只要感知周围视野半径 r 内的邻居并执行分离、对齐（队列）、聚集三条纯粹的局部向量规则，就会自发涌现出震撼的真实鸟群/鱼群游动集群智能。',
+      steps: [
+        '第一步（拆解三大核心规则定义）：① 分离 (Separation) = 向邻近同伴反方向推开，防止身体重叠碰撞；② 对齐/队列 (Alignment) = 获取附近邻居的速度平均值并向该平均航向偏转；③ 聚集 (Cohesion) = 计算附近邻居的平均坐标（几何质心）并朝质心靠拢。',
+        '第二步（提取题干关键字）：“朝着同伴的平均速度方向移动”精准对应速度同步对齐——队列（对齐），英文 Alignment。',
+        '第三步（确认选项并匹配英文术语）：因此“朝平均速度方向移动”对应的规则是队列（对齐 / Alignment），选 D。'
+      ],
+      pitfall: '注意考场常把“对齐 (Alignment)”和“聚集 (Cohesion)”两个词张冠李戴：看清楚后半句——朝邻居“平均速度”靠拢是队列（对齐），朝邻居“平均位置（中心点）”靠拢才是聚集！'
+    },
+
+    /* -------------------- 二、判断题 (tf1..tf18) -------------------- */
+    tf1: {
+      why: '沿墙走算法的本质是沿着“障碍物表面边界线”一格一格往前摸索，它自身并没有朝终点的全局吸引力概念。',
+      steps: [
+        '第一步（分析依赖前提）：算法假定 AI 身旁存在墙体可供紧贴跟随（靠左/右手贴墙探测），从而顺着墙角绕开阻塞到达另一侧。',
+        '第二步（推演空旷环境表现）：如果把角色丢在毫无障碍的开阔大厅中间，所有方向全通，它会永远先挑最偏左（或偏右）的方向走、连续转向变成原地绕小圈转圈，路径既冗余又抵达不了远方目标。',
+        '第三步（判别正误）：题干描述符合沿墙走的核心局限性，因此判定为【对】。'
+      ],
+      pitfall: '注意区别“一定能找到终点”：沿墙走在有限封闭简单迷宫可以兜遍边缘寻得通道，但面对“孤岛环绕墙”或空旷广场都会陷入局部环圈死循环。'
+    },
+    tf2: {
+      why: '八方向编码 0~7 为顺时针顺序排列（例如 0=北、2=东/右、4=南、6=西/左），向左转 90° 需要逆时针退两步 (-2)，而非顺时针加两步 (+2)；加 8 则是为了避开 C# 负余数的编程语言陷阱。',
+      steps: [
+        '第一步（验证方向加减角关系）：假设当前朝正北 0（上），正东右手为 2（即 0 + 2），正西左手为 6；从 0 走到左手 6 必须顺着减 2！',
+        '第二步（处理负数取模问题）：直接算 (0 - 2) % 8 在 C# / C++ 中结果是 -2，会造成 dirs[-2] 数组越界崩溃，因此必须加上一圈周期 8 再取模，写成 (curDir - 2 + 8) % 8。',
+        '第三步（核对题干结论）：题干把 +2（右手公式）安到了左手上，因此判定为【错】。'
+      ],
+      pitfall: '考场口诀“右加 2，左减 2 再加 8”：右手起步 `(curDir + 2) % 8` 随后 `--i`；左手起步 `(curDir - 2 + 8) % 8` 随后 `++i`！'
+    },
+    tf3: {
+      why: '在矢量空间中，减法的方向口诀是“终点减去起点”（即目标位置 - 自身位置 = 从自身指向目标），Seek（追近）才从智能体指向目标；Flee（逃离）需要朝威胁源完全相反的方向高速撤退。',
+      steps: [
+        '第一步（写出 Seek 期望方向）：Vdesired_seek = Normalize(目标位置 - 智能体当前位置) * maxSpeed，方向从 AI 指向目标。',
+        '第二步（反转得到 Flee 期望方向）：Flee 要逃离危险源，期望速度必须是 Seek 的相反向量，即 Normalize(智能体当前位置 - 目标位置) * maxSpeed，方向严格“从目标指向智能体”。',
+        '第三步（判定正误）：题干将 Flee 与 Seek 的方向说反了，因此为【错】。'
+      ],
+      pitfall: '写代码时很容易把 `prey.position - predator.position` 和 `monster.position - threat.position` 弄反，做题时一定用简单数字（如 AI 在 10、危险在 2，期望应往 +方向即 10-2=+8 逃跑）代进去验算一秒！'
+    },
+    tf4: {
+      why: '动态 AI 决策需要在每帧评估环境视野、跑网格搜索算法或遍历复杂行为树节点；而模式移动把“智慧”提前固化到了开发者写死的数据数组里，运行时只做简单的顺序索引读取与角度累加。',
+      steps: [
+        '第一步（剖析模式移动开销）：DoPattern 每帧只读取 patternArray[curIndex]，算一个三角函数位移累加并检查步长是否达标，时间复杂度 O(1)、几乎零分支决策。',
+        '第二步（对比动态 AI 开销）：A* 需要维护堆与网格节点（图搜索复杂度），动态行为树/效用 AI 需要大量环境感知与射线检测。',
+        '第三步（判断正误）：题干把算力大小与实现复杂度说完全颠倒了，故为【错】。'
+      ],
+      pitfall: '模式移动的劣势在于“太死板、不会自适应变化”，但绝对不是计算开销大；相反它正是以低计算复杂度换取性能的经典方案。'
+    },
+    tf5: {
+      why: '随机模式移动（Random Pattern Movement）并不是彻底失控的随机游走，它只是在预设好的合法模式模板列表或关键参数区间（比如前进距离 [80, 150]、转向方向 ±90°）中进行抽样微调，从而在不破坏行为框架的前提下防止玩家轻易背板。',
+      steps: [
+        '第一步（理解“加随机因子”的典型做法）：比如预设正方形巡逻边长加入 ±20% 随机抖动，或者准备 3 套安全的进攻套路数组每次随机选其中 1 套播放。',
+        '第二步（检查行为可控性）：无论怎么随机，它执行的每一步动作依然严格受限于开发者预先设计的指令数据结构和状态规则框架内。',
+        '第三步（判定对错）：题干说“完全不可预测、无法再基于预设规则执行”过于极端错误，因此为【错】。'
+      ],
+      pitfall: '游戏中 Boss 常见的“随机招式循环”就属于这种思路：单看下一秒不知道出哪招，但所有招式动作与范围仍全在策划写的剧本规则框里。'
+    },
+    tf6: {
+      why: '如果目标正在高速斜向移动，朝目标当前轨迹上的几何垂足（距离最近点）冲过去，等你跑到那个位置时目标早就飞远了；拦截算法追求的是两物体运动轨迹与时间在未来 t = tc 时刻交会于同一个时空坐标。',
+      steps: [
+        '第一步（辨析“最近点”与“等时交汇点”）：几何最近点是由目标轨迹线与追踪者当前位置做垂线求出的静态空间极值点，并未考虑两者的速度矢量配比和时间同步。',
+        '第二步（复述拦截点真正数学含义）：拦截点 St = Sprey + Vprey * tc，满足追踪者全速直线跑向 St 耗时也正好约等于 tc，从而实现同一瞬间抓捕碰撞。',
+        '第三步（做出判断）：因此“距追踪者最近的点”定义错误，判为【错】。'
+      ],
+      pitfall: '牢记第 4 讲拦截三公式核心结论：不是最近点，而是“双方同时到达的未来相遇点”！'
+    },
+    tf7: {
+      why: '随机移动避障遇到障碍仅仅靠“原地蒙着眼随机换一个不撞墙的角度走 50 像素”，没有记录去过哪、没有最短路指导、也不会沿着墙脚系统地找门洞，面对转角密集的迷宫只能反复碰壁折腾，根本无法保证走出迷宫。',
+      steps: [
+        '第一步（分析算法盲区）：随机避障既没有地图全局信息，也没有任何已访问记忆体；在狭窄复杂通道里哪怕偶遇缺口也很难连续随机命中正确转弯角。',
+        '第二步（明确正确定位）：它仅适用于宽阔地图、稀疏柱子或城镇 NPC 自由漫步的轻量级小怪避让；复杂迷宫的主路径规划必须交给 A*、BFS 等图搜索算法。',
+        '第三步（判别正误）：题干夸大了随机避障的迷宫适用性，故判定为【错】。'
+      ],
+      pitfall: '四大基本寻路全都不适合复杂密集迷宫作主力全局规划（绕行稍好些但也会在深死胡同兜不过来），主线强迷宫寻路考纲一定选 A* / BFS。'
+    },
+    tf8: {
+      why: '2D 格子地图（TileMap）在内存里本质就是一个矩阵数组 map[row][col]，用轻量的整数常量编码每种瓦片的物理/逻辑属性，让碰撞检测和八方向邻域查表只需极快的数组下标随机访问（O(1)）即可完成。',
+      steps: [
+        '第一步（核对数据结构形式）：二维数组按行（row）与列（col）组织网格数据，与屏幕规则瓦片一格一对应。',
+        '第二步（核对常见状态编码约定）：常见习惯用 0 代表空地可通行、1 代表实心墙壁不可通行，也可以扩展 2 代表沼泽等更高移动代价地形。',
+        '第三步（得出结论）：题干叙述完全准确，判为【对】。'
+      ],
+      pitfall: '别把行号 col 与列号 row 搞混：在二维数组 `map[r, c]` 中第一维通常是行 y，而在像素屏幕坐标 `(x, y)` 中第一个数才是列 x！'
+    },
+    tf9: {
+      why: '“走完记住走过的路径”叫轨迹回放或历史记录；“寻路（Pathfinding）”的核心动作是在智能体真正迈出那长远几百步之前，利用算法对地形图提前展开搜索推理与路径规划。',
+      steps: [
+        '第一步（定义寻路 Pathfinding 本质）：指在存在障碍物的图或网格环境中，依据搜索/避障算法提前规划找出一条从当前起点到目标点可行（或代价最小）轨迹的过程。',
+        '第二步（拆穿表述偷换概念）：把“事前主动计算规划路线”偷换成了“事后被动记下足迹”，倒置了因果逻辑。',
+        '第三步（作出判定）：因此该说法为【错】。'
+      ],
+      pitfall: '尽管 A* / BFS 确实会记下每个搜索节点的父指针 `parent` 并最后反转取出路径，但那是搜索树的探索回溯机制，不是简单把角色实际走过的一切脚印全录下来就算寻路。'
+    },
+    tf10: {
+      why: '能从复杂死胡同“退回上个分叉口重新换路”的能力，本质上需要保存一整棵已探索状态树的分支栈/队列实现全局回溯（DFS/BFS/A*）；而绕行避障与沿路径走算法都只看当前脚下 8 邻域的局部打分/规则，不保留父节点回溯路径链。',
+      steps: [
+        '第一步（推演绕行避障进入死胡同）：周围除了刚进来时踩过（已被标记为 visited）的那个入口格以外，其余方向全是实心墙；而算法明确禁止重踏已访问格子，最终无路可选原地卡死。',
+        '第二步（推演沿路径走进入死胡同）：面对封闭盲端后因后退方向权重远低于前方/两侧，或者掉头走一步后再次因与大方向夹角高重新往回折返，陷入乒乓振荡卡死。',
+        '第三步（得出结论）：两种局部基础算法均无法自主走出死胡同，因此题干为【错】。'
+      ],
+      pitfall: '记住考纲对比表：真正能够稳定破解一切迷宫死胡同的是第 10–12 讲的图搜索算法（DFS / BFS / Dijkstra / A*）。'
+    },
+    tf11: {
+      why: '函数递归本质上就是把函数的形参、局部变量以及调用完的返回地址压入 CPU 内存的系统调用栈（Call Stack）里：深入一层相当于 Push，遇到无路 return false 退回上一层继续执行没跑完的 for 循环，就自动完成了等效于栈 Pop 的回溯。',
+      steps: [
+        '第一步（对照递归 vs 非递归 DFS 代码）：手写非递归循环版本需要手动 `new Stack<MapNode>()` 来 Push/Pop；递归版本直接调用函数自身 `doDFSRecursionSearch(next, to)`。',
+        '第二步（验证调用栈接管机制）：每次递归返回 false 时，上一层函数在 `for (int i=0; i<8; ++i)` 断点处自动唤醒并顺着下一个邻接方向接着探索，底层依赖操作系统维护的调用栈。',
+        '第三步（确认答案）：题干完全正确，判为【对】。'
+      ],
+      pitfall: '顺带注意隐患：正因为递归占用系统线程调用栈（通常只有 1MB~几MB），超大地图上深度过深会直接抛出 StackOverflowException 栈溢出异常，此时必须改为显式堆内存 Stack！'
+    },
+    tf12: {
+      why: '深度优先（DFS）的名字就体现了策略特征——在遇到第一个可走岔路口时立即毫不犹豫顺着这条路一头扎向最深处，直到撞到南墙或终点才回退一层换一条岔路；先按横宽一圈圈水波扩散的是广度优先搜索（BFS）。',
+      steps: [
+        '第一步（回顾 DFS 搜索形态）：利用栈的“后进先出 (LIFO)”特性，最新压入的深处邻居总是最先被弹出来扩张，呈一条蜿蜒深潜的长蛇形态。',
+        '第二步（对比 BFS 形态）：BFS 利用队列的“先进先出 (FIFO)”，距离起点 1 步的所有点全部处理完才会开始展开距离 2 步的点，正是横宽层次扩展。',
+        '第三步（判别正误）：题干张冠李戴了 DFS 与 BFS 的搜索特征，判为【错】。'
+      ],
+      pitfall: '审题千万留意“深度”与“广度/横宽”字样；横宽逐层 = 广度 (BFS)，纵深一竿子到底 = 深度 (DFS)。'
+    },
+    tf13: {
+      why: 'A* 搜索需要用两张分工明确的集合严格划清界限：一张专门保管“发现过但还没来得及全面评估 8 邻域的候选节点”（待处理），另一张存放“已经拿出来把周围全看了一遍的定稿节点”（已处理），避免同个格子被无数次反复弹出陷入死循环。',
+      steps: [
+        '第一步（明确 Open List 职责）：开放列表（Open）里装的是有待考察的边缘节点，每轮循环从 Open 里取出 f 最小的节点进行扩张。',
+        '第二步（明确 Close List 职责）：关闭列表（Close）里存放的是已经作为当前节点展开过、处理完毕的节点，后序扫描邻居遇到在 Close 里的节点原则上直接跳过。',
+        '第三步（对应题干判别）：题干把 Close 列表说成了“待处理节点”，彻底颠倒了 Open 与 Close 的职责，故为【错】。'
+      ],
+      pitfall: '记忆联想法：Open = 门还开着（待考虑候选区）；Close = 关门结案（已经审查完毕区）。'
+    },
+    tf14: {
+      why: '分支逻辑法（把全部状态塞在一个庞大的 Update switch-case 中）在只有 2~3 个状态时看似快，但实际游戏每加一个新状态、每加一个跨状态跳转触发条件，所有 case 枝杈交错蔓延在一起，导致函数动辄几百上千行，改一处牵动全局。',
+      steps: [
+        '第一步（分析可读性与耦合度）：同一处大方法混杂了巡逻寻路、追击计算、攻击判定、回血、死亡销毁等截然不同的业务变量，极难定位问题。',
+        '第二步（分析扩展风险）：添加新状态必须直接深入巨型 switch-case 内部动刀修改，违背面向对象“对扩展开放、对修改关闭”的开闭原则。',
+        '第三步（判定结论）：状态多变时逻辑分支法可读性与可维护性都很差（所谓面条代码），因此说“较好”为【错】。'
+      ],
+      pitfall: '切记课程第 15 讲强调重构动机：状态极少用分支法图个简单，题干但凡问分支法的代码可维护性/可读性评价，在软件设计题中必答“差 / 臃肿耦合 / 难维护”。'
+    },
+    tf15: {
+      why: '在工程与教学体系里，有限状态机（FSM）最基础直接的落地方式是面向过程的控制分支法（if-else / switch-case 配合枚举变量），而具备大型复杂状态扩展能力的工程实践标准方案则是面向对象的状态设计模式（State Design Pattern）。',
+      steps: [
+        '第一步（核对方法 1）：定义 enum State { Patrol, Chase, Attack }，在 Update() 中 switch(curState) 分发执行——简单直观，对应 switch-case 简单实现。',
+        '第二步（核对方法 2）：定义 IState 接口、Context 与各个 ConcreteState 类——面向对象解耦，对应状态设计模式实现。',
+        '第三步（判断正误）：与课件第 14–15 讲框架完全一致，判定为【对】。'
+      ],
+      pitfall: '更进阶的数据驱动表驱动法（状态迁移表查表法）虽存在，但针对本校考纲真题，这两种主流实现方法完全正确。'
+    },
+    tf16: {
+      why: '树结构定义决定了叶节点只能出现在没有任何子节点的最底端；而根节点处于整棵行为树的顶层总入口，它下面必然挂接着 Selector、Sequence 等控制子树来协调 AI 的各项行为，根本不可能既是叶节点又是根（除非树里孤零零一个退化节点，但这不叫游戏行为树）。',
+      steps: [
+        '第一步（验证前半句）：“根节点可以是叶节点的一种类型”——错误！行为树中根节点是唯一入口（通常只挂唯一总控子节点如 Selector/Sequence），绝非承担底层单一检测/执行的叶节点。',
+        '第二步（验证后半句）：“行为树的行为节点是叶节点”——正确！行为树叶节点仅包含两类：条件节点（Condition）与行为节点（Action）。',
+        '第三步（整题组合判别）：复合判断题只要有一半明显不成立，整体即为【错】；如考场单独拆分出“行为节点是叶节点”时则单选为对！'
+      ],
+      pitfall: '这道题就是真题合并版易错点：记住“根节点 ≠ 叶节点”，拆开看时前半错、后半对，合在一题判错！'
+    },
+    tf17: {
+      why: '如果角色移动、播放大招动画需要持续 20 帧才能走完，动作叶节点在此期间会每帧返回 Running；为了不让角色每帧都傻傻重新从前序条件甚至第 1 步开始重启，普通 Sequence（带有状态记忆功能）必须记住当前正处于 Running 态的那颗孩子，下帧直奔该孩子继续跑。',
+      steps: [
+        '第一步（验证 Sequence 对 Running 的记忆机制）：课件明确强调，顺序节点记住了返回 Running 的当前子节点，下一轮 Tick 会跳过前面已经成功的兄弟直接继续执行该节点。',
+        '第二步（联系它带来的中断局限）：正因为直接续跑了正在进行的移动节点，不再重新评估前面的“是否还能看到玩家”条件，才引出了后面“需要用 Parallel + Until Failure 改造中断”的大题（见 e7）。',
+        '第三步（判别正误）：题干准确表述了 Sequence 的运行续跑特性，判为【对】。'
+      ],
+      pitfall: '部分教材区分“有记忆 Sequence”和“无记忆 Sequence”，在本门课程标准真题口径中，Sequence 明确会记住 Running 节点并在下帧继续执行！'
+    },
+    tf18: {
+      why: '行为树奉行严格的职责分离设计：Condition（条件节点）相当于纯只读的布尔查询哨兵，负责检测“血量低吗 / 发现敌人吗 / 进射程了吗”，它绝对不能改动游戏坐标或触发攻击伤害，只会瞬时返回 Success 或 Failure；只有 Action（行为节点）才真正推进物理位移、发射子弹等业务动作。',
+      steps: [
+        '第一步（回顾两种叶节点分工）：① 条件节点 (Condition) = 只判断真假不改变游戏世界状态（永不返回 Running）；② 行为节点 (Action) = 负责真正执行移动、攻击、播放动画或等待（可返回 Running）。',
+        '第二步（定位题干张冠李戴之处）：题干把“移动、攻击”等具体行为硬安在了“条件节点”头上，混淆了两类叶节点边界。',
+        '第三步（做出判定）：因此判定为【错】。'
+      ],
+      pitfall: '记住叶节点铁律：Condition 返回值永远非 Success 即 Failure；唯有 Action 才负责具体行动且可能返回 Running 跨帧持续执行！'
+    },
+
+    /* -------------------- 三、填空题 (f1..f10) -------------------- */
+    f1: {
+      why: '有限状态机（FSM）在离散数学与游戏 AI 工程中有严谨的四元组核心要素顺序，任何缺失都会导致状态机要么无法启动（缺初始态）、要么永远停滞不前（缺输入事件或转换函数）。',
+      steps: [
+        '第一步（锚定静态基础要素）：一个状态机首先要划定全集有哪些离散模式——【状态】；接着明确角色刚出生在众多模式中先落在哪一个——【初始状态】。',
+        '第二步（锚定动态驱动要素）：仅靠状态自己动不起来，必须接收外部或内部触发信号——【输入】（或输入事件）；由输入决定从现状态跳往何处的映射关系——【转换】（或转换函数）。',
+        '第三步（核对严格顺序）：课件第 14 讲原文严格排序为：① 状态 → ② 初始状态 → ③ 输入 → ④ 转换（第 5 项动作在四空题中不填）。'
+      ],
+      pitfall: '真题特别强调“按课件严格顺序填写”！别把“输入”和“初始状态”倒置；记住顺序逻辑：先有哪些房间（状态）→ 从哪个门进（初始状态）→ 收到什么钥匙（输入）→ 跨过哪条走廊（转换）。'
+    },
+    f2: {
+      why: '理解广度优先搜索（BFS）从拓扑特征到执行次序再到实现载体的完整因果链：水波按层均匀推进决定了必须让更早入圈的节点先站出来扩张，而在计算机里天然落实“先到者先服务”的线性数据结构正是先进先出队列。',
+      steps: [
+        '第一步（填写搜索整体形态——空 1）：BFS 优先横向展开同一距离环上的节点，属于【分层】（或分级/逐层）的搜索过程。',
+        '第二步（填写节点展开次序原则——空 2）：为了严格维持逐层推进不被深枝插队，必须按照【先访问的节点先展开】（或先进先出）的方式处理。',
+        '第三步（填写匹配数据结构——空 3）：支持尾部压入、头部优先弹出（FIFO）的容器正是【队列】（Queue）。'
+      ],
+      pitfall: '注意空 2 要对齐真题填空原文表述“先访问的节点先展开”（或先访问的节点先访问 / 先进先出），切勿写成“后进先出”那是 DFS 的栈机制！'
+    },
+    f3: {
+      why: '与网格状跳转的有限状态机不同，行为树（Behavior Tree）用严格无环的父子层级关系消除状态跳转失控，每次刷新都固定从唯一入口按预定规则自顶向下递归分发控制权。',
+      steps: [
+        '第一步（确定结构类型——空 1）：节点由边自顶向下分叉，每个非根节点有唯一父节点且无环路，因此是一种【树状】（树形）数据结构。',
+        '第二步（确定遍历入口——空 2）：每帧（Tick）系统要评估当前该干什么动作，遍历总是统一从最顶端的【根节点】（Root）开始向下传递。',
+        '第三步（关联执行流）：从根节点出发经过组合/修饰节点路由，最终由最底层的条件/行为叶节点返回状态并回传结果。'
+      ],
+      pitfall: '不要把行为树和 FSM 混写为“网状/图状”；FSM 才是图结构，行为树始终是树状且每帧必须从根节点启程！'
+    },
+    f4: {
+      why: 'TileMap 每个格子占用 64×64 像素矩形面积：如果直接用 col * 64，得到的坐标落在瓦片的左下/左上边缘边界线，会让角色精灵中心和墙体一半卡进格子边界；只有加上半个瓦片边长 (64 / 2 = 32)，才能把角色精准锚定在格子正中央。',
+      steps: [
+        '第一步（求格子起始边角坐标）：第 col 列左边缘 X = col * 64；第 row 行下/上边缘 Y = row * 64。',
+        '第二步（偏移至单元格正中心）：由于每格宽 64、高 64，中心距边缘刚好半格即 64 / 2 = 32 px。',
+        '第三步（写出最终表达式）：中心坐标 x = col * 64 + 32，y = row * 64 + 32。'
+      ],
+      pitfall: '考试最常失分就是只写了 `col * 64` 和 `row * 64` 而漏了 `+ 32`！另外再次核对对应轴：col（列）乘在 x 里，row（行）乘在 y 里，千万不要写反！'
+    },
+    f5: {
+      why: '把 A* 核心评估函数 f(n) = g(n) + h(n) 拆解成“历史确定支出”与“未来估算开销”两大部分，帮助理解为什么 A* 能兼具 Dijkstra 的严格累计精度与贪心搜索的方向前瞻性。',
+      steps: [
+        '第一步（解读 f(n)——空 1）：综合了过去开销与未来预测，代表综合评估某个试探点总优劣的值，对应 C（每个可能试探点的估值）。',
+        '第二步（解读 g(n)——空 2）：沿搜索树父链从起点一步步实打实走过来的代价，对应 A（从起始搜索点到当前点的代价）。',
+        '第三步（解读 h(n)——空 3）：不顾障碍、凭曼哈顿或欧氏距离估算当前格离终点有多远，对应 B（当前点到目标点的估值）。'
+      ],
+      pitfall: '区分 f(n) 与 h(n)：h(n) 是“当前到目标”的局部启发估值，f(n) 是加上起点以来已耗费 g(n) 后的“起点经当前到目标”总估值！'
+    },
+    f6: {
+      why: '28 格真题是全卷分值权重最高的手算经典模型：严格遵循 4×7 网格坐标 (row = floor(id/7), col = id%7)，利用直走 g+=10、斜走 g+=14 以及曼哈顿启发 h=(|Δrow|+|Δcol|)×10 逐步展开最小 f(n) 节点即可精确复现所有空白格数字。',
+      steps: [
+        '第一步（标定关键节点行列坐标）：起点 A=8 即 (r=1, c=1)，终点 B=19 即 (r=2, c=5)；给定点 9=(1,2) 有 g=10, h=(|1-2|+|2-5|)×10=40, f=50。',
+        '第二步（计算 3 号、14 号、16 号格）：① 从 9 号(1,2)斜走到 3 号(0,3)：g = 10+14 = 24，h = (|0-2|+|3-5|)×10 = 40 → f(3) = 64；② 从起点 8(1,1)斜走到 14 号(2,0)：g = 14，h = (|2-2|+|0-5|)×10 = 50 → f(14) = 64；③ 从起点 8(1,1)斜走到 16 号(2,2)：g = 14，h = (|2-2|+|2-5|)×10 = 30 → f(16) = 44（此时 Open 中最小！）。',
+        '第三步（以 16 号为跳板继续算 22、24、18 号）：弹出最小节点 16(f=44)放入 Close；看其左下方 22 号(3,1)由 15(2,1)直走 g=10+10=20, h=(1+4)×10=50 → f(22)=70（若由 16 斜走则是 14+14=28 更贵不更新）；看其右下方 24 号(3,3)斜走 g=14+14=28, h=(1+2)×10=30 → f(24)=58。弹出 24 扩展右上方 18 号(2,4)：斜走 g=28+14=42, h=(0+1)×10=10 → f(18) = 52！',
+        '第四步（终点回溯与等价路径）：18 号正右一格直走即可达终点 B=19（g=42+10=52，全程总代价 52；注 24→25→19 同代价亦可），沿着 parent 链顺着写得路径 8-16-24-18-19！'
+      ],
+      pitfall: '计算 22 号格时最易算错 g 值：别误以 16→22(g=28) 当父节点！实际上 8→15(直走 g=10)→22(直走 g=20) 更短，所以 g(22)=20，f=20+50=70；且本真题允许切角（若禁止切障碍17则8→16可行，16→24不切17，24→18斜穿过17/25空隙合法或绕25）。'
+    },
+    f7: {
+      why: '考察对 A* 算法完整闭环控制流的精准把控：Open 表初始化 → 循环抽最小 f → 判停回溯 → 转入 Close 防重 → 扫描 8 邻居分三种状态处理（跳过、新增、松弛更新）→ 回环。',
+      steps: [
+        '第一步（初始化与取点阶段 C→B→A→D→E）：先起点入 open (C) → 判断 open 是否空并循环 (B) → 取 f 最小节点 pNode (A) → 若是终点即成功准备回溯 (D) → 否则把 pNode 移入 close (E)。',
+        '第二步（邻居扩展阶段 G→F/H）：循环 8 邻接点遇到障碍或在 close 则跳过 (G) → 若邻居不在 open 则加入并算 fgh 设父 (F)，若已在 open 且经过 pNode 的新 g 更小则改父与 g/f 值 (H)（F/H 并列可互换）。',
+        '第三步（闭环与路径提取 M→N）：跳回步骤 B 继续下一轮 (M)，找到目标后反向迭代父指针保存路径 (N)，连缀得 CBADEGFHMN。'
+      ],
+      pitfall: '高错位置有两个：① 把 D（判目标）放在 E（移入 close）之后或 A 之前；② 把 M（转步骤 B）和 N（反向保存路径）顺序弄混——记住 M 是内循环跳回 B，N 是跳出循环后收尾输出路径！'
+    },
+    f8: {
+      why: '深度优先搜索（DFS）既可以用显式 Stack 写迭代循环，也可以借助系统栈写递归；两套算法虽然底层思想同源，但入口初始化顺序和结束回退方式各有侧重。',
+      steps: [
+        '第一步（梳理递归序列 E→J→F→H/G→K→L）：先定义递归函数 doDFSRec (E) → 判起点即终点递归基 (J) → 计算 i 方向邻居节点 (F) → 若可通未访则设父指针换新起点 (H) 否则跳过判下方向 (G) → 递归深入调用 doDFSRec (K) → 8 方向全部试探失败结束返回 false (L)。',
+        '第二步（梳理非递归序列 A→C→D→B）：首先建栈并压入起点 (A) → 只要栈不为空就进入循环 (C) → 弹出栈顶判断是不是终点 (D) → 标当前节点已访问并把所有可通未访邻居设父后压入栈 (B)。',
+        '第三步（对照核验）：递归序列为 EJFHKGL（或 EJFGHKL），非递归序列为 ACDB。'
+      ],
+      pitfall: '非递归最后四字母顺序极易误选 ABCD：注意先进入“栈非空重复(C)”，循环体内才执行“取栈顶判终点(D)”，最后才是展开邻居入栈(B)！'
+    },
+    f9: {
+      why: '系统辨析课内全部四大基本局部寻路法，精准抓住各自唯一标志性语句（随机角/已访问绕行/maxWeight 赋权/左右手优先定序）即可一次性准确配对。',
+      steps: [
+        '第一步（匹配空 1 绕行避障——DJKC）：向目标走遇障绕行(D) → 查 next=(dir+n)%8 找无障未访问格(J) → 向 next 走一步(K) → 重复到终点(C)。',
+        '第二步（匹配空 2 沿路径走——ABC）：按方向为 8 邻域赋权(A) → 选权重最大格作下一步(B) → 重复直到目标(C)。',
+        '第三步（匹配空 3 沿墙走——IMLC）：按左手/右手定优先序列(I) → 顺序列查首个可通行格移动(M) → 更新当前前进方向(L) → 重复(C)。',
+        '第四步（匹配空 4/5 两种赋权法——EH 与 GF）：法一“先地形后方向”（先判障碍给低权能通给高权 E → 再按当前方向加减权重 H）；法二“先夹角后碰撞”（按夹角越小权越大赋初值 G → 遇障碍碰撞减权 F）。'
+      ],
+      pitfall: '注意空 4 与空 5 各自都是两步（E+H、G+F），千万别把 E 和 G 配错对（先地形 E 后方向 H；先夹角 G 后碰撞 F），且空 4 和空 5 两者整体可以互换。'
+    },
+    f10: {
+      why: 'Boids 模型通过只看局部半径内的同伴状态、各自算出三条独立操控力再线性加权求和，用零全局规划代价合成逼真自然群体涌现运动。',
+      steps: [
+        '第一步（辨析避撞力——空 1）：与邻近个体距离过近时产生反向推力防止撞车重叠，称为【分离】（Separation）。',
+        '第二步（辨析同步航向力——空 2）：将自身速度朝邻居群体的平均速度矢量调整，使大家方向步伐一致，称为【对齐】或【队列】（Alignment）。',
+        '第三步（辨析向心力——空 3）：计算出周围邻居坐标的几何中心点并产生向心引力防止落单散群，称为【聚集】（Cohesion）。'
+      ],
+      pitfall: '注意国内教材对 Alignment 既有译作“对齐”也有译作“队列”的，本平台已同时兼容，但千万别把它与 Cohesion（聚集/聚合）混淆！'
+    },
+
+    /* -------------------- 四、按要求作答题 (e1..e10) -------------------- */
+    e1: {
+      why: '本题集中对比第 7 讲的两种基础局部避障策略：随机避障代表“零记忆最小代价随机脱困”，绕行避障代表“局部贴边记忆防震荡”，理解是否有 visited 记忆以及如何影响空间/效率是第 3 章问答重点。',
+      steps: [
+        '第一步（剖析随机移动避障原理与步骤）：核心是维持 Tracing 与 RandomMoving 双状态。正常直奔目标（Tracing）；一旦前格碰撞，切换 RandomMoving 并随机挑选一个无碰撞角度设定步长（如 50 px）向前推进，走完恢复追踪、途中再撞则清零步长重随机。',
+        '第二步（剖析绕行障碍物核心机制与防死环方法）：直线逼近时遇墙定位障碍方向 dir，按顺/逆时针公式 next = (dir + n) % 8 寻找首个“无障碍且未访问过”的格并打上已访标记走一步，同时继续试图朝终点前进。正因记录了“已访问格”，才避免在障碍物边来回打转死循环。',
+        '第三步（从考纲四个维度逐条对比）：① 实现难度（随机极简 vs 绕行较复杂需查 8 邻）；② 内存开销（随机不存历史低至 O(1) vs 绕行需维护 visited 数组）；③ 路径效率（随机大幅波动绕弯 vs 绕行通常更稳较短）；④ 适用场景（随机适合开阔少障城镇漫游 vs 绕行适合障碍较多的环境，但遇深死胡同两者都会卡）。'
+      ],
+      pitfall: '大题采分极看重两个关键点：必须点出“绕行依靠记录已访问格子防止原地死循环”，以及四维度对比不要漏写“内存开销”与“适用场景”！'
+    },
+    e2: {
+      why: '第 8 讲聚焦“沿路径走（打分权重选方向）”与“沿墙走（左/右手优先摸边）”两类无启发寻路法，既考手工权重设计细节，也考 C# 中负数取模与空旷区域绕圈漏洞的工程修正思维。',
+      steps: [
+        '第一步（讲清沿路径走两种权重设计思路）：方法 1“先地形后方向”（先判 8 邻域可通 +10、障碍 -10，再按距正前方夹角分别 +2/+1/0/-1/-2 微调）；方法 2“先夹角后碰撞”（按与当前朝向夹角从正前 10 到正后 6 预设 initial weights [10,9,8,7,6,7,8,9]，再把障碍物格权重统一 -= 10），最后选 maxWeight 格作为新目标。',
+        '第二步（分别写出四方向与八方向沿墙走步骤）：四方向左手定则固定按【左 → 前 → 右 → 后】试探首个无障方向；八方向在顺时针 0..7 编码下，左手从起始方向 (curDir - 2 + 8) % 8 起步顺时针扫描 8 格（右手从 (curDir + 2) % 8 逆时针扫描），选第一个可通行格迈步并同步更新 curDir。',
+        '第三步（点明空旷区局限与工程改进）：空旷区域由于四周全是空地“摸不到墙”，AI 会持续偏向左侧/右侧转弯从而原地兜圈浪费步数；改进思路为加入脱墙检测（连续多步未接触障碍则切换直线直奔或随机探索模式，直至重新触墙）。'
+      ],
+      pitfall: '写八方向左手起始公式时若写成 `(curDir - 2) % 8` 必扣分（因未加 8 处理负数余数）；另外四方向左手定则顺序“左 → 前 → 右 → 后”必须严格按序写出。'
+    },
+    e3: {
+      why: '图搜索三剑客（DFS、BFS、Dijkstra）的区别完全取决于“待扩展集合选用何种优先策略弹出下一节点”：后进先出的栈带来纵深试探，先进先出的队列带来无权层次最短路，而按当前累计 g 值排序的最小堆则把能力推广到了不同地形代价的带权图。',
+      steps: [
+        '第一步（分步写出 BFS 完整流程）：① 若 start==target 直接结束；② 创建 Queue<MapNode>，起点标 visited=true 入队；③ while(队非空)：Dequeue 出队头 cur，遍历 8 邻接点：若可通行且未访问，立即标 visited=true、记录 next.parent=cur、若为终点调用 generatePath(target) 沿父链倒推并反转路径结束，否则 Enqueue(next)；④ 队空仍未遇终点则寻路失败。',
+        '第二步（分步写出 DFS 非递归完整流程）：① 建栈 Stack 压入起点；② while(栈非空)：Pop 出栈顶元素判是否终点（是则回溯返回）；③ 否则标其已访问，找它周围可通行且未访问邻接点，记录父节点并依次 Push 压入栈；④ 栈空则无解返回。',
+        '第三步（对比四维度及归纳关系）：数据结构（DFS 栈 vs BFS 队列 vs Dijkstra 优先队列/最小堆）；最优性（DFS 不保最短 vs BFS 保无权图边数最少最短 vs Dijkstra 保非负权最小总代价路径）；空间与场景（DFS 内存省适迷宫生成/连通检测，BFS 层次扩占内存大适无权最短，Dijkstra 适沼泽山地加权地形，且当所有边权重相等时 Dijkstra 退化为 BFS）。'
+      ],
+      pitfall: 'BFS 必须在邻接点“入队时”立刻标记 `visited = true`，绝不能等到“出队时”才标！否则同一邻格会被上一层的多个节点重复塞进队列造成指数级内存爆炸！'
+    },
+    e4: {
+      why: 'A* 算法作为第 4 章压轴核心，把已知实耗与未来方向估价有机结合，大题既要求精确写出 Open/Close 列表中每轮节点比较-改父-重评估循环逻辑，也考查在实际游戏大地图中如何突破寻路性能瓶颈。',
+      steps: [
+        '第一步（阐明 f=g+h 含义与可采纳条件）：f(n)=g(n)+h(n)，其中 g(n) 是起点到 n 的已知真实代价（网格正交 +10、斜向 +14），h(n) 是 n 到终点的启发预估值（曼哈顿/欧氏距离）；h 必须满足可采纳性 h(n) <= h*(n)（不高估），才能严谨保证必得最优路径。',
+        '第二步（给出双表职责与完整 5 步执行流）：Open 表存待考察候选节点，Close 表存已彻底考察过的节点。① 起点算 g/h/f 入 Open；② 若 Open 空失败，否则取 f 最小节点 pNode；③ 若 pNode 为终点，沿 parent 链回溯并反转得最优路；④ 移 pNode 到 Close，检查 8 邻格 pAdj：若不可通或在 Close 中忽略；若不在 Open 中则计算其 g/h/f、设父为 pNode 并入 Open；若已在 Open 中且经由 pNode 的新 g 更小（即 g_new < pAdj.g），则把 pAdj 的父指针改为 pNode 并刷新 g 与 f；⑤ 返回第 ② 步循环。',
+        '第三步（总结至少 4~6 条核心工程优化）：① Open 改用二叉最小堆/优先队列将查找最小值由 O(N) 降至 O(log N)；② f 值相同打破平局优先取 h 更小者（更快靠向终点）；③ Close 动态重开应对非一致启发；④ 双向 A* 减小搜索面积；⑤ 引入多样地形代价与敌方火力影响力映射（Influence Map）算趋利避害路径；⑥ 分层寻路 (HPA*) 与平滑剪枝/NavMesh 降维。'
+      ],
+      pitfall: '最易遗漏的步骤是“pAdj 已在 Open 表且经当前点 g 更小时，不仅要更新 g/f，还必须更新其父指针 parent = pNode”，否则最后回溯出来的路还是旧的绕远路径！'
+    },
+    e5: {
+      why: '这道画图兼理论大题全面检验“FSM 四要素定义 → 规范绘制状态迁移图 → 转换表逻辑查漏 → 为何从分支代码演进到状态设计模式”的全链路工程能力。',
+      steps: [
+        '第一步（写出 FSM 严格四要素）：状态、初始状态、输入（事件）、转换（转换函数）。',
+        '第二步（在画板规范构建 4 态守卫迁移图）：创建【巡逻 Patrol】【追逐 Chase】【攻击 Attack】【死亡 Dead】4 个圆圈状态；用实心黑点箭头标记【巡逻 Patrol】为初始状态；连出 8 条带事件标签的有向边：巡逻--(发现玩家)-->追逐、追逐--(玩家离开)-->巡逻、追逐--(进入射程)-->攻击、攻击--(脱离射程)-->追逐、攻击--(玩家很远)-->巡逻，以及巡逻/追逐/攻击各自--(HP=0 / 生命归零)-->死亡 Dead。',
+        '第三步（梳理状态迁移表与设计模式重构理由）：状态迁移表按行“当前状态”、列“输入事件”填出下一状态（直观检验有无遗漏）。传统 switch-case 随着状态增加耦合失控、改一发牵全身，而状态设计模式利用 Context + IState(Enter/Execute/Exit) + ConcreteState 将各状态解耦为独立类，符合单一职责与开闭原则。'
+      ],
+      pitfall: '画状态机大题最常丢两种分：① 忘记点击【设为初始态】给“巡逻 Patrol”加上 `●→` 初始黑点标志；② 漏画攻击、巡逻到死亡的那 3 条任意态 HP=0 转换边（题目明确说“前三种任意状态下生命归0均进入死亡”）！'
+    },
+    e6: {
+      why: '经典游戏案例状态机建模考验快速从文字规则中抽象互斥运行态与闭环迁移事件的能力：无论是吃豆人幽灵的出笼→追逐→惧怕逃逸→变眼珠回巢周期，还是蚂蚁“寻食→搬回→找水→回循环+有毒即死”的生态循环，核心都是用有限圆圈完全覆盖生命周期。',
+      steps: [
+        '第一步（方案 A·吃豆人 Blinky 五态闭环剖析）：先放置 5 个状态并用实心黑点指向【上升】作为初始态。按规则连线：上升 --(走出迷宫中央)--> 追逐玩家；追逐玩家 --(玩家死亡)--> 随机移动 --(玩家再生)--> 追逐玩家；追逐玩家 --(玩家吃能量球)--> 逃离玩家 --(能量球用尽)--> 追逐玩家；逃离玩家 --(被玩家吃掉)--> 死亡(眼珠) --(回到迷宫中央)--> 上升。',
+        '第二步（方案 B·蚂蚁世界四态闭环剖析）：放置【饥饿(找食物)】【回家】【口渴(找水源)】【死亡】4 个状态，以实心黑点指向初始态【饥饿(找食物)】。连出主循环：饥饿 --(找到食物)--> 回家 --(回到巢穴放下食物)--> 口渴 --(找到水源喝水)--> 饥饿；再分别从饥饿、回家、口渴各自连一条 --(碰到毒物)--> 死亡 的有向边。',
+        '第三步（自检画板完备性）：确认自己只专心完整画其中 1 套方案，初始态标记清晰，每条有向转换边都标注清楚触发事件且闭合无悬空状态。'
+      ],
+      pitfall: '千万不要把方案 A 的状态和方案 B 的状态混在一起画，否则会干扰语义对齐；选一套熟悉的画全所有闭环边与条件文字！特别是 Blinky 的“死亡回到中央 → 重新上升”及蚂蚁的“三条 → 死亡”容易漏画。'
+    },
+    e7: {
+      why: '“条件突变中断”是行为树实战中最经典的高级控制问题：因为有记忆的 Sequence 一旦卡进耗时多帧的 Running 子节点就不再回头看左侧前置条件，导致“目标早已不在眼前还在空挥”；通过 Parallel 并发监控 + Until Failure 持续循环哨兵，实现条件一假立刻全组熔断。',
+      steps: [
+        '第一步（点透 Sequence 的痛点根源）：“向玩家移动”需多帧完成并不断返回 Running。普通顺序节点记住并续跑该 Running 节点，直接跳过左侧已成功过的“看到玩家？”条件检测，因而无法感知目标突然消失，不具备实时中断能力。',
+        '第二步（用画板构建 Parallel + Decorator 中断树）：顶层放组合节点 Parallel (⇉)；左分支先挂修饰节点 Decorator (Until Failure)，下面挂条件叶【看到玩家？】（只要条件继续成功，Until Failure 就持续返回 Running 让监视保持存活；一旦玩家消失条件返 Failure，Until Failure 瞬间跳出并返回 Failure！）；右分支挂 Sequence (→)，下接动作叶【向玩家移动】和【攻击】。当左分支吐出 Failure，Parallel 立即中断右侧正在跑的移动/攻击！',
+        '第三步（从四维度对比 BT vs FSM）：① 组织结构（层级树状 vs 网状图状）；② 模块复用与扩展（子树插拔复用、防状态爆炸 vs 状态多边暴增）；③ 并行与条件中断（原生 Parallel+Decorator 强支持 vs 需额外手工写并发控制）；④ 适用定位（复杂动态高频变更 AI vs 简单明确或宏观阶段切分）。'
+      ],
+      pitfall: '画图常见两个失误：① 把两个子节点直接裸挂在 Parallel 下而忘了给“看到玩家？”套上【Until Failure】修饰节点（没套修饰节点的话，只要一帧看到玩家返回 Success 就会立刻让该分支结束不再持续监控！）；② 节点连线方向应从父节点指往子节点。'
+    },
+    e8: {
+      why: '拦截问题本质是求解“恒速移动目标当前线性预测路线，与全速切弦追击者路线在空间与时间上恰好同时交汇于一点 St”的矢量闭合方程：先用相对速度 Vr 和相对距离 Sr 估算近似闭合时间 tc，再用目标速度外推出未来位置 St，比传统盯着尾部追的算法快得多。',
+      steps: [
+        '第一步（写出标准拦截 6 步流程与公式）：① 测量或读取目标速度 Vprey；② 求相对速度 Vr = Vprey - Vpredator；③ 求相对距离 Sr = Sprey - Spredator；④ 估算闭合拦截时间 tc = |Sr| / |Vr|；⑤ 外推预测拦截点 St = Sprey + Vprey * tc；⑥ 按 Seek 思路求期望速度 (St - Spredator) / tc 并经 ClampMagnitude 限幅后乘 dt 更新位移。',
+        '第二步（代入题目数值算出相对向量与模长）：火箭（目标）(80, 220), Vprey = (6, 5)；怪兽（追逐者）(380, 160), Vpred = (0, 0)。故 Vr = (6 - 0, 5 - 0) = (6, 5)，模长 |Vr| = sqrt(6^2 + 5^2) = sqrt(61) ≈ 7.81；Sr = (80 - 380, 220 - 160) = (-300, 60)，模长 |Sr| = sqrt(300^2 + 60^2) = sqrt(93600) ≈ 305.94。',
+        '第三步（算出闭合时间 tc 与预测点 St）：tc = 305.94 / 7.81 ≈ 39.17；代入坐标 St = (80 + 6 * 39.17, 220 + 5 * 39.17) = (80 + 235.02, 220 + 195.85) ≈ (315.0, 415.9)。'
+      ],
+      pitfall: '最易翻车的符号错位：① Sr = 目标位置 - 自身位置 = (-300, 60)，不是反向（不过求模长 |Sr| 时正负号平方面不变，但后面算拦截点 St 一定要用“目标当前位置 80,220 + 目标速度 × tc”，不要错加成怪兽当前位置 380,160！）；② 算 tc 时别忘了两个分量各自先平方求和再开根号。'
+    },
+    e9: {
+      why: '战斗决策树是行为树在实际项目中最典型的“带优先级分层决策”范式：把生存底线、主动迎敌、闲置巡逻按紧急程度从左到右排成互斥优先级，借由 Selector 的“自左向右择一触发”与 Sequence 的“条件+行为强绑定门禁”，不写任何复杂状态转换边就能写出逻辑严谨的战斗 AI。',
+      steps: [
+        '第一步（确立顶层总控优先路由 Selector）：根节点下挂总控选择节点 Selector (?)，它的孩子从左到右严格对应优先级从高到低的三套应急方案。',
+        '第二步（依次挂载左、中、右三分支）：① 最左最高优分支挂 Sequence (→)，包含条件叶【低血量？】和动作叶【撤退 / 回血】；② 中间战斗分支挂 Sequence (→)，包含条件叶【发现敌人？】、动作叶【移动 / 追击】和【攻击】；③ 最右兜底分支挂默认动作叶【巡逻】（前两分支全返回 Failure 时自动运行）。',
+        '第三步（简述 Selector 与 Sequence 执行及返回值规则）：Selector 按从左到右逐个 Tick 子节点，任一返回 Success 或 Running 立即停止并向上返回对应状态，全部失败才返回 Failure；Sequence 按从左到右逐个 Tick，任一返回 Failure 立即中断返回 Failure，只有全部 Success 才返回 Success。'
+      ],
+      pitfall: '两个画图高发错误：① 把三个分支按从左到右顺序列颠倒了（若把【巡逻】放在最左边，每次无条件返回 Success/Running 就会直接饿死右边所有的低血量撤退和打架逻辑！）；② 忘记文字补充 Selector 和 Sequence 的返回值执行规则导致丢掉规则分。'
+    },
+    e10: {
+      why: '这道 5×6 网格压轴手算+画图题综合考验：① 对角步长 14 与正交步长 10 的精确加权求和；② 紧贴墙角穿行时是否触发“禁止斜穿障碍角点 (Corner Cut)”几何约束；③ 在多条潜在可通道路中通过严谨算式证明并比选出全局唯一最小总代价 g*。',
+      steps: [
+        '第一步（解码网格坐标与墙体位置）：5 行 6 列（row 0..4, col 0..5），格号 id = row * 6 + col。起点 S(12) 在 (2,0)，终点 G(17) 在 (2,5)；墙格为 8(1,2)、14(2,2)、20(3,2)、21(3,3)——正好横亘在第 2~3 列挡住直线通路。',
+        '第二步（排查非法切角路线——避坑关键）：很多同学想直接从 S(12) 向上斜绕走 12→7(1,1)→2(0,2)→...；但从 7(1,1) 斜向右上走到 2(0,2) 时，其正下方旁邻格子 8(1,2) 是障碍墙！依据题目红线“禁止斜穿障碍物角点”，7→2 属于非法穿墙，必须改走正交经过 1(0,1) 再右拐进 2(0,2)！同样 12→6(1,0)→1(0,1) 与 12→7(1,1)→1(0,1) 都不切墙角 8 和 14（注意 12→7 旁邻是 6(空) 和 13(空)，合法！）。',
+        '第三步（计算上方绕行最优总代价 g* = 72）：沿着上方合法路线 12(2,0) --斜(+14)--> 7(1,1) --直(+10)--> 1(0,1) --直(+10)--> 2(0,2) --直(+10)--> 3(0,3) --斜(+14)--> 10(1,4) --斜(+14)--> 17(2,5)（其中 3→10 旁邻是 4(空)和9(空)，10→17 旁邻是 11(空)和16(空)，全程零切角！）：总代价 g* = 14 + 10 + 10 + 10 + 14 + 14 = 72！（等价另一条路径 12--(+10)-->6--(+14)-->1→2→3→10→17 总和也是 72）。',
+        '第四步（验证底部绕行总代价并对比排出）：若想从墙下方绕过 20、21：因为 20 是墙所以 19→26 非法切角，只能正交绕走 12→19(+14)→25(+10)→26(+10)→27(+10)→28(+10)→23(+14)→17(+10) = 78（> 72）；因此顶部双路径以 g* = 72 严格最优！'
+      ],
+      pitfall: '三大丢分重灾区：① 从 7 直接斜切过墙角 8 去到 2（违法穿角得 0 分）；② 从下方 19→26 直接斜穿障碍 20 墙角；③ 绕下面走出合法路径（代价 78）未比对上方更短的 72。务必牢记：八方向斜走 (dr, dc) 合法的充要条件是相邻两个正交中间格 (r+dr, c) 与 (r, c+dc) 均不是障碍物！'
+    },
+
+    /* -------------------- 五、编程填空与编码大题 (c1..c9) -------------------- */
+    c1: {
+      why: 'Unity 游戏物理引擎如果每帧逐次积分并响应边界反弹，底层依靠两件事：① 用时间步长 dt = Time.deltaTime 做半隐式欧拉积分；② 通过向量投影反射公式 v\' = v - 2(v·N)N 统一处理轴平行墙面与任意倾角斜面三脚架的弹性碰撞。',
+      steps: [
+        '第一步（实现空 1、空 2 —— 帧率无关运动积分）：速度更新按匀加速方程写 velocity + acceleration * dt（注意乘以 dt 消除帧率差异）；位置更新使用更新后的新 velocity 与上一位置 ballpos + velocity * dt，写回 UI 组件 anchoredPosition。',
+        '第二步（实现空 3、空 4、空 5 —— 正交墙壁与篮筐点反弹）：① 撞右竖直墙壁（法线 [±1, 0]）只改横向速度：velocity.x = -velocity.x；② 撞上水平天花板（法线 [0, ±1]）只改纵向速度：velocity.y = -velocity.y；③ 撞篮筐圆形孤立端点视为法线恰与来向共线，整条速度矢量全反转：velocity = -velocity。',
+        '第三步（实现空 6 —— 斜面三脚架一般法向量反射推导）：设单位法向量为 N（|N| = 1），入射速度 v 在法向上的投影长度为 Vector2.Dot(velocity, N)，该分量垂直扎进斜面需先抵消一次、再反向弹回同样大小，因此总变化量为减去两倍法向投影：velocity = 2 * N * (-Vector2.Dot(velocity, N)) + velocity（或者等价调用 Unity 内置方法 Vector2.Reflect(velocity, N)）。'
+      ],
+      pitfall: '写空 6 时符号千万不要写正加号（+2 * Dot * N 会让篮球加速钻穿进斜坡地底！），也别忘了空 1~空 5 不要多余写分号（模板括号或等号后已有固定结构），并区分竖直墙反转 .x、水平板反转 .y！'
+    },
+    c2: {
+      why: 'DoPattern 控制指令法用一段小巧的循环状态机驱动 NPC 沿矩形/多边形自动巡逻：核心在于同时做好两类循环溢出防护——“方位角度 0~360° 取模与负角补正”和“指令数组 curIndex 索引环形回绕”。',
+      steps: [
+        '第一步（实现空 1、空 2 —— 方位角安全归一 [0, 360)）：叠加本帧左右转向角后可能超过 360° 或跌破 0°。先做取模 monsterAngle % 360；因为 C# 中 (-90) % 360 仍返回负数 -90，必须紧接判断 if (monsterAngle < 0) monsterAngle += 360，确保角度稳落在 [0, 360)。',
+        '第二步（实现空 3、空 4 —— 极坐标转笛卡尔位移）：先乘以 Mathf.Deg2Rad 将角度转化为弧度，用三角函数合成单位方向矢量 new Vector2(Mathf.Cos(angle), Mathf.Sin(angle))；乘速率和 dt 后得位移 displacement，并把新坐标 pos = pos + displacement 暂存同时累加步长 stepDistance。',
+        '第三步（实现空 5、空 6、空 7 —— 段末切指令与写回 UI）：一旦累计距离达到当前指令要求（fForwardDis - fBackwardDis），执行 ++curIndex 并通过 curIndex %= patternArray.Count 回到 0 形成闭环，同时把 stepDistance = 0 为新指令重新计程；最后把算好的新坐标写回 monster.anchoredPosition = pos。'
+      ],
+      pitfall: '两处经典编程坑：① 空 3 的 Mathf.Cos / Mathf.Sin 参数必须传已乘过 Deg2Rad 的局部变量 angle，绝不能再传入原始度数 monsterAngle；② 切换指令进入空 6 时如果不重置 stepDistance = 0，之后每一条指令都会瞬间达标跳过导致怪物原地疯转！'
+    },
+    c3: {
+      why: '八方向沿墙走（doWallTracing）在编码层面重点考察两项能力：① 将“优先右手”几何方位映射为顺时针 0..7 编号循环起点与逆时针扫查步进方向；② 妥善规避 C# 语言中“负数取余得负值”引起的 dirs 数组越界异常。',
+      steps: [
+        '第一步（实现空 1 —— 右手优先扫描循环范围）：0~7 为顺时针编码，当前方向正前方记作 curDirection，向右旋转 90° 即间隔 2 格为 curDirection + 2。因为要“从右手开始按逆时针挨个试探（右 → 右前 → 前 → 左前 → 左...）”，所以 i 从 curDirection + 2 开始递减（--i）直至 > curDirection - 6（共精确尝试 8 个方向）。',
+        '第二步（实现空 2 —— 负数安全归一化到 0~7）：随着 --i 不断减小或 curDirection 本身接近 0 时，i 很可能变成负数（例如 -1, -3）。直接写 i % 8 在 C# 会得到 -1 报错，必须先加上周期 8 再取模写成 (i + 8) % 8（或 ((i % 8) + 8) % 8）保证安全映射到 0~7。',
+        '第三步（实现空 3、空 4 —— 地形校验与目标更新）：计算出试探格 pt = curPos + dirs[walkDir] 后，调用 map.canPassWithRowCol(pt) 判断是否无障碍；一旦找到第一个可走格，立即调用 map.toXY(pt) 把逻辑行列号转成世界/UI 中心像素坐标赋给 target，更新 curDirection = walkDir 并 break 跳出试探循环。'
+      ],
+      pitfall: '若题目改为【左手优先】沿墙走：起点立刻变为 curDirection - 2 + 8（或 (curDirection - 2 + 8) % 8）起跳并且循环条件变为递增 ++i，切记“右手 +2 配递减 --i，左手 -2 配递增 ++i”！'
+    },
+    c4: {
+      why: '沿路径走算法（doPathFollowing）用“静态方向偏置 + 动态障碍罚分 + 贪心选最大值”三段简洁循环实现平滑避障：即使正前方被一堵小柱子挡住（正前初分 10 扣去 10 变成 0），次优的斜前方两翼（9 分）也能无缝接管引导角色自然斜绕。',
+      steps: [
+        '第一步（拼接空 1 —— AMDBCN 障碍减权循环）：外层用 for(int i=0;i<8;++i) (A) 开大括号 { (M) 包裹内部语句：先算出该方向试探格 Vector2 pnt=curPos+dirs[i]; (D)，随后判断 if(!map.canPassWithRowCol(pnt)) (B) 命中障碍则惩罚权重 weight[i]-=10; (C)，最后闭大括号 } (N)。',
+        '第二步（拼接空 2 —— FMEMGHNN 寻找最高分方向）：再次遍历 8 个方向 for(int i=0;i<8;++i) (F) 打开 { (M)，判断 if(weight[i]>maxWeight) (E) 成立时再次打开 { (M) 同步更新最高分 maxWeight=weight[i]; (G) 并记住对应方向下标 curDirection=i; (H)，最后成对关闭内/外两层 } } (N N)。',
+        '第三步（拼接空 3 —— IJ 算格并转为像素坐标）：已知最佳方向索引 curDirection 后，求下一步行列坐标 Vector2 pt=curPos+dirs[curDirection]; (I)，再用 target=map.toXY(pt); (J) 转换为中心像素目标点供移动状态使用。'
+      ],
+      pitfall: '代码片段排序填空最容易栽在结构性大括号匹配上：记住空 2 共有两层嵌套（for { if { ... } }），前面用了两个 M，结尾一定要有两个 N 即 NN 收尾，漏一个括号都会扣分！'
+    },
+    c5: {
+      why: '随机移动避障 RandomMoving 分支是一个非常典型的双态机交互样本：进入随机状态后每帧按随机角度迈小步，既要实时提防随机新方向是否再次迎头撞墙，又要在累计走完预设步长后无缝切换回追踪玩家模式。',
+      steps: [
+        '第一步（实现空 1~3 —— 合法行进与里程累计）：先调用 TileMap.canPass(pos) 检查试探点 pos 是否可通行；若通畅则更新坐标 monster.anchoredPosition = pos，并将本帧矢量位移的模长加到已走距离中：monsterMovedDis = monsterMovedDis + displacement.magnitude（或 +=）。',
+        '第二步（实现空 4~7 —— 达成随机步长回归追踪）：检查条件 monsterMovedDis >= monsterNeedMoveDis 判断随机巡游段是否完成；走完后将状态切回 RoleState.Tracing（或 Tracing），清零计数变量，按“终点减起点”计算指向玩家的矢量 Vector2 vr = player.anchoredPosition - monster.anchoredPosition，归一化后再乘标量速率 vr * MonsterSpeed 重建追踪速度。',
+        '第三步（实现空 8 —— 随机期间再遇障熔断自救）：如果 else 分支被触发说明随机挑出来的新方向前面依然堵着墙，绝不能原地死撞，必须立即执行 monsterNeedMoveDis = 0，促使下一帧触发 RandomMoving 重随新角度逻辑。'
+      ],
+      pitfall: '注意两处细节：① 空 6 矢量相减千万别写成 monster - player（那样回归追踪会立刻变成背向玩家逃跑！）；② 空 8 不要写成重设随机角度，真题原码是通过设 monsterNeedMoveDis = 0 来通知分支入口重新抽取方向与步长。'
+    },
+    c6: {
+      why: '手写拦截算法的核心在于用最少几行 3D 向量运算完成时空耦合预判，从底层保证即使目标在快速横向逃逸，追逐者也不会画出低效尾巴线，而是通过 ClampMagnitude + Time.deltaTime 以物理限速稳健切弦拦截。',
+      steps: [
+        '第一步（求相对速度与相对距离）：遵循相对运动公式，分别算出 Vector3 relativeVelocity = preyVelocity - predatorVelocity; 与 Vector3 relativeDistance = prey.position - predator.position;。',
+        '第二步（计算闭合时间 tc 与除零防护）：取相对速率模长 speedMag = relativeVelocity.magnitude; 若 speedMag < 0.001f 直接 return 防止除以 0 出现 NaN；否则算出 float interceptTime = relativeDistance.magnitude / speedMag;。',
+        '第三步（外推交汇点、速度限幅并推进坐标）：推算目标在 tc 秒后的未来坐标 Vector3 interceptPoint = prey.position + preyVelocity * interceptTime;；算出直奔交汇点所需的理想速度 desiredVelocity = (interceptPoint - predator.position) / interceptTime;，用 Vector3.ClampMagnitude(desiredVelocity, maxSpeed) 限制最大飞行速度，最后帧率无关更新 predator.position += newVelocity * Time.deltaTime;。'
+      ],
+      pitfall: '常犯错误是忘了用 Vector3.ClampMagnitude 限幅——如果双方初始位置很远、相对速度却很小算出的 tc 很大或反之，期望速度模长很容易突破物理最大速度 maxSpeed 导致瞬间闪现；以及最后位移一定要乘 Time.deltaTime！'
+    },
+    c7: {
+      why: '递归 DFS 兼顾搜索代码极简美感与父链回溯架构之美：函数借助系统栈隐式回退，只需记录好 next.parent = from 就能构建出完整生成树；随后无论什么搜索算法（DFS/BFS/A*）都可复用同一套 generatePath() 从终点顺藤摸瓜还原出正向路径。',
+      steps: [
+        '第一步（入口标记与递归终止基）：进入 doDFSRecursionSearch(MapNode from, MapNode to) 后第一句话标记 from.visited = true 防死循环重复走；紧接着检查 if (from == to) return true; 作为到达终点即刻成功返回的递归出口。',
+        '第二步（8 方向试探与递归推进）：循环 i = 0..7 算出邻接位置 Vector2Int nextPos = from.pos + dirs[i];，判断 map.canPassWithRowCol(nextPos) 可通且拿出的节点 MapNode next = map.getNode(nextPos) 满足 !next.visited；先记录关键指针 next.parent = from; 再递归 if (doDFSRecursionSearch(next, to)) return true;，若 8 个方向走尽仍无果则在循环外 return false 自动退回上层分叉口。',
+        '第三步（编写父指针回溯与反转 generatePath）：从终点 node = targetNode 开始先放进 ArrayList path，随后利用 while (node.parent != null) 循环不断将 node.parent 加入 path 并顺链上移 node = node.parent；因为此时列表顺序是从终点倒着走到起点，退出循环前务必调用 path.Reverse(); 转正并返回！'
+      ],
+      pitfall: '三大极易失分位置：① 忘了在递归最开头设 from.visited = true，一旦图中有环会瞬间堆栈溢出；② 忘了写 next.parent = from 会使后面 generatePath 只有终点一个孤立元素；③ 忘记最后的 path.Reverse() 会让角色从终点倒着飞回起点！'
+    },
+    c8: {
+      why: '队列驱动的广度优先搜索（BFS）是“无权二维网格地图全局最短路径”的基准实现：借助 Queue 的 FIFO 先进先出顺序，离起点恰好跳数为 k 的格子必然全部先于跳数为 k+1 的格子被出队扩展，因而当某一步第一次碰见 target 时路径跳数绝对全局最少。',
+      steps: [
+        '第一步（建队列与起点初始化）：先特判 if (start == target) return true;；随后实例化 Queue<MapNode> queue = new Queue<MapNode>();，立即把 start.visited 设为 true（关键！）再执行 queue.Enqueue(start);。',
+        '第二步（出队与 8 邻域层序扩展）：在 while (queue.Count > 0) 主循环中，每次用 MapNode cur = queue.Dequeue(); 取出最先进入当前波前的一格，并用 for(int i = 0; i < 8; ++i) 算出邻格 nextPos，跳过不可通行格。',
+        '第三步（入队前标已访、记父指针与早停判终点）：拿到未访问邻接节点 (!next.visited) 后，必须趁它还在进队之前立刻设置 next.visited = true; 与 next.parent = cur;；如果此时检查 next == target 命中终点，立即调用 generatePath(target) 保存最短路并 return true 提前退出；否则调用 queue.Enqueue(next); 等待后续波次扩展。若队空仍未出局则返回 false。'
+      ],
+      pitfall: '写 BFS 最致命的问题是把 next.visited = true 错误地写到上面 cur = queue.Dequeue() 之后而不是 Enqueue(next) 之前——这会导致同层相邻几个父节点同时把共用的右上角邻居多次塞进队列，造成节点重复膨胀与 parent 指针混乱！'
+    },
+    c9: {
+      why: '标准状态设计模式通过 C# 接口多态把“怪物主循环帧调度”和“每一种状态自己的行为与转跳规则”彻底拆开：Context 类从此只认抽象契约 IState，后续再给 Boss 拓展十几个状态也不需要回头改 Monster 类一行核心调度逻辑。',
+      steps: [
+        '第一步（定义抽象状态契约 interface IState）：明确声明三大标准化生命周期钩子：void Enter(Monster monster)（进入该态只跑一次如切动画/加移速）、void Execute(Monster monster)（处于该态每帧 Update 执行）、void Exit(Monster monster)（退出前只跑一次清理现场）。',
+        '第二步（构建上下文 Context——Monster 类）：私藏当前状态引用 private IState _currentState;；在 Update() 中简洁委托 _currentState?.Execute(this);；重点编写 ChangeState(IState newState)，必须严格遵守三部曲先后时序：① _currentState?.Exit(this);（先用 ?. 判空安全退出旧态）→ ② _currentState = newState;（替换新状态引用）→ ③ _currentState.Enter(this);（进入并初始化新态）。',
+        '第三步（实现具体状态类 RunAway）：继承实现 IState，在 Execute(Monster m) 中用 if (m.IsSafe()) 判断周围是否脱险：若安全则调用 m.ChangeState(new Patrol()); 回归巡逻；否则调用 m.LeaveEnemy(); 继续逃离危险目标。'
+      ],
+      pitfall: '高频工程/考试陷阱全集中在 ChangeState 三句话的执行次序上：如果把 _currentState = newState; 写在了 Exit(this) 前面，那就变成了调用“新状态的 Exit”，旧状态永远收不了尾且新状态刚被切进来就被自我销毁了！'
+    },
+
+    /* -------------------- 六、实战手写编程练习 (d1..d9) -------------------- */
+    d1: {
+      why: '实战 d1 将牛顿半隐式欧拉积分与四种典型 2D 边界几何反射合为一体，考察你在不依赖刚体 Physics2D 组件的情况下，仅用基础 Vector2 与 dot 点积即可手写稳定、清晰的篮球物理碰撞管线。',
+      steps: [
+        '第一步（Update 运动积分）：首先更新速度 velocity = velocity + acceleration * dt;（半隐式欧拉法先把新速度算出来用于更新位置，比旧速度直接乘 dt 更不易能量发散）；再更新位置 ball.anchoredPosition = ballpos + velocity * dt;，最后调 HandleCollision()。',
+        '第二步（HandleCollision 正交墙面与点反射）：撞右竖直墙（法线沿 x 轴）执行 velocity.x = -velocity.x;；撞水平天花板（法线沿 y 轴）执行 velocity.y = -velocity.y;；撞篮筐端点则整个速度反转 velocity = -velocity;。',
+        '第三步（斜面三脚架向量反射公式实现）：利用单位法向量 N，速度向斜面的垂直分量为 Vector2.Dot(velocity, N)，完全弹性碰撞后垂直速度恰好反向、平行切向速度保持不变，故写出 velocity = 2 * N * (-Vector2.Dot(velocity, N)) + velocity;（也可等价写 velocity -= 2f * Vector2.Dot(velocity, N) * N; 或 Vector2.Reflect(velocity, N);）。'
+      ],
+      pitfall: '常见写法错误包括：忘记乘 dt；将 velocity = -velocity 错用到竖直墙/水平板上；或者自己手算点积写丢乘 N（注意 2 * Dot(v, N) 是一个标量数字，必须再乘上法向量 N 才能和 velocity 做矢量加减！）。'
+    },
+    d2: {
+      why: '实战 d2 对齐游戏操控 AI 中最经典的预判追捕函数 UpdateIntercept：相比只会紧咬目标尾巴的普通 Seek，先计算相对闭合时间 tc、外推交汇点再做最大速率限幅与帧率无关位移，能真正飞出高智商弧弦交汇路径。',
+      steps: [
+        '第一步（相对速度与相对距离）：用目标物理量减去追逐者自身物理量：Vector3 relativeVelocity = preyVelocity - predatorVelocity; 与 Vector3 relativeDistance = prey.position - predator.position;。',
+        '第二步（估算拦截耗时与外推未来点）：float interceptTime = relativeDistance.magnitude / relativeVelocity.magnitude;（实际工程中建议同时防 speedMag < 1e-4f 除零）；然后推算拦截交汇坐标 Vector3 interceptPoint = prey.position + preyVelocity * interceptTime;。',
+        '第三步（最大速率限幅与平滑位移）：算出理想速度 Vector3 desiredVelocity = (interceptPoint - predator.position) / interceptTime;，再调用 Vector3.ClampMagnitude(desiredVelocity, maxSpeed) 截断超速向量得 newVelocity，最终写 transform.position += newVelocity * Time.deltaTime;（或 predator.position += ...）。'
+      ],
+      pitfall: '若在算 desiredVelocity 时把分子写成 interceptPoint + predator.position 或忘了除以 interceptTime 后又没有正则限幅，都会导致追击方向与速率失真；若忘了乘 Time.deltaTime，帧率一变化位移立刻飙升数十倍！'
+    },
+    d3: {
+      why: '实战 d3 手写 DoPattern 指令循环器，考验你对 C# 负数取余规律、角度弧度换算系数（Mathf.Deg2Rad）、三角形极坐标投影公式以及列表循环下标控制四个高频小细节的串联编写。',
+      steps: [
+        '第一步（角度整周收敛与负角校正）：先执行 monsterAngle = monsterAngle % 360; 压缩多圈累加角度；紧接着由于 C# 中负角取模还是负的，写 if (monsterAngle < 0) monsterAngle += 360; 保证范围严格落在 [0, 360)。',
+        '第二步（弧度映射方向矢量与位置推进）：传入已转为弧度的 angle 计算 Vector2 v = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));；计算新坐标 pos = pos + displacement;。',
+        '第三步（指令切段回绕、计程重置与坐标写回）：当 stepDistance >= data.fForwardDis - data.fBackwardDis 触发进入下一指令 ++curIndex 时，执行 curIndex %= patternArray.Count; 循环到数组开头，并重设 stepDistance = 0;；最后写回 monster.anchoredPosition = pos; 生效显示。'
+      ],
+      pitfall: '三大典型 Bug：① Vector2 的构造函数顺序永远是 (Cos, Sin) 即 (x, y)，别写反成 (Sin, Cos)；② curIndex 自增后如果不对其做 % patternArray.Count 会在跑完第一圈矩形时抛出 ArgumentOutOfRangeException；③ 方法最后若忘记把 pos 赋值回 monster.anchoredPosition，怪物在屏幕上完全一动不动！'
+    },
+    d4: {
+      why: '实战 d4 独立构建八方向右手优先沿墙走循环：如何从当前方向出发在 0~7 环形方向表上顺畅折转而不越界崩溃，是所有格子游戏贴边寻路编写成败的分水岭。',
+      steps: [
+        '第一步（确立右手扫描起止范围）：顺时针方向表上右转 90° 即 curDirection + 2，随后按逆时针递减（--i）连续试探一圈 8 个方向，写成 for (int i = curDirection + 2; i > curDirection - 6; --i)。',
+        '第二步（负数安全的周期索引转换）：为避免 i < 0 时 i % 8 返回负数导致 dirs 越界，写入 int walkDir = (i + 8) % 8;（等价 ((i % 8) + 8) % 8）。',
+        '第三步（碰撞试探与像素目标写回）：利用 Vector2 pt = curPos + dirs[walkDir] 验证 if (map.canPassWithRowCol(pt))，找到首格即可通行则算像素中心 target = map.toXY(pt);、更新朝向 curDirection = walkDir 并 break 中止本帧试探。'
+      ],
+      pitfall: '千万不要写成 int walkDir = i % 8;（当 curDirection == 0 递减试探到 i == -1 时直接索引溢出报错！），也别忘了找到第一个可通行格后立即 break 退出循环，否则会接着试探完剩余所有方向覆盖掉刚选好的右手边方向！'
+    },
+    d5: {
+      why: '实战 d5 通过两次连续线性扫描（评估减权 + 选最大值），把“方向维持惯性”与“障碍规避本能”统一到同一个极简整型权重数组中，展示不依赖图搜索就能平稳绕障前进的局部决策编程模式。',
+      steps: [
+        '第一步（第一个循环——计算邻格偏移并扣除障碍权重）：在 for (int i = 0; i < 8; ++i) 中先算出邻近格坐标 Vector2 pnt = curPos + dirs[i];，紧接着判障碍 if (!map.canPassWithRowCol(pnt)) { weight[i] -= 10; }。',
+        '第二步（第二个循环——极值扫描挑选最高分方向）：在第二个 for 循环内比较 if (weight[i] > maxWeight)，发现更高权重时必须同时刷新两项状态：maxWeight = weight[i]; 与 curDirection = i;。',
+        '第三步（生成下一步格并转为屏幕目标）：循环结束确定最佳方向 curDirection 后，计算格子坐标 Vector2 pt = curPos + dirs[curDirection]; 并赋值 target = map.toXY(pt);。'
+      ],
+      pitfall: '高发编码漏点：第二个循环里虽然更新了 curDirection = i，却忘了同步更新 maxWeight = weight[i]！那样 maxWeight 永远停留在 0，导致后面所有权重大于 0 的方向全都能闯进 if 语句并覆盖前值，最终每次都傻傻挑方向 7！'
+    },
+    d6: {
+      why: '实战 d6 深入随机避障 RandomMoving 分支内部：既要做到能走时累加位移里程、满距离后准确把状态机拉回追踪玩家并重新计算归一化矢量速度；更要在随机走半路又碰壁时果断“清零步长止损重选方向”。',
+      steps: [
+        '第一步（碰撞检测与行进累加）：使用 if (tileMap.canPass(pos))（兼容 TileMap.canPass(pos)）确认拟移坐标无阻挡，随后移动位置 monster.anchoredPosition = pos;，并在原已走距离加上本帧向量长度 monsterMovedDis += displacement.magnitude;。',
+        '第二步（步长达成判定与恢复追踪态）：如果 monsterMovedDis >= monsterNeedMoveDis 说明按随机角撤离已经走足指定长度，此时令 monsterState = RoleState.Tracing;、清空两项步长变量，算指向玩家向量 Vector2 vr = player.anchoredPosition - monster.anchoredPosition;，调用 vr.Normalize(); 后赋值 monsterVelocity = vr * MonsterSpeed;。',
+        '第三步（else 碰撞回退触发下帧重随机）：当随机行走途中再次撞墙进入 else 分支时，直接写入 monsterNeedMoveDis = 0;，促使下一帧随机选角逻辑接管重随新角度。'
+      ],
+      pitfall: '两个高危笔误：① 累加距离 displacement.magnitude 不要漏写 .magnitude（Vector2 无法与 float monsterMovedDis 直接相加编译会报错！）；② 重算速度前必须先对 vr 调 Normalize()（或用 .normalized），否则离玩家越远怪物追逐瞬间速度越大出现超级瞬移！'
+    },
+    d7: {
+      why: '实战 d7 完整演练递归深度优先搜索（DFS）与父链路径反推生成两个互相协作的核心函数：这是整个第 4 章最常在手写代码编程题里合体出现的经典双函数搭档。',
+      steps: [
+        '第一步（doDFSRecursionSearch 递归函数头尾防御）：函数一开始置 from.visited = true; 防止成环回访；随即判断递归终点终止条件 if (from == to) return true;。',
+        '第二步（8 邻域探测、父指针挂接与递归深入）：遍历 8 方向且当 canPassWithRowCol(nextPos) 为真并取出的 next 未访问时（!next.visited），务必在进入下一层递归前挂父指针 next.parent = from;，接着调用 if (doDFSRecursionSearch(next, to)) return true;；8 方向试尽未通则在末端 return false; 回溯。',
+        '第三步（generatePath 链表式倒推 + 反转）：创建 path 先加入终点 targetNode，然后沿 while (node.parent != null) 循环持续将 node.parent 加进列表并移动游标 node = node.parent;；退出循环后执行关键一步 path.Reverse(); 还原成从起点到终点的正向导航路径返回。'
+      ],
+      pitfall: '写出正确 next.parent = from; 后一定检查 generatePath 循环终止条件是否写成了 while (node != null) 与 path.Add(node) 重复添加（如果初始化先 path.Add(node) 了，循环里就应该判断 node.parent != null 并添加 node.parent，否则终点会重复两次！）。'
+    },
+    d8: {
+      why: '实战 d8 考察队列版广度优先搜索（BFS）：理解队列 FIFO 如何通过“逐层入队”实现无权最短路特性，并在编码中养成“节点进队一瞬即刻锁定 visited 状态”的严格图搜索工程习惯。',
+      steps: [
+        '第一步（创建 Queue 并入队起点）：声明 Queue<MapNode> queue = new Queue<MapNode>();，立即置 start.visited = true; 然后 queue.Enqueue(start);。',
+        '第二步（主循环出队与遍历邻格）：写 while (queue.Count > 0) 循环，内部出队 MapNode cur = queue.Dequeue();，沿 8 方向循环算出 nextPos 并过滤掉不可通的墙壁格。',
+        '第三步（标记已访、设置父节点、命中终点与持续扩散）：针对尚未访问过（!next.visited）的邻接格，按序做三件大事：① next.visited = true; ② next.parent = cur; ③ 判断 if (next == target) { path = generatePath(target); return true; } 立刻拿到最短路径退出，否则调用 queue.Enqueue(next); 排入队列尾部等下层扩展。'
+      ],
+      pitfall: '切记两件事：① 判断队列空非空用 C# 属性 queue.Count > 0（不是 .Length 也不是 .size()）；② next.visited = true 和 next.parent = cur 绝对不能漏掉或晚于 Enqueue！'
+    },
+    d9: {
+      why: '实战 d9 用完整可读可扩的 C# 面向对象架构手写“标准状态设计模式”三要素（抽象状态接口 IState + 上下文 Monster + 具体状态 RunAway），集中体现面向接口编程、空条件保护调用、生命周期顺序严格保证与开闭原则落地。',
+      steps: [
+        '第一步（编写公共契约 public interface IState）：在接口体内精确声明三个无返回值方法：void Enter(Monster m);、void Execute(Monster m);、void Exit(Monster m);（接口方法默认公开无需写方法体和 public）。',
+        '第二步（编写 Context 核心切换 Method——Monster.ChangeState）：严格遵守三段生命周期先后秩序：先用 _currentState?.Exit(this); 让旧状态完成退出善后（用 ?. 空条件操作符防止初次赋状态时空指针崩溃）；紧接着 _currentState = newState; 更新引用；最后调用 _currentState.Enter(this); 激活新状态的进入逻辑。',
+        '第三步（编写具体状态子类 RunAway.Execute）：在每帧执行方法 Execute(Monster m) 内部调用条件判断：if (m.IsSafe()) m.ChangeState(new Patrol()); else m.LeaveEnemy();，让各个具体状态自己掌管自身行为以及满足触发条件时由自己驱动上下文切换到下一态。'
+      ],
+      pitfall: '三大手写代码致命扣分项：① ChangeState 把 _currentState = newState 放到了 Exit(this) 之前导致新状态自毁旧状态残留；② Exit 没做空判断（可用 ?. 或 if (_currentState != null)），首次切初始态必抛 NullReferenceException；③ RunAway.Execute 把 m.IsSafe() 的 true/false 分支逻辑写反！'
+    }
+  };
+
+  global.EXPLAIN_DETAILS = EXPLAIN_DETAILS;
+})(typeof window !== 'undefined' ? window : globalThis);
 
   </script>
   <script>
@@ -14745,8 +15805,13 @@ public class RunAway : IState {
           return `<div class="blank-field"><label>${b.label}</label><input class="blank-input ${cls}" data-bidx="${i}" value="${escapeHTML(vals[i] || '')}" placeholder="请输入答案..." ${isLocked ? 'disabled' : ''}></div>`;
         }).join('') + `</div>`;
     } else if (q.type === 'code') {
-      const txtVal = (saved && typeof saved.userVal === 'string') ? saved.userVal : '// 在此手写 Unity C# 核心代码（支持 Tab 缩进与实时语法着色）\n';
-      bodyHTML += `<div style="border-radius:12px;overflow:hidden;border:1px solid #1e2d4a;margin-bottom:12px">${buildIdeEditorHTML(txtVal, 'q-code-ide', 210, isLocked)}</div>`;
+      const fallbackStarter = q.starterCode || '// 在此手写 Unity C# 核心代码（支持 Tab 缩进与实时语法着色）\n';
+      const txtVal = (saved && typeof saved.userVal === 'string') ? saved.userVal : fallbackStarter;
+      const ideH = q.starterCode ? 265 : 210;
+      const starterBar = (q.starterCode && !isLocked)
+        ? `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 12px;background:#0f172a;border-bottom:1px solid #1e2d4a;font-size:12px;color:#94a3b8"><span>代码编写区（已内置逐行提示注释，支持等价写法智能判分）</span><button type="button" class="ctrl-btn q-reset-starter-btn" style="padding:3px 9px;font-size:11px;background:rgba(255,255,255,0.08);color:#e2eeff;border-color:rgba(148,163,184,0.3)">重置提示骨架</button></div>`
+        : '';
+      bodyHTML += `<div style="border-radius:12px;overflow:hidden;border:1px solid #1e2d4a;margin-bottom:12px">${starterBar}${buildIdeEditorHTML(txtVal, 'q-code-ide', ideH, isLocked)}</div>`;
     } else {
       const isHybrid = saved && saved.userVal && typeof saved.userVal === 'object' && !Array.isArray(saved.userVal);
       const txtVal = isHybrid ? (saved.userVal.text || '') : (typeof saved?.userVal === 'string' ? saved.userVal : '');
@@ -14851,6 +15916,32 @@ public class RunAway : IState {
       </div>`;
   }
 
+  function buildExplainDetailHTML(itemId) {
+    const d = window.EXPLAIN_DETAILS && window.EXPLAIN_DETAILS[itemId];
+    if (!d) return '';
+    return `
+      <div class="explain-detail-card">
+        <div class="ex-detail-head">
+          <span class="ex-detail-badge">深度分步解析</span>
+          <span class="ex-detail-sub">为什么这么做 &amp; 一步步怎么实现 / 推导</span>
+        </div>
+        <div class="ex-why-box">
+          <span class="ex-sec-tag why">为什么这么做</span>
+          <p class="ex-why-text">${escapeHTML(d.why)}</p>
+        </div>
+        <div class="ex-steps-box">
+          <span class="ex-sec-tag steps">逐步推导 / 实现流程</span>
+          <ol class="ex-step-list">
+            ${(d.steps || []).map((st, idx) => `<li class="ex-step-item"><span class="ex-step-num">${idx + 1}</span><span>${escapeHTML(st)}</span></li>`).join('')}
+          </ol>
+        </div>
+        <div class="ex-pitfall-box">
+          <span class="ex-sec-tag pitfall">考场避坑</span>
+          <span>${escapeHTML(d.pitfall)}</span>
+        </div>
+      </div>`;
+  }
+
   function buildExplainHTML(q, saved, opts = {}) {
     const isSubj = (q.type === 'essay' || (q.type === 'code' && q.subkind === 'write'));
     let subjReport = null;
@@ -14919,6 +16010,7 @@ public class RunAway : IState {
           </div>
         </div>
         ${nextCtaHTML}
+        ${buildExplainDetailHTML(q.id)}
         ${rubricHTML}
         ${demoHTML}
         <div class="explain-anim-wrap" data-ex-engine="${anim.engine}" data-ex-mode="${anim.mode}" data-ex-params='${JSON.stringify(anim.params || {})}' data-ex-title="${escapeHTML(anim.caption)}">
@@ -15192,6 +16284,16 @@ public class RunAway : IState {
         if (onAfterCheck) onAfterCheck();
         else rerenderSingleCard(card, q, opts);
       };
+
+      const resetStarterBtn = card.querySelector('.q-reset-starter-btn');
+      if (resetStarterBtn && q.starterCode) resetStarterBtn.onclick = () => {
+        const ide = card.querySelector('.q-code-ide');
+        if (ide) ide._setCode(q.starterCode);
+        if (isMock && state.mockExam && !state.mockExam.submitted) {
+          state.mockExam.userAnswers[qid] = q.starterCode;
+          updateMockSheetStatus();
+        }
+      };
     });
   }
 
@@ -15451,6 +16553,7 @@ public class RunAway : IState {
               <div class="explain-text"><strong>核心思路：</strong>${escapeHTML(d.hint)}</div>
             </div>
           </div>
+          ${buildExplainDetailHTML(d.id)}
           <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:10px 0 8px">
             <strong style="font-size:14px">智能代码考点诊断清单（${ev.passCnt} / ${ev.totalCnt} 通过 · ${ev.score}%）</strong>
             <span class="drill-smart-badge">支持等价写法 · 数值仿真校验</span>
@@ -15513,6 +16616,7 @@ public class RunAway : IState {
             <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
               ${!isLocked ? `
                 <button class="ctrl-btn" id="btn-drill-hint" style="padding:5px 10px;font-size:11.5px;background:rgba(255,255,255,0.08);color:#fde047;border-color:rgba(253,224,71,0.35)">提示思路</button>
+                <button class="ctrl-btn" id="btn-drill-explain" style="padding:5px 10px;font-size:11.5px;background:rgba(56,189,248,0.16);color:#bae6fd;border-color:rgba(56,189,248,0.45)">直接展开详细解析</button>
                 <button class="ctrl-btn" id="btn-drill-reset" style="padding:5px 10px;font-size:11.5px;background:rgba(255,255,255,0.08);color:#e2eeff;border-color:rgba(148,163,184,0.3)">重置骨架</button>
                 <button class="cs-run-btn" id="btn-drill-check">▶ 提交代码并智能检测（提交后锁定）</button>
               ` : `<span style="font-size:12px;color:#7dd3fc;font-weight:700">已完成智能检测并锁定</span>`}
@@ -15539,6 +16643,7 @@ public class RunAway : IState {
         </div>
 
         <div id="drill-hint-slot"></div>
+        <div id="drill-explain-slot"></div>
         ${reportHTML}
       </div>`;
   }
@@ -15575,6 +16680,34 @@ public class RunAway : IState {
     const hintBtn = document.getElementById('btn-drill-hint');
     if (hintBtn) hintBtn.onclick = () => {
       if (hintSlot) hintSlot.innerHTML = `<div class="trap-callout" style="margin-top:12px"><strong>编写思路提示：</strong>${escapeHTML(d.hint)}</div>`;
+    };
+    const exSlot = document.getElementById('drill-explain-slot');
+    const exBtn = document.getElementById('btn-drill-explain');
+    if (exBtn && exSlot) exBtn.onclick = () => {
+      if (exSlot.innerHTML.trim()) {
+        exSlot.innerHTML = '';
+        exBtn.textContent = '直接展开详细解析';
+        return;
+      }
+      exSlot.innerHTML = `
+        <div class="explain-box" style="margin-top:14px">
+          <div class="explain-head">
+            <img class="explain-mascot" src="${MASCOTS.code || MASCOTS.teach || ''}" alt="大肥鱼">
+            <div>
+              <div class="explain-verdict info">详细步骤剖析与标准参考 C# 代码</div>
+              <div class="explain-text"><strong>核心思路：</strong>${escapeHTML(d.hint)}</div>
+            </div>
+          </div>
+          ${buildExplainDetailHTML(d.id)}
+          <div style="margin-top:12px">
+            <strong>标准参考 Unity C# 代码（语法着色）：</strong>
+            <div class="code-block" style="margin-top:6px">${hlCS(d.solution)}</div>
+          </div>
+        </div>`;
+      exBtn.textContent = '收起详细解析';
+      const phEl = document.getElementById('drill-ph');
+      if (phEl) phEl.style.display = 'none';
+      mountPreview();
     };
     const resetBtn = document.getElementById('btn-drill-reset');
     if (resetBtn) resetBtn.onclick = () => {
