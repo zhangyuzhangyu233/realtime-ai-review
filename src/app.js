@@ -1748,6 +1748,11 @@
       ? (opts.mockAns || null)
       : (opts.instance ? opts.instance.ans : (state.answers[q.id] || null));
     const isLocked = (!!opts.lockAfterAnswer && !!(saved && saved.checked)) || (isMock && !!state.mockExam?.submitted);
+    const isSplitReview = !!opts.splitReview;
+    const activeLeftTab = opts.activeLeftTab || 'question';
+    const draftVal = (!saved?.checked && opts.instance && opts.instance.draftVal !== undefined)
+      ? opts.instance.draftVal
+      : undefined;
     const isFav = !!state.favorites[q.id];
     const [tLabel, tCls] = TYPE_LABELS[q.type] || ['题目', ''];
     const cardCls = saved && saved.checked ? (saved.correct ? 'is-correct' : 'is-wrong') : '';
@@ -1756,7 +1761,9 @@
     let bodyHTML = '';
     if (q.interactiveGrid && BOARD) {
       const ig = q.interactiveGrid;
-      const valsArr = (saved && Array.isArray(saved.userVal)) ? saved.userVal : [];
+      const valsArr = (saved && Array.isArray(saved.userVal))
+        ? saved.userVal
+        : (Array.isArray(draftVal) ? draftVal : []);
       const curPathStr = String(valsArr[ig.syncBlankIdx ?? 5] || '').trim();
       const parsedIds = curPathStr ? curPathStr.split(/[-–—>,\s]+/).map(Number).filter(n => Number.isInteger(n) && n >= 0 && n < ig.rows * ig.cols) : [];
       const gridUid = opts.instance ? `${opts.instance.uid}-ig` : `${cardId}-${displayIdx}-ig`;
@@ -1790,7 +1797,9 @@
           return `<button class="opt-btn ${cls.trim()}" data-tf="${val}" ${isLocked ? 'disabled' : ''}><span class="opt-key">${i === 0 ? 'T' : 'F'}</span><span>${lbl}</span></button>`;
         }).join('') + `</div>`;
     } else if (q.type === 'fill' || (q.type === 'code' && q.subkind === 'fill')) {
-      const vals = (saved && Array.isArray(saved.userVal)) ? saved.userVal : q.blanks.map(() => '');
+      const vals = (saved && Array.isArray(saved.userVal))
+        ? saved.userVal
+        : (Array.isArray(draftVal) ? draftVal : q.blanks.map(() => ''));
       bodyHTML += `<div class="blanks-wrap">` +
         q.blanks.map((b, i) => {
           let cls = '';
@@ -1802,16 +1811,19 @@
         }).join('') + `</div>`;
     } else if (q.type === 'code') {
       const fallbackStarter = q.starterCode || '// 在此手写 Unity C# 核心代码（支持 Tab 缩进与实时语法着色）\n';
-      const txtVal = (saved && typeof saved.userVal === 'string') ? saved.userVal : fallbackStarter;
+      const txtVal = (saved && typeof saved.userVal === 'string')
+        ? saved.userVal
+        : (typeof draftVal === 'string' ? draftVal : fallbackStarter);
       const ideH = q.starterCode ? 265 : 210;
       const starterBar = (q.starterCode && !isLocked)
         ? `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 12px;background:#0f172a;border-bottom:1px solid #1e2d4a;font-size:12px;color:#94a3b8"><span>代码编写区（已内置逐行提示注释，支持等价写法智能判分）</span><button type="button" class="ctrl-btn q-reset-starter-btn" style="padding:3px 9px;font-size:11px;background:rgba(255,255,255,0.08);color:#e2eeff;border-color:rgba(148,163,184,0.3)">重置提示骨架</button></div>`
         : '';
       bodyHTML += `<div style="border-radius:12px;overflow:hidden;border:1px solid #1e2d4a;margin-bottom:12px">${starterBar}${buildIdeEditorHTML(txtVal, 'q-code-ide', ideH, isLocked)}</div>`;
     } else {
-      const isHybrid = saved && saved.userVal && typeof saved.userVal === 'object' && !Array.isArray(saved.userVal);
-      const txtVal = isHybrid ? (saved.userVal.text || '') : (typeof saved?.userVal === 'string' ? saved.userVal : '');
-      const savedDia = isHybrid ? (saved.userVal.diagram || null) : null;
+      const srcUv = (saved && saved.userVal !== undefined) ? saved.userVal : draftVal;
+      const isHybrid = srcUv && typeof srcUv === 'object' && !Array.isArray(srcUv);
+      const txtVal = isHybrid ? (srcUv.text || '') : (typeof srcUv === 'string' ? srcUv : '');
+      const savedDia = isHybrid ? (srcUv.diagram || null) : null;
       if (q.board && BOARD) {
         const boardUid = opts.instance ? opts.instance.uid : `${cardId}-${displayIdx}`;
         bodyHTML += BOARD.createBoardHTML(q.board, boardUid, savedDia, isLocked);
@@ -1830,7 +1842,7 @@
       bodyHTML += `<textarea class="essay-textarea" placeholder="在此整理答题思路（核心思想 / 算法步骤 / 规则说明），提交后核对采分点与动画解析..." ${isLocked ? 'disabled' : ''}>${escapeHTML(txtVal)}</textarea>`;
     }
 
-    const showExplain = saved && saved.checked;
+    const showExplain = !isSplitReview && saved && saved.checked;
     const scoreTag = opts.points ? `<span class="exam-tag hot">${opts.points}分</span>` : '';
     const lockTag = isLocked ? `<span class="exam-tag locked-tag">已锁定 · 不可修改</span>` : '';
     const checkBtnLabel = q.board
@@ -1838,31 +1850,79 @@
       : (q.type === 'essay' || q.subkind === 'write'
         ? (opts.lockAfterAnswer ? '提交作答（提交后锁定）' : '提交并查看参考代码 + 动画解析')
         : (opts.lockAfterAnswer ? '提交作答（提交后锁定）' : '提交核对答案'));
+    const peekBtnLabel = (!isLocked && isSplitReview && opts.peekExplain)
+      ? '收起解析面板'
+      : ((opts.lockAfterAnswer && (q.type === 'single' || q.type === 'tf')) ? '展开解析与动画' : '直接展开解析与动画');
 
     let footerHTML = '';
     if (!isMock) {
       if (isLocked) {
         footerHTML = `
           <div class="locked-notice-bar">
-            <span>本题已作答锁定（无论对错不可改选），查看解析后请继续下一题</span>
-            ${opts.hasNext ? `<button class="submit-btn inline-next-q-btn" style="padding:7px 14px;font-size:12.5px">进入下一题 →</button>` : ''}
+            <span>本题已作答锁定（无论对错不可改选），右侧可同步浏览详解与关联知识点</span>
+            <div class="post-quick-actions">
+              ${isSplitReview ? `<button type="button" class="secondary-btn" data-jump-lpanel="code" style="padding:7px 13px;font-size:12.5px">切到代码与运行 →</button>` : ''}
+              ${opts.hasNext ? `<button class="submit-btn inline-next-q-btn" style="padding:7px 14px;font-size:12.5px">进入下一题 →</button>` : ''}
+            </div>
           </div>`;
       } else if (opts.lockAfterAnswer && (q.type === 'single' || q.type === 'tf')) {
         footerHTML = `
           <div class="q-footer-bar">
             <span style="font-size:12.5px;font-weight:700;color:var(--text-muted)">点选上方选项即提交锁定（无论对错不可更改）</span>
-            <button class="secondary-btn" data-toggle-anim="${q.id}">展开解析与动画</button>
+            <button class="secondary-btn" data-toggle-anim="${q.id}">${peekBtnLabel}</button>
           </div>`;
       } else {
         footerHTML = `
           <div class="q-footer-bar">
             <div style="display:flex;gap:8px;flex-wrap:wrap">
               <button class="submit-btn" data-check="${q.id}">${checkBtnLabel}</button>
-              <button class="secondary-btn" data-toggle-anim="${q.id}">直接展开解析与动画</button>
+              <button class="secondary-btn" data-toggle-anim="${q.id}">${peekBtnLabel}</button>
             </div>
             ${!opts.lockAfterAnswer && saved && saved.checked ? `<button class="secondary-btn" data-redo="${q.id}">重做巩固</button>` : ''}
           </div>`;
       }
+    } else if (isSplitReview) {
+      footerHTML = `
+        <div class="post-quick-bar">
+          <span class="post-quick-status ${saved?.correct ? 'ok' : 'bad'}">${saved?.correct ? '本题智能判定已达标' : '本题仍需巩固（详见右侧分步解析）'}</span>
+          <div class="post-quick-actions">
+            <button type="button" class="secondary-btn" data-jump-lpanel="code" style="padding:6px 12px;font-size:12px">切到代码与运行 →</button>
+            ${opts.hasNext ? `<button type="button" class="submit-btn inline-next-q-btn" style="padding:6px 13px;font-size:12px">下一题 →</button>` : ''}
+          </div>
+        </div>`;
+    }
+
+    let contentAreaHTML = '';
+    if (isSplitReview) {
+      const qTabLabel = (q.type === 'code' && q.subkind === 'write') ? '题目与编码' : '题目与作答';
+      const codeTabLabel = (q.codeTemplate && q.blanks)
+        ? '完整代码与运行'
+        : (q.modelCode ? '参考代码与运行' : 'C# 示例代码与运行');
+      const codeTabPill = (q.codeTemplate || q.modelCode) ? 'C#' : '沙盒';
+      contentAreaHTML = `
+        <div class="post-card-tabs" role="tablist" aria-label="作答后视图切换">
+          <button type="button" class="post-tab-btn ${activeLeftTab === 'question' ? 'active' : ''}" data-lpanel="question">${qTabLabel}</button>
+          <button type="button" class="post-tab-btn ${activeLeftTab === 'code' ? 'active' : ''}" data-lpanel="code">${codeTabLabel} <span class="post-tab-pill">${codeTabPill}</span></button>
+          <button type="button" class="post-tab-btn ${activeLeftTab === 'anim' ? 'active' : ''}" data-lpanel="anim">交互动画演示 <span class="post-tab-pill">动画</span></button>
+        </div>
+        <div class="post-tab-pane ${activeLeftTab === 'question' ? '' : 'hidden'}" data-lpanel-body="question">
+          <div class="q-stem">${q.stem}</div>
+          ${bodyHTML}
+          ${footerHTML}
+          <div class="explain-slot"></div>
+        </div>
+        <div class="post-tab-pane ${activeLeftTab === 'code' ? '' : 'hidden'}" data-lpanel-body="code">
+          ${buildPostAnswerCodeTabHTML('question', q, saved, opts.instance)}
+        </div>
+        <div class="post-tab-pane ${activeLeftTab === 'anim' ? '' : 'hidden'}" data-lpanel-body="anim">
+          ${buildPostAnswerAnimTabHTML('question', q)}
+        </div>`;
+    } else {
+      contentAreaHTML = `
+        <div class="q-stem">${q.stem}</div>
+        ${bodyHTML}
+        ${footerHTML}
+        <div class="explain-slot">${showExplain ? buildExplainHTML(q, saved, opts) : ''}</div>`;
     }
 
     return `
@@ -1880,10 +1940,7 @@
             ${!isMock ? `<button class="fav-btn ${isFav ? 'active' : ''}" data-fav="${q.id}">${isFav ? '已收藏' : '收藏'}</button>` : ''}
           </div>
         </div>
-        <div class="q-stem">${q.stem}</div>
-        ${bodyHTML}
-        ${footerHTML}
-        <div class="explain-slot">${showExplain ? buildExplainHTML(q, saved, opts) : ''}</div>
+        ${contentAreaHTML}
       </div>`;
   }
 
@@ -2026,6 +2083,525 @@
       </div>`;
   }
 
+  function copyTextWithFallback(text, btnEl) {
+    const str = String(text || '');
+    const flash = () => {
+      if (!btnEl) return;
+      const orig = btnEl.dataset.origLabel || btnEl.textContent;
+      btnEl.dataset.origLabel = orig;
+      btnEl.textContent = '已复制';
+      btnEl.classList.add('copied');
+      clearTimeout(btnEl._copyTimer);
+      btnEl._copyTimer = setTimeout(() => {
+        btnEl.textContent = orig;
+        btnEl.classList.remove('copied');
+      }, 1500);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(str).then(flash).catch(() => {
+        const ta = document.createElement('textarea');
+        ta.value = str;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); } catch {}
+        ta.remove();
+        flash();
+      });
+    } else {
+      const ta = document.createElement('textarea');
+      ta.value = str;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); } catch {}
+      ta.remove();
+      flash();
+    }
+  }
+
+  function buildLineNumberedCodeHTML(rawCode, preHighlightedHTML = null) {
+    const codeStr = String(rawCode || '');
+    const htmlBody = preHighlightedHTML !== null ? preHighlightedHTML : hlCS(codeStr);
+    return `
+      <div class="rs-code-scroll">
+        <div class="rs-gutter" aria-hidden="true">${buildLineNumbers(codeStr)}</div>
+        <pre class="rs-code-pre"><code>${htmlBody}</code></pre>
+      </div>`;
+  }
+
+  function buildFilledTemplatePlain(q) {
+    let out = String(q.codeTemplate || '');
+    (q.blanks || []).forEach((b, i) => {
+      const ans = (b.answers && b.answers[0]) || '';
+      out = out.split(`[___空${i + 1}___]`).join(ans);
+    });
+    return out;
+  }
+
+  function buildFilledTemplateHTML(q) {
+    let html = hlCS(q.codeTemplate || '');
+    (q.blanks || []).forEach((b, i) => {
+      const ans = (b.answers && b.answers[0]) || '';
+      const rawTok = `<span class="tok-blank">[___空${i + 1}___]</span>`;
+      const repTok = `<span class="tok-filled" title="空${i + 1} 标准答案"><em class="tok-filled-idx">空${i + 1}</em>${escapeHTML(ans)}</span>`;
+      html = html.split(rawTok).join(repTok);
+    });
+    return html;
+  }
+
+  function captureCardDraft(card, q) {
+    if (!card || !q) return undefined;
+    if (q.blanks) {
+      return Array.from(card.querySelectorAll('.blank-input')).map(x => x.value);
+    }
+    if (q.type === 'code') {
+      const ide = card.querySelector('.q-code-ide');
+      return ide ? ide._getCode() : undefined;
+    }
+    const ta = card.querySelector('.essay-textarea');
+    if (q.board && card._boardCtrl) {
+      return { text: ta ? ta.value : '', diagram: card._boardCtrl.getData() };
+    }
+    return ta ? ta.value : undefined;
+  }
+
+  function buildPostAnswerCodeTabHTML(itemKind, item, saved, inst) {
+    const uidTail = Math.random().toString(36).slice(2, 6);
+    if (itemKind === 'drill') {
+      const refCode = item.solution || '';
+      const mineCode = (saved && typeof saved.userVal === 'string')
+        ? saved.userVal
+        : ((inst && typeof inst.draftCode === 'string') ? inst.draftCode : (item.starter || ''));
+      return `
+        <div class="rs-code-card">
+          <div class="rs-code-head">
+            <div class="rs-code-title">
+              <span class="cs-lang-pill">C#</span>
+              <span>标准参考 Unity C# 代码</span>
+              <span style="font-family:var(--font-mono);font-size:11.5px;color:#34d399">${escapeHTML(item.file || '')}</span>
+            </div>
+            <div class="rs-code-actions">
+              <div class="rs-subtoggle">
+                <button type="button" class="rs-subtoggle-btn active" data-code-view="ref">标准参考代码</button>
+                <button type="button" class="rs-subtoggle-btn" data-code-view="mine">我的作答代码</button>
+              </div>
+              <button type="button" class="rs-copy-btn" data-copy-code>复制代码</button>
+            </div>
+          </div>
+          <div class="rs-code-pane" data-code-pane="ref">
+            <textarea class="rs-copy-src" hidden readonly>${escapeHTML(refCode)}</textarea>
+            ${buildLineNumberedCodeHTML(refCode)}
+          </div>
+          <div class="rs-code-pane hidden" data-code-pane="mine">
+            <textarea class="rs-copy-src" hidden readonly>${escapeHTML(mineCode)}</textarea>
+            ${buildLineNumberedCodeHTML(mineCode)}
+          </div>
+        </div>
+        ${item.hint ? `<div class="re-summary-note"><strong>核心实现思路：</strong>${escapeHTML(item.hint)}</div>` : ''}`;
+    }
+
+    const demoHTML = (item.demo && DEMOS[item.demo])
+      ? buildCodeRunnerHTML([item.demo], `qcs-tab-${item.id}-${uidTail}`, true)
+      : '';
+
+    if (item.modelCode) {
+      const refCode = item.modelCode;
+      const mineCode = (saved && typeof saved.userVal === 'string')
+        ? saved.userVal
+        : ((inst && typeof inst.draftVal === 'string') ? inst.draftVal : (item.starterCode || ''));
+      return `
+        <div class="rs-code-card">
+          <div class="rs-code-head">
+            <div class="rs-code-title">
+              <span class="cs-lang-pill">C#</span>
+              <span>标准参考 Unity C# 代码（语法着色）</span>
+            </div>
+            <div class="rs-code-actions">
+              ${mineCode ? `
+                <div class="rs-subtoggle">
+                  <button type="button" class="rs-subtoggle-btn active" data-code-view="ref">标准参考代码</button>
+                  <button type="button" class="rs-subtoggle-btn" data-code-view="mine">我的作答代码</button>
+                </div>` : ''}
+              <button type="button" class="rs-copy-btn" data-copy-code>复制代码</button>
+            </div>
+          </div>
+          <div class="rs-code-pane" data-code-pane="ref">
+            <textarea class="rs-copy-src" hidden readonly>${escapeHTML(refCode)}</textarea>
+            ${buildLineNumberedCodeHTML(refCode)}
+          </div>
+          ${mineCode ? `
+            <div class="rs-code-pane hidden" data-code-pane="mine">
+              <textarea class="rs-copy-src" hidden readonly>${escapeHTML(mineCode)}</textarea>
+              ${buildLineNumberedCodeHTML(mineCode)}
+            </div>` : ''}
+        </div>
+        ${demoHTML}`;
+    }
+
+    if (item.codeTemplate && item.blanks) {
+      const filledPlain = buildFilledTemplatePlain(item);
+      const filledHTML = buildFilledTemplateHTML(item);
+      const tplPlain = item.codeTemplate;
+      const userVals = (saved && Array.isArray(saved.userVal))
+        ? saved.userVal
+        : ((inst && Array.isArray(inst.draftVal)) ? inst.draftVal : []);
+      const compareHTML = item.blanks.map((b, i) => {
+        const uv = String(userVals[i] || '').trim();
+        let chipCls = '';
+        let ok = false;
+        if (saved && saved.checked) {
+          ok = GRADER
+            ? GRADER.matchFillBlank(uv, b.answers)
+            : b.answers.some(a => normalizeAns(a) === normalizeAns(uv));
+          chipCls = ok ? 'ok' : 'bad';
+        }
+        return `
+          <span class="rs-blank-chip ${chipCls}">
+            <strong>${escapeHTML(b.label)}：</strong>
+            <span class="rs-blank-ans">${escapeHTML(b.answers[0])}</span>
+            ${(saved && saved.checked && !ok) ? `<span class="rs-blank-user">（你填：${escapeHTML(uv || '未填')}）</span>` : ''}
+          </span>`;
+      }).join('');
+      return `
+        <div class="rs-code-card">
+          <div class="rs-code-head">
+            <div class="rs-code-title">
+              <span class="cs-lang-pill">C#</span>
+              <span>完整填入版参考代码（可直接运行验证）</span>
+            </div>
+            <div class="rs-code-actions">
+              <div class="rs-subtoggle">
+                <button type="button" class="rs-subtoggle-btn active" data-code-view="filled">完整填入代码</button>
+                <button type="button" class="rs-subtoggle-btn" data-code-view="template">带提示原题模板</button>
+              </div>
+              <button type="button" class="rs-copy-btn" data-copy-code>复制代码</button>
+            </div>
+          </div>
+          <div class="rs-code-pane" data-code-pane="filled">
+            <textarea class="rs-copy-src" hidden readonly>${escapeHTML(filledPlain)}</textarea>
+            ${buildLineNumberedCodeHTML(filledPlain, filledHTML)}
+          </div>
+          <div class="rs-code-pane hidden" data-code-pane="template">
+            <textarea class="rs-copy-src" hidden readonly>${escapeHTML(tplPlain)}</textarea>
+            ${buildLineNumberedCodeHTML(tplPlain)}
+          </div>
+          <div class="rs-blanks-compare">${compareHTML}</div>
+        </div>
+        ${demoHTML}`;
+    }
+
+    if (demoHTML) return demoHTML;
+    return `<div class="trap-callout">本题暂无配套 C# 示例代码，可切回「题目与作答」或查看「交互动画演示」。</div>`;
+  }
+
+  function buildPostAnswerAnimTabHTML(itemKind, item) {
+    const anim = itemKind === 'drill'
+      ? (item.anim ? { ...item.anim, caption: `${item.file} 实时算法动画演示` } : { engine: 'astar', mode: 'ppt', caption: '交互动画演示' })
+      : (item.anim || { engine: 'astar', mode: 'ppt', caption: '交互动画演示' });
+    return `
+      <div class="explain-anim-wrap" style="margin-top:4px" data-ex-engine="${anim.engine}" data-ex-mode="${anim.mode}" data-ex-params='${JSON.stringify(anim.params || {})}' data-ex-title="${escapeHTML(anim.caption)}">
+        <div class="explain-anim-bar">
+          <span>动画解析：${escapeHTML(anim.caption)}（点击画面全屏放大）</span>
+          <div class="ctrl-group">
+            <button type="button" class="ctrl-btn primary" style="padding:3px 9px;font-size:11.5px" data-act="play">暂停</button>
+            <button type="button" class="ctrl-btn" style="padding:3px 9px;font-size:11.5px" data-act="step">单步</button>
+            <button type="button" class="ctrl-btn" style="padding:3px 9px;font-size:11.5px" data-act="reset">重播</button>
+          </div>
+        </div>
+        <div class="anim-stage-wrap">
+          <div class="anim-canvas-box" style="min-height:295px"><canvas class="explain-anim-canvas"></canvas></div>
+          <div class="anim-side-panel" style="max-height:295px"></div>
+        </div>
+      </div>`;
+  }
+
+  function buildPostAnswerRightPanelHTML({ itemKind, item, saved, flipMeta, diffInfo, hasNext, activeRightTab = 'explain' }) {
+    const topicId = (flipMeta && flipMeta.topic) || item.topic;
+    const modId = (flipMeta && flipMeta.module) || item.module;
+    const tp = TOPICS.find(t => t.id === topicId) || TOPICS[0];
+    const mod = MODULES.find(m => m.id === modId) || MODULES[0];
+    const sum = TOPIC_SUMMARIES[tp.id] || TOPIC_SUMMARIES.t_unity;
+    const grad = tp ? tp.grad : (mod ? mod.grad : 'grad-ocean');
+    const tpMastery = computeTopicMastery(tp.id).pct;
+    const diffLabel = (diffInfo && diffInfo.name) ? diffInfo.name : '核心考点';
+
+    let mascot = 'teach', verdictCls = 'info', verdictTxt = '详解与相关知识点已就绪（可直接对照左侧题目或代码）';
+    let answerBlock = '';
+    let summaryNoteHTML = '';
+    let extraExplainHTML = '';
+
+    if (itemKind === 'drill') {
+      const ev = saved && saved.evalReport ? saved.evalReport : null;
+      if (saved && saved.checked && ev) {
+        verdictCls = ev.pass ? 'ok' : 'bad';
+        mascot = ev.allOk ? 'trophy' : (ev.pass ? 'happy' : 'oops');
+        verdictTxt = ev.allOk
+          ? `智能校验全部通过（${ev.passCnt}/${ev.totalCnt} · 100%）！`
+          : (ev.pass
+            ? `代码检测达标（${ev.score}% · 通过 ${ev.passCnt}/${ev.totalCnt} 项）`
+            : `暂未达标（${ev.score}% · 需 ≥ 60%），对照下方分步剖析完善`);
+      } else {
+        mascot = 'code';
+        verdictTxt = '详细步骤剖析与标准参考 C# 实现思路';
+      }
+      if (item.hint) {
+        summaryNoteHTML = `<div class="re-summary-note"><strong>核心思路：</strong>${escapeHTML(item.hint)}</div>`;
+      }
+      if (saved && saved.checked && ev) {
+        extraExplainHTML = `
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin:12px 0 8px">
+            <strong style="font-size:13.5px">智能考点诊断（${ev.passCnt}/${ev.totalCnt} · ${ev.score}%）</strong>
+            <span class="drill-smart-badge">等价写法 · 数值仿真</span>
+          </div>
+          <div class="drill-checklist">
+            ${ev.checks.map(r => {
+              const cls = r.status === 'full' ? 'pass' : (r.status === 'partial' ? 'partial' : 'fail');
+              const dot = r.status === 'full' ? 'OK' : (r.status === 'partial' ? '~' : '!');
+              return `
+                <div class="drill-chk-item ${cls}">
+                  <span class="drill-chk-dot">${dot}</span>
+                  <div class="drill-chk-body">
+                    <div class="drill-chk-title">${escapeHTML(r.label)}</div>
+                    ${r.matchNote ? `<div class="drill-chk-match">识别依据：${escapeHTML(r.matchNote)}</div>` : ''}
+                    ${r.hint ? `<div class="drill-chk-hint">完善建议：${escapeHTML(r.hint)}</div>` : ''}
+                  </div>
+                </div>`;
+            }).join('')}
+          </div>`;
+      }
+    } else {
+      const q = item;
+      const isSubj = (q.type === 'essay' || (q.type === 'code' && q.subkind === 'write'));
+      const subjReport = (isSubj && saved && saved.checked)
+        ? (saved.evalReport || (GRADER ? GRADER.evaluateSubjective(q, saved.userVal) : null))
+        : null;
+      if (isSubj && subjReport) {
+        verdictCls = subjReport.pass ? 'ok' : 'bad';
+        mascot = subjReport.ratio >= 0.85 ? 'trophy' : (subjReport.pass ? 'happy' : 'oops');
+        verdictTxt = subjReport.pass
+          ? `智能判定通过（${subjReport.score}/${subjReport.maxScore} 分），熟练度已上升`
+          : `智能评分 ${subjReport.score}/${subjReport.maxScore} 分（需 ≥ 6 分），建议补齐缺失要点`;
+      } else if (q.type === 'single' || q.type === 'tf' || q.type === 'fill' || q.subkind === 'fill') {
+        if (saved && saved.checked) {
+          if (saved.correct) { mascot = 'happy'; verdictCls = 'ok'; verdictTxt = '回答完全正确！对应考点熟练度已上升'; }
+          else { mascot = 'oops'; verdictCls = 'bad'; verdictTxt = '回答有误，已收入错题本；可对照分步解析巩固'; }
+        }
+      } else if (q.type === 'code') {
+        mascot = 'code';
+      }
+
+      if (q.type === 'single') {
+        const L = ['A', 'B', 'C', 'D'][q.answer];
+        answerBlock = `<div style="margin-bottom:8px;font-size:13px"><strong>参考答案：</strong><span style="color:var(--success);font-weight:900">${L}. ${q.options[q.answer]}</span></div>`;
+      } else if (q.type === 'tf') {
+        answerBlock = `<div style="margin-bottom:8px;font-size:13px"><strong>参考答案：</strong><span style="color:var(--success);font-weight:900">${q.answer ? '对（正确）' : '错（错误）'}</span></div>`;
+      } else if (q.blanks) {
+        answerBlock = `<div style="margin-bottom:8px;display:flex;flex-wrap:wrap;gap:5px"><strong style="width:100%;font-size:13px">标准答案：</strong>` +
+          q.blanks.map(b => `<span style="display:inline-block;padding:2px 8px;border-radius:6px;background:var(--bg-elevated);border:1px solid var(--border);font-family:var(--font-mono);font-size:11.8px"><b>${b.label}:</b> <span style="color:var(--success)">${escapeHTML(b.answers[0])}</span></span>`).join('') + `</div>`;
+      }
+      if (q.explain) {
+        summaryNoteHTML = `<div class="re-summary-note">${q.explain}</div>`;
+      }
+      extraExplainHTML = subjReport ? buildSubjectiveReportHTML(subjReport) : '';
+      if (q.rubric && !subjReport) {
+        extraExplainHTML += `<div style="margin-top:10px"><strong style="font-size:13px">考场采分点自查清单：</strong><ul class="rubric-list">` +
+          q.rubric.map(r => `<li class="rubric-item"><input type="checkbox"><span>${r}</span></li>`).join('') + `</ul></div>`;
+      }
+      if (q.modelAnswer) {
+        extraExplainHTML += `<div style="margin-top:10px"><strong style="font-size:13px">标准参考作答范本：</strong><div class="formula-box" style="white-space:pre-wrap;font-family:var(--font-sans);font-weight:600;line-height:1.7">${escapeHTML(q.modelAnswer)}</div></div>`;
+      }
+    }
+
+    return `
+      <aside class="review-explain-sidebar" id="review-explain-sidebar" aria-label="本题解析与关联知识点">
+        <div class="re-head">
+          <div class="re-head-top">
+            <img class="re-mascot" src="${MASCOTS[mascot] || MASCOTS.teach || ''}" alt="大肥鱼">
+            <div class="re-head-meta">
+              <div class="re-verdict ${verdictCls}">${verdictTxt}</div>
+              <div class="re-topic-row">
+                <span class="exam-tag blue">${tp.name}</span>
+                <span class="exam-tag">熟练度 ${tpMastery}%</span>
+              </div>
+            </div>
+          </div>
+          <div class="re-subtabs" role="tablist" aria-label="右侧解析与知识点切换">
+            <button type="button" class="re-subtab-btn ${activeRightTab === 'explain' ? 'active' : ''}" data-rpanel="explain">本题详细解析</button>
+            <button type="button" class="re-subtab-btn ${activeRightTab === 'knowledge' ? 'active' : ''}" data-rpanel="knowledge">相关知识点</button>
+          </div>
+        </div>
+
+        <div class="re-body">
+          <div class="re-pane ${activeRightTab === 'explain' ? '' : 'hidden'}" data-rpanel-body="explain">
+            ${answerBlock}
+            ${summaryNoteHTML}
+            ${buildExplainDetailHTML(item.id)}
+            ${extraExplainHTML}
+            <div class="re-rel-preview">
+              <div class="re-rel-head">
+                <strong style="font-size:13px;color:var(--text)">关联知识点速览</strong>
+                <span class="exam-tag blue">${tp.name}</span>
+              </div>
+              <div class="flip-formula-pill">${escapeHTML(sum.formula)}</div>
+              <div class="flip-trap-box"><strong>易错提醒：</strong>${sum.trap}</div>
+              <div class="re-rel-actions">
+                <button type="button" class="secondary-btn" data-open-rpanel="knowledge" style="padding:5px 11px;font-size:12px">展开完整知识点卡片</button>
+                <button type="button" class="submit-btn" data-jump-sec="${tp.id}" style="padding:5px 12px;font-size:12px">去本小节详解 →</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="re-pane ${activeRightTab === 'knowledge' ? '' : 'hidden'}" data-rpanel-body="knowledge">
+            <div class="re-kp-card ${grad}">
+              <div class="re-kp-banner ${grad}">
+                <div>
+                  <div style="font-size:11px;opacity:0.9;font-weight:700">${mod.short} · ${mod.lectures}</div>
+                  <div style="font-size:15px;font-weight:900">${tp.name}</div>
+                </div>
+                <span class="m-tier-pill" style="background:rgba(255,255,255,0.2);border-color:rgba(255,255,255,0.34);color:#fff">${diffLabel}</span>
+              </div>
+
+              <div class="m-bar-wrap" style="margin:2px 0">
+                <div class="m-bar-head" style="font-size:12px"><span>本考点当前熟练度</span><span>${tpMastery}%</span></div>
+                <div class="m-bar-track"><div class="m-bar-fill" style="width:${tpMastery}%"></div></div>
+              </div>
+
+              <div class="flip-kw-row" style="margin-top:0">
+                ${sum.keywords.map(kw => `<span class="flip-kw-pill">${kw}</span>`).join('')}
+              </div>
+
+              <div class="flip-formula-pill">${escapeHTML(sum.formula)}</div>
+              <ul class="flip-points">
+                ${sum.points.map(pt => `<li>${pt}</li>`).join('')}
+              </ul>
+              <div class="flip-trap-box"><strong>高频易错提醒：</strong>${sum.trap}</div>
+              <div class="flip-mini-code">${hlCS(sum.snippet)}</div>
+              <button type="button" class="submit-btn" data-jump-sec="${tp.id}" style="width:100%;justify-content:center">去知识回顾查看本小节完整讲义与交互动画 →</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="re-foot">
+          <button type="button" class="secondary-btn" id="btn-re-toggle-left" style="flex:1">在左侧查看代码 →</button>
+          ${hasNext ? `<button type="button" class="submit-btn inline-next-q-btn" style="flex:1">进入下一题 →</button>` : ''}
+        </div>
+      </aside>`;
+  }
+
+  function bindPostAnswerLayout(rootEl, opts = {}) {
+    if (!rootEl) return;
+    const onNext = opts.onNext || null;
+    const stateHolder = opts.stateHolder || null;
+    let curLeftTab = opts.initialLeftTab || (stateHolder && stateHolder.reviewLeftTab) || 'question';
+
+    const syncReFootBtn = () => {
+      const footBtn = rootEl.querySelector('#btn-re-toggle-left');
+      if (!footBtn) return;
+      if (curLeftTab === 'code') {
+        footBtn.textContent = '左侧切回题目与作答';
+        footBtn.dataset.nextTab = 'question';
+      } else {
+        footBtn.textContent = '在左侧查看代码 →';
+        footBtn.dataset.nextTab = 'code';
+      }
+    };
+
+    const activateLeftTab = (tabKey) => {
+      if (!tabKey) return;
+      curLeftTab = tabKey;
+      if (stateHolder) stateHolder.reviewLeftTab = tabKey;
+      if (opts.onLeftTabChange) opts.onLeftTabChange(tabKey);
+
+      rootEl.querySelectorAll('.post-tab-btn[data-lpanel]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.lpanel === tabKey);
+      });
+      rootEl.querySelectorAll('.post-tab-pane[data-lpanel-body]').forEach(pane => {
+        const isTarget = pane.dataset.lpanelBody === tabKey;
+        pane.classList.toggle('hidden', !isTarget);
+        if (isTarget) {
+          if (tabKey === 'code') {
+            bindCodeRunners(pane);
+            bindIdeEditors(pane);
+          } else if (tabKey === 'anim') {
+            requestAnimationFrame(() => mountExplainWidgets(pane, onNext));
+          }
+        }
+      });
+      syncReFootBtn();
+    };
+
+    const activateRightTab = (rKey) => {
+      if (!rKey) return;
+      if (stateHolder) stateHolder.reviewRightTab = rKey;
+      if (opts.onRightTabChange) opts.onRightTabChange(rKey);
+
+      rootEl.querySelectorAll('.re-subtab-btn[data-rpanel]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.rpanel === rKey);
+      });
+      rootEl.querySelectorAll('.re-pane[data-rpanel-body]').forEach(pane => {
+        pane.classList.toggle('hidden', pane.dataset.rpanelBody !== rKey);
+      });
+      const bodyEl = rootEl.querySelector('.review-explain-sidebar .re-body');
+      if (bodyEl) bodyEl.scrollTop = 0;
+    };
+
+    rootEl.querySelectorAll('.post-tab-btn[data-lpanel]').forEach(btn => {
+      btn.onclick = () => activateLeftTab(btn.dataset.lpanel);
+    });
+    rootEl.querySelectorAll('[data-jump-lpanel]').forEach(btn => {
+      btn.onclick = () => activateLeftTab(btn.dataset.jumpLpanel);
+    });
+    const reFootBtn = rootEl.querySelector('#btn-re-toggle-left');
+    if (reFootBtn) {
+      reFootBtn.onclick = () => activateLeftTab(reFootBtn.dataset.nextTab || (curLeftTab === 'code' ? 'question' : 'code'));
+    }
+
+    rootEl.querySelectorAll('.re-subtab-btn[data-rpanel]').forEach(btn => {
+      btn.onclick = () => activateRightTab(btn.dataset.rpanel);
+    });
+    rootEl.querySelectorAll('[data-open-rpanel]').forEach(btn => {
+      btn.onclick = () => activateRightTab(btn.dataset.openRpanel);
+    });
+
+    rootEl.querySelectorAll('[data-jump-sec]').forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        switchView('knowledge');
+        selectSection(btn.dataset.jumpSec, true);
+      };
+    });
+
+    rootEl.querySelectorAll('.rs-code-card').forEach(card => {
+      card.querySelectorAll('.rs-subtoggle-btn[data-code-view]').forEach(btn => {
+        btn.onclick = () => {
+          const viewKey = btn.dataset.codeView;
+          card.querySelectorAll('.rs-subtoggle-btn[data-code-view]').forEach(b => b.classList.toggle('active', b === btn));
+          card.querySelectorAll('.rs-code-pane[data-code-pane]').forEach(p => {
+            p.classList.toggle('hidden', p.dataset.codePane !== viewKey);
+          });
+        };
+      });
+      const copyBtn = card.querySelector('[data-copy-code]');
+      if (copyBtn) {
+        copyBtn.onclick = () => {
+          const activePane = card.querySelector('.rs-code-pane:not(.hidden)') || card.querySelector('.rs-code-pane');
+          const rawSrc = activePane ? activePane.querySelector('.rs-copy-src') : null;
+          const text = rawSrc ? rawSrc.value : (activePane?.querySelector('.rs-code-pre')?.textContent || '');
+          copyTextWithFallback(text, copyBtn);
+        };
+      }
+    });
+
+    if (onNext) {
+      rootEl.querySelectorAll('.inline-next-q-btn').forEach(btn => { btn.onclick = onNext; });
+    }
+
+    activateLeftTab(curLeftTab);
+  }
+
   function mountExplainWidgets(cardEl, onNextCb) {
     bindIdeEditors(cardEl);
     bindCodeRunners(cardEl);
@@ -2033,8 +2609,8 @@
       cardEl.querySelectorAll('.inline-next-q-btn').forEach(btn => { btn.onclick = onNextCb; });
     }
 
-    const wrap = cardEl.querySelector('.explain-anim-wrap');
-    if (wrap && !wrap.dataset.mounted) {
+    cardEl.querySelectorAll('.explain-anim-wrap').forEach(wrap => {
+      if (wrap.dataset.mounted || wrap.closest('.hidden')) return;
       wrap.dataset.mounted = '1';
       let params = {};
       try { params = JSON.parse(wrap.dataset.exParams || '{}'); } catch {}
@@ -2043,7 +2619,7 @@
         engine: wrap.dataset.exEngine, mode: wrap.dataset.exMode, params,
         title: wrap.dataset.exTitle || '题目解析动画全屏预览'
       });
-    }
+    });
   }
 
   function evaluateQuestion(q, userVal) {
@@ -2078,6 +2654,8 @@
       if (isMock && shell.classList.contains('q-code-ide')) {
         const card = shell.closest('.q-card');
         if (card) { state.mockExam.userAnswers[card.dataset.qid] = val; updateMockSheetStatus(); }
+      } else if (!isMock && opts.instance && shell.classList.contains('q-code-ide')) {
+        opts.instance.draftVal = val;
       }
     });
 
@@ -2096,7 +2674,9 @@
       const boardWrap = Array.from(card.querySelectorAll('.diagram-board-wrap')).find(el => !el.closest('.scratch-host') && !el.closest('.ig-board-host'));
       if (q.board && BOARD && boardWrap && !boardWrap.dataset.mounted) {
         boardWrap.dataset.mounted = '1';
-        const initUv = curSavedAtMount?.userVal;
+        const initUv = (curSavedAtMount && curSavedAtMount.userVal !== undefined)
+          ? curSavedAtMount.userVal
+          : (opts.instance ? opts.instance.draftVal : undefined);
         const initDia = (initUv && typeof initUv === 'object' && !Array.isArray(initUv)) ? initUv.diagram : null;
         boardCtrl = BOARD.mountBoard(boardWrap, q.board, {
           initialData: initDia,
@@ -2107,6 +2687,9 @@
               const curTxt = card.querySelector('.essay-textarea')?.value || '';
               state.mockExam.userAnswers[qid] = { text: curTxt, diagram: nextDia };
               updateMockSheetStatus();
+            } else if (!isMock && opts.instance && !cardLocked) {
+              const curTxt = card.querySelector('.essay-textarea')?.value || '';
+              opts.instance.draftVal = { text: curTxt, diagram: nextDia };
             }
           }
         });
@@ -2190,7 +2773,11 @@
             if (opts.lockAfterAnswer && curSaved?.checked) return;
             const correct = gradeQuestion(q, val);
             const rec = { userVal: val, correct, checked: true };
-            if (opts.instance) opts.instance.ans = rec;
+            if (opts.instance) {
+              opts.instance.ans = rec;
+              opts.instance.peekExplain = false;
+              opts.instance.reviewLeftTab = 'question';
+            }
             state.answers[qid] = rec;
             saveState(); updateGlobalStats();
             if (correct) {
@@ -2228,6 +2815,18 @@
           }
           updateMockSheetStatus();
         };
+      } else if (opts.instance && !cardLocked) {
+        card.querySelectorAll('.blank-input').forEach(inp => {
+          inp.oninput = () => {
+            opts.instance.draftVal = Array.from(card.querySelectorAll('.blank-input')).map(x => x.value);
+          };
+        });
+        const ta = card.querySelector('.essay-textarea');
+        if (ta) ta.oninput = () => {
+          opts.instance.draftVal = (q.board && card._boardCtrl)
+            ? { text: ta.value, diagram: card._boardCtrl.getData() }
+            : ta.value;
+        };
       }
 
       const checkBtn = card.querySelector('[data-check]');
@@ -2244,7 +2843,11 @@
         const isObj = (q.type === 'single' || q.type === 'tf' || q.type === 'fill' || q.subkind === 'fill');
         const { correct, evalReport } = evaluateQuestion(q, userVal);
         const rec = { userVal, correct, checked: true, evalReport };
-        if (opts.instance) opts.instance.ans = rec;
+        if (opts.instance) {
+          opts.instance.ans = rec;
+          opts.instance.peekExplain = false;
+          opts.instance.reviewLeftTab = 'question';
+        }
         state.answers[qid] = rec;
         saveState(); updateGlobalStats();
         if (correct) {
@@ -2273,6 +2876,11 @@
 
       const animBtn = card.querySelector('[data-toggle-anim]');
       if (animBtn) animBtn.onclick = () => {
+        if (typeof opts.onTogglePeekExplain === 'function') {
+          if (opts.instance) opts.instance.draftVal = captureCardDraft(card, q);
+          opts.onTogglePeekExplain();
+          return;
+        }
         const slot = card.querySelector('.explain-slot');
         if (slot.innerHTML.trim()) { slot.innerHTML = ''; return; }
         const curSaved = opts.instance ? opts.instance.ans : state.answers[qid];
@@ -2291,6 +2899,7 @@
       if (resetStarterBtn && q.starterCode) resetStarterBtn.onclick = () => {
         const ide = card.querySelector('.q-code-ide');
         if (ide) ide._setCode(q.starterCode);
+        if (opts.instance) opts.instance.draftVal = q.starterCode;
         if (isMock && state.mockExam && !state.mockExam.submitted) {
           state.mockExam.userAnswers[qid] = q.starterCode;
           updateMockSheetStatus();
@@ -2526,15 +3135,17 @@
   /* ========================================================================
      INLINE HANDS-ON C# CODING DRILL CARD (Merged inside Unlimited Practice!)
      ======================================================================== */
-  function renderInlineDrillCard(inst, d, displayIdx) {
+  function renderInlineDrillCard(inst, d, displayIdx, opts = {}) {
     const saved = inst.ans || null;
     const isLocked = !!(saved && saved.checked);
+    const isSplitReview = !!opts.splitReview;
+    const activeLeftTab = opts.activeLeftTab || 'question';
     const curCode = isLocked ? (saved.userVal || d.starter) : (inst.draftCode !== null ? inst.draftCode : d.starter);
     const cardCls = isLocked ? (saved.correct ? 'is-correct' : 'is-wrong') : '';
     const ev = saved?.evalReport || null;
 
     let reportHTML = '';
-    if (isLocked && ev) {
+    if (isLocked && ev && !isSplitReview) {
       const verdictCls = ev.pass ? 'ok' : 'bad';
       const mascotKey = ev.allOk ? 'trophy' : (ev.pass ? 'happy' : 'oops');
       const verdictTxt = ev.allOk
@@ -2580,6 +3191,15 @@
             <div class="code-block" style="margin-top:6px">${hlCS(d.solution)}</div>
           </div>
         </div>`;
+    } else if (isLocked && isSplitReview) {
+      reportHTML = `
+        <div class="locked-notice-bar" style="margin-top:12px">
+          <span>本题已作答锁定，右侧可同步查看分步剖析与考点诊断清单</span>
+          <div class="post-quick-actions">
+            <button type="button" class="secondary-btn" data-jump-lpanel="code" style="padding:7px 13px;font-size:12.5px">切看标准参考代码 →</button>
+            <button class="submit-btn inline-next-q-btn" style="padding:7px 14px;font-size:12.5px">进入下一题 →</button>
+          </div>
+        </div>`;
     }
 
     const consoleInitHTML = isLocked && ev
@@ -2591,6 +3211,79 @@
         }).join('') +
         `<div class="cs-console-line info">> 最终得分：${ev.score}%（${ev.passCnt}/${ev.totalCnt} 项通过）</div>`
       : `<div class="cs-console-line info">[等待提交] 补全上方 // TODO 后点击「提交代码并智能检测」——支持变量重命名、交换律与任意等价 C# 写法。</div>`;
+
+    const explainBtnLabel = (!isLocked && isSplitReview && opts.peekExplain) ? '收起解析面板' : '直接展开详细解析';
+    const editorH = (isLocked && isSplitReview) ? 245 : 320;
+    const outputPaneHTML = (isLocked && isSplitReview)
+      ? `<div class="cs-output-pane" style="grid-template-columns:1fr">
+           <div class="cs-editor-bar"><span>智能语义与数值仿真检测控制台</span><span>自动评分</span></div>
+           <div class="cs-console-box" id="drill-console" style="border-right:none">${consoleInitHTML}</div>
+         </div>`
+      : `<div class="cs-output-pane">
+           <div class="cs-editor-bar"><span>智能语义与数值仿真检测台 &amp; 动画效果（点击画面放大）</span><span>自动评分</span></div>
+           <div class="cs-console-box" id="drill-console">${consoleInitHTML}</div>
+           <div class="cs-preview-wrap" id="drill-preview">
+             <canvas></canvas>
+             ${!isLocked ? `
+               <div class="cs-preview-placeholder" id="drill-ph">
+                 <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+                 <span>提交代码即可查看智能诊断与实时运行动画</span>
+               </div>` : ''}
+           </div>
+         </div>`;
+
+    const mainBodyHTML = `
+      <div class="q-stem" style="margin-bottom:12px">
+        <div style="font-weight:900;margin-bottom:4px">${d.title}</div>
+        <div style="font-size:13.5px;color:var(--text-sec);font-weight:600">${d.desc}</div>
+      </div>
+
+      <div class="cs-runner-card" style="margin-bottom:0">
+        <div class="cs-runner-head">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <span class="cs-lang-pill">C#</span>
+            <strong style="font-family:var(--font-mono);font-size:12.5px">${d.file}</strong>
+          </div>
+          <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
+            ${!isLocked ? `
+              <button class="ctrl-btn" id="btn-drill-hint" style="padding:5px 10px;font-size:11.5px;background:rgba(255,255,255,0.08);color:#fde047;border-color:rgba(253,224,71,0.35)">提示思路</button>
+              <button class="ctrl-btn" id="btn-drill-explain" style="padding:5px 10px;font-size:11.5px;background:rgba(56,189,248,0.16);color:#bae6fd;border-color:rgba(56,189,248,0.45)">${explainBtnLabel}</button>
+              <button class="ctrl-btn" id="btn-drill-reset" style="padding:5px 10px;font-size:11.5px;background:rgba(255,255,255,0.08);color:#e2eeff;border-color:rgba(148,163,184,0.3)">重置骨架</button>
+              <button class="cs-run-btn" id="btn-drill-check">▶ 提交代码并智能检测（提交后锁定）</button>
+            ` : `<span style="font-size:12px;color:#7dd3fc;font-weight:700">已完成智能检测并锁定</span>`}
+          </div>
+        </div>
+        <div class="cs-runner-grid">
+          <div class="cs-editor-pane">
+            <div class="cs-editor-bar"><span>手写编码区（Tab 缩进 · 支持等价写法与数值仿真自动判定）</span><span>Unity C#</span></div>
+            ${buildIdeEditorHTML(curCode, 'drill-ide-box', editorH, isLocked)}
+          </div>
+          ${outputPaneHTML}
+        </div>
+      </div>
+
+      <div id="drill-hint-slot"></div>
+      <div id="drill-explain-slot"></div>
+      ${reportHTML}`;
+
+    let drillContentHTML = mainBodyHTML;
+    if (isSplitReview) {
+      drillContentHTML = `
+        <div class="post-card-tabs" role="tablist" aria-label="编程题作答后视图切换">
+          <button type="button" class="post-tab-btn ${activeLeftTab === 'question' ? 'active' : ''}" data-lpanel="question">题目与编码</button>
+          <button type="button" class="post-tab-btn ${activeLeftTab === 'code' ? 'active' : ''}" data-lpanel="code">标准参考代码 <span class="post-tab-pill">C#</span></button>
+          <button type="button" class="post-tab-btn ${activeLeftTab === 'anim' ? 'active' : ''}" data-lpanel="anim">运行动画效果 <span class="post-tab-pill">动画</span></button>
+        </div>
+        <div class="post-tab-pane ${activeLeftTab === 'question' ? '' : 'hidden'}" data-lpanel-body="question">
+          ${mainBodyHTML}
+        </div>
+        <div class="post-tab-pane ${activeLeftTab === 'code' ? '' : 'hidden'}" data-lpanel-body="code">
+          ${buildPostAnswerCodeTabHTML('drill', d, saved, inst)}
+        </div>
+        <div class="post-tab-pane ${activeLeftTab === 'anim' ? '' : 'hidden'}" data-lpanel-body="anim">
+          ${buildPostAnswerAnimTabHTML('drill', d)}
+        </div>`;
+    }
 
     return `
       <div class="q-card ${cardCls}" id="drill-card-${inst.uid}" data-drill-uid="${inst.uid}">
@@ -2604,53 +3297,11 @@
             ${isLocked ? `<span class="exam-tag locked-tag">已锁定 · 不可修改</span>` : ''}
           </div>
         </div>
-        <div class="q-stem" style="margin-bottom:12px">
-          <div style="font-weight:900;margin-bottom:4px">${d.title}</div>
-          <div style="font-size:13.5px;color:var(--text-sec);font-weight:600">${d.desc}</div>
-        </div>
-
-        <div class="cs-runner-card" style="margin-bottom:0">
-          <div class="cs-runner-head">
-            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-              <span class="cs-lang-pill">C#</span>
-              <strong style="font-family:var(--font-mono);font-size:12.5px">${d.file}</strong>
-            </div>
-            <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
-              ${!isLocked ? `
-                <button class="ctrl-btn" id="btn-drill-hint" style="padding:5px 10px;font-size:11.5px;background:rgba(255,255,255,0.08);color:#fde047;border-color:rgba(253,224,71,0.35)">提示思路</button>
-                <button class="ctrl-btn" id="btn-drill-explain" style="padding:5px 10px;font-size:11.5px;background:rgba(56,189,248,0.16);color:#bae6fd;border-color:rgba(56,189,248,0.45)">直接展开详细解析</button>
-                <button class="ctrl-btn" id="btn-drill-reset" style="padding:5px 10px;font-size:11.5px;background:rgba(255,255,255,0.08);color:#e2eeff;border-color:rgba(148,163,184,0.3)">重置骨架</button>
-                <button class="cs-run-btn" id="btn-drill-check">▶ 提交代码并智能检测（提交后锁定）</button>
-              ` : `<span style="font-size:12px;color:#7dd3fc;font-weight:700">已完成智能检测并锁定</span>`}
-            </div>
-          </div>
-          <div class="cs-runner-grid">
-            <div class="cs-editor-pane">
-              <div class="cs-editor-bar"><span>手写编码区（Tab 缩进 · 支持等价写法与数值仿真自动判定）</span><span>Unity C#</span></div>
-              ${buildIdeEditorHTML(curCode, 'drill-ide-box', 320, isLocked)}
-            </div>
-            <div class="cs-output-pane">
-              <div class="cs-editor-bar"><span>智能语义与数值仿真检测台 &amp; 动画效果（点击画面放大）</span><span>自动评分</span></div>
-              <div class="cs-console-box" id="drill-console">${consoleInitHTML}</div>
-              <div class="cs-preview-wrap" id="drill-preview">
-                <canvas></canvas>
-                ${!isLocked ? `
-                  <div class="cs-preview-placeholder" id="drill-ph">
-                    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="6 3 20 12 6 21 6 3"/></svg>
-                    <span>提交代码即可查看智能诊断与实时运行动画</span>
-                  </div>` : ''}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div id="drill-hint-slot"></div>
-        <div id="drill-explain-slot"></div>
-        ${reportHTML}
+        ${drillContentHTML}
       </div>`;
   }
 
-  function bindInlineDrillCard(host, inst, d, goNext) {
+  function bindInlineDrillCard(host, inst, d, goNext, opts = {}) {
     const isLocked = !!(inst.ans && inst.ans.checked);
     bindIdeEditors(host, (val) => {
       if (!isLocked) {
@@ -2663,7 +3314,7 @@
 
     const prevWrap = document.getElementById('drill-preview');
     const mountPreview = () => {
-      if (!prevWrap || !d.anim) return;
+      if (!prevWrap || !d.anim || prevWrap.closest('.hidden')) return;
       window.AnimEngine.mount(prevWrap, d.anim.engine, { mode: d.anim.mode, params: d.anim.params || {} });
       delete prevWrap.dataset.zoomWired;
       attachCanvasZoomBehavior(prevWrap, {
@@ -2686,6 +3337,15 @@
     const exSlot = document.getElementById('drill-explain-slot');
     const exBtn = document.getElementById('btn-drill-explain');
     if (exBtn && exSlot) exBtn.onclick = () => {
+      if (typeof opts.onTogglePeekExplain === 'function') {
+        if (ide) {
+          const val = ide._getCode();
+          inst.draftCode = val;
+          state.drillDrafts[d.id] = val;
+        }
+        opts.onTogglePeekExplain();
+        return;
+      }
       if (exSlot.innerHTML.trim()) {
         exSlot.innerHTML = '';
         exBtn.textContent = '直接展开详细解析';
@@ -2735,6 +3395,8 @@
           })();
 
       inst.ans = { checked: true, correct: ev.pass, userVal: code, evalReport: ev };
+      inst.peekExplain = false;
+      inst.reviewLeftTab = 'question';
       if (ev.pass) state.passedDrills[d.id] = true;
       state.drillDrafts[d.id] = code;
       saveState();
@@ -2800,6 +3462,11 @@
       ? `<span class="exam-tag hot" style="display:inline-flex;align-items:center;gap:5px">聚焦：${state.focusScope.label} <button id="btn-clear-focus" style="border:none;background:none;color:inherit;font-weight:900;cursor:pointer" title="恢复全题型无限随机">× 全题型无限随机</button></span>`
       : '';
 
+    const isAnswered = Boolean(inst.ans && inst.ans.checked);
+    const isReviewMode = Boolean(isAnswered || inst.peekExplain);
+    const activeLeftTab = inst.reviewLeftTab || 'question';
+    const activeRightTab = inst.reviewRightTab || 'explain';
+
     let mainCardHTML = '';
     let flipMeta = { topic: inst.topic, module: inst.mod };
     let qObj = null, dObj = null;
@@ -2807,15 +3474,38 @@
     if (inst.kind === 'drill') {
       dObj = DRILLS.find(x => x.id === inst.refId) || DRILLS[0];
       flipMeta = { topic: dObj.topic, module: dObj.module };
-      mainCardHTML = renderInlineDrillCard(inst, dObj, idx + 1);
+      mainCardHTML = renderInlineDrillCard(inst, dObj, idx + 1, {
+        splitReview: isReviewMode,
+        peekExplain: !!inst.peekExplain,
+        activeLeftTab
+      });
     } else {
       qObj = BANK.find(x => x.id === inst.refId) || BANK[0];
       flipMeta = { topic: qObj.topic, module: qObj.module };
-      mainCardHTML = renderQuestionCard(qObj, idx + 1, { hasNext: true, lockAfterAnswer: true, instance: inst });
+      mainCardHTML = renderQuestionCard(qObj, idx + 1, {
+        hasNext: true,
+        lockAfterAnswer: true,
+        instance: inst,
+        splitReview: isReviewMode,
+        peekExplain: !!inst.peekExplain,
+        activeLeftTab
+      });
     }
 
+    const rightSidebarHTML = isReviewMode
+      ? buildPostAnswerRightPanelHTML({
+          itemKind: inst.kind,
+          item: dObj || qObj,
+          saved: inst.ans || { checked: false },
+          flipMeta,
+          diffInfo,
+          hasNext: true,
+          activeRightTab
+        })
+      : buildFlipSummaryCardHTML(flipMeta, diffInfo);
+
     listEl.innerHTML = `
-      <div class="practice-split-layout">
+      <div class="practice-split-layout ${isReviewMode ? 'is-review-mode' : ''}">
         <div class="practice-main-col">
           <div class="pager-bar" style="margin-bottom:18px">
             <div class="diff-curve-top">
@@ -2842,7 +3532,7 @@
           </div>
         </div>
 
-        ${buildFlipSummaryCardHTML(flipMeta, diffInfo)}
+        ${rightSidebarHTML}
       </div>`;
 
     const goNext = () => {
@@ -2864,6 +3554,18 @@
         window.scrollTo({ top: 110, behavior: 'smooth' });
       }
     };
+    const togglePeekExplain = () => {
+      inst.peekExplain = !inst.peekExplain;
+      if (inst.peekExplain) {
+        if (inst.kind === 'drill' || (qObj && qObj.type === 'code' && qObj.subkind === 'write')) {
+          inst.reviewLeftTab = 'code';
+        } else {
+          inst.reviewLeftTab = 'question';
+        }
+        inst.reviewRightTab = 'explain';
+      }
+      renderRandomPracticePaged();
+    };
 
     document.getElementById('btn-q-prev').onclick = goPrev;
     document.getElementById('btn-q-next').onclick = goNext;
@@ -2878,29 +3580,31 @@
       renderRandomPracticePaged();
     };
 
-    // Wire 3D Flip Knowledge Summary Card
-    const flipCard = document.getElementById('summary-flip-card');
-    const toggleFlip = (e) => {
-      if (e && e.target.closest('#btn-flip-jump')) return;
-      state.cardFlipped = !state.cardFlipped;
-      flipCard.classList.remove('dealing');
-      flipCard.classList.toggle('flipped', state.cardFlipped);
-    };
-    if (flipCard) {
-      flipCard.onclick = toggleFlip;
-      flipCard.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleFlip(e); } };
-    }
-    const jumpSecBtn = document.getElementById('btn-flip-jump');
-    if (jumpSecBtn) {
-      jumpSecBtn.onclick = e => {
-        e.stopPropagation();
-        switchView('knowledge');
-        selectSection(jumpSecBtn.dataset.jumpSec, true);
+    if (!isReviewMode) {
+      // Wire 3D Flip Knowledge Summary Card (Answering Phase)
+      const flipCard = document.getElementById('summary-flip-card');
+      const toggleFlip = (e) => {
+        if (e && e.target.closest('#btn-flip-jump')) return;
+        state.cardFlipped = !state.cardFlipped;
+        flipCard.classList.remove('dealing');
+        flipCard.classList.toggle('flipped', state.cardFlipped);
       };
+      if (flipCard) {
+        flipCard.onclick = toggleFlip;
+        flipCard.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleFlip(e); } };
+      }
+      const jumpSecBtn = document.getElementById('btn-flip-jump');
+      if (jumpSecBtn) {
+        jumpSecBtn.onclick = e => {
+          e.stopPropagation();
+          switchView('knowledge');
+          selectSection(jumpSecBtn.dataset.jumpSec, true);
+        };
+      }
     }
 
     if (inst.kind === 'drill' && dObj) {
-      bindInlineDrillCard(listEl, inst, dObj, goNext);
+      bindInlineDrillCard(listEl, inst, dObj, goNext, { onTogglePeekExplain: togglePeekExplain });
     } else {
       bindQuestionCardEvents(listEl, {
         mockMode: false,
@@ -2909,6 +3613,15 @@
         instance: inst,
         onAnswerResult: (correct) => adaptDifficultyCurve(correct),
         onAfterCheck: () => renderRandomPracticePaged(),
+        onTogglePeekExplain: togglePeekExplain,
+        onNext: goNext
+      });
+    }
+
+    if (isReviewMode) {
+      bindPostAnswerLayout(listEl, {
+        stateHolder: inst,
+        initialLeftTab: activeLeftTab,
         onNext: goNext
       });
     }
@@ -3059,6 +3772,40 @@
       return `<button class="pager-dot ${cls}" data-goto-mq="${i}">${i + 1}</button>`;
     }).join('');
 
+    if (me.submitted) {
+      me.reviewTabByQid = me.reviewTabByQid || {};
+      me.reviewRightByQid = me.reviewRightByQid || {};
+    }
+    const curLeftTab = me.submitted ? (me.reviewTabByQid[q.id] || 'question') : 'question';
+    const curRightTab = me.submitted ? (me.reviewRightByQid[q.id] || 'explain') : 'explain';
+    const footerNavHTML = `
+      <div class="pager-footer">
+        <button class="secondary-btn" id="btn-mq-prev" ${idx === 0 ? 'disabled style="opacity:0.45;cursor:not-allowed"' : ''}>← 上一题</button>
+        <span style="font-size:13px;font-weight:700;color:var(--text-muted)">模拟卷 第 ${idx + 1} / ${me.items.length} 题</span>
+        ${idx < me.items.length - 1
+          ? `<button class="submit-btn" id="btn-mq-next">下一页（下一题） →</button>`
+          : (!me.submitted ? `<button class="submit-btn" id="btn-mq-finish">完成全部作答 · 交卷阅卷</button>` : `<button class="secondary-btn" disabled>已是最后一题</button>`)}
+      </div>`;
+
+    const mockStageBlock = me.submitted
+      ? `<div class="practice-split-layout is-review-mode" id="mock-review-split">
+           <div class="practice-main-col">
+             <div id="mock-single-stage">${renderQuestionCard(q, idx + 1, { mockMode: true, mockAns, points: pts, hasNext: idx < me.items.length - 1, splitReview: true, activeLeftTab: curLeftTab })}</div>
+             ${footerNavHTML}
+           </div>
+           ${buildPostAnswerRightPanelHTML({
+             itemKind: 'question',
+             item: q,
+             saved: mockAns,
+             flipMeta: { topic: q.topic, module: q.module },
+             diffInfo: DIFF_META[2],
+             hasNext: idx < me.items.length - 1,
+             activeRightTab: curRightTab
+           })}
+         </div>`
+      : `<div id="mock-single-stage">${renderQuestionCard(q, idx + 1, { mockMode: true, mockAns, points: pts, hasNext: idx < me.items.length - 1 })}</div>
+         ${footerNavHTML}`;
+
     host.innerHTML = `
       <div class="mock-header-card">
         <div>
@@ -3075,14 +3822,7 @@
         <div class="pager-top-row"><strong style="font-size:13.5px">答题卡快速跳题</strong><span style="font-size:12px;color:var(--text-muted)">第 ${idx + 1} / ${me.items.length} 题</span></div>
         <div class="pager-dots">${sheetDots}</div>
       </div>
-      <div id="mock-single-stage">${renderQuestionCard(q, idx + 1, { mockMode: true, mockAns, points: pts, hasNext: idx < me.items.length - 1 })}</div>
-      <div class="pager-footer">
-        <button class="secondary-btn" id="btn-mq-prev" ${idx === 0 ? 'disabled style="opacity:0.45;cursor:not-allowed"' : ''}>← 上一题</button>
-        <span style="font-size:13px;font-weight:700;color:var(--text-muted)">模拟卷 第 ${idx + 1} / ${me.items.length} 题</span>
-        ${idx < me.items.length - 1
-          ? `<button class="submit-btn" id="btn-mq-next">下一页（下一题） →</button>`
-          : (!me.submitted ? `<button class="submit-btn" id="btn-mq-finish">完成全部作答 · 交卷阅卷</button>` : `<button class="secondary-btn" disabled>已是最后一题</button>`)}
-      </div>`;
+      ${mockStageBlock}`;
 
     updateMockSheetStatus();
     const goMNext = () => { if (state.mockPageIdx < me.items.length - 1) { state.mockPageIdx++; renderMockExamView(); window.scrollTo({ top: 120, behavior: 'smooth' }); } };
@@ -3094,6 +3834,14 @@
     host.querySelectorAll('[data-goto-mq]').forEach(b => b.onclick = () => { state.mockPageIdx = Number(b.dataset.gotoMq); renderMockExamView(); });
 
     bindQuestionCardEvents(document.getElementById('mock-single-stage'), { mockMode: true, hasNext: idx < me.items.length - 1, onNext: goMNext });
+    if (me.submitted) {
+      bindPostAnswerLayout(document.getElementById('mock-review-split'), {
+        initialLeftTab: curLeftTab,
+        onLeftTabChange: (t) => { me.reviewTabByQid[q.id] = t; },
+        onRightTabChange: (rt) => { me.reviewRightByQid[q.id] = rt; },
+        onNext: idx < me.items.length - 1 ? goMNext : null
+      });
+    }
     if (window.DshPetAssistant) window.DshPetAssistant.onContextChanged();
   }
 
