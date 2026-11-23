@@ -2561,8 +2561,8 @@
         applyRightPanes(curRightTab);
         sidebar.classList.remove('re-flip-out');
         sidebar.classList.add('re-flip-in');
-        sidebar._flipT2 = setTimeout(() => sidebar.classList.remove('re-flip-in'), 300);
-      }, 220);
+        sidebar._flipT2 = setTimeout(() => sidebar.classList.remove('re-flip-in'), 360);
+      }, 300);
     };
 
     const reFootBtn = rootEl.querySelector('#btn-re-toggle-left');

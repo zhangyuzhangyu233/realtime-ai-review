@@ -155,6 +155,29 @@ for (const mCls of [
   assert(mobileCss.includes(mCls), `src/mobile.css defines ${mCls}`);
 }
 
+// Zero-overshoot monotonic flip curves & synced JS swap timers (PC + Mobile)
+function assertZeroOvershootBezier(cssText, selector, label) {
+  const esc = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const m = cssText.match(new RegExp(`${esc}\\s*\\{[\\s\\S]*?cubic-bezier\\(([^)]+)\\)`));
+  assert(Boolean(m), `${label} defines cubic-bezier curve`);
+  if (m) {
+    const nums = m[1].split(',').map(x => Number(x.trim()));
+    assert(
+      nums.length === 4 && nums[1] >= 0 && nums[1] <= 1 && nums[3] >= 0 && nums[3] <= 1,
+      `${label} uses smooth non-bouncing bezier (${m[1]})`
+    );
+  }
+}
+assertZeroOvershootBezier(styleCss, '.flip-card', 'PC .flip-card');
+assertZeroOvershootBezier(styleCss, '.flip-card.dealing', 'PC .flip-card.dealing');
+assertZeroOvershootBezier(styleCss, '.review-flip-card', 'PC .review-flip-card');
+assertZeroOvershootBezier(styleCss, '.review-explain-sidebar.re-flip-out', 'PC .re-flip-out');
+assertZeroOvershootBezier(styleCss, '.review-explain-sidebar.re-flip-in', 'PC .re-flip-in');
+assertZeroOvershootBezier(mobileCss, '.m-review-panel.m-flip-out', 'Mobile .m-flip-out');
+assertZeroOvershootBezier(mobileCss, '.m-review-panel.m-flip-in', 'Mobile .m-flip-in');
+assert(appSrc.includes('360);') && appSrc.includes('300);'), 'src/app.js syncs PC right-panel flip timers (300ms/360ms)');
+assert(mobileSrc.includes('340);') && mobileSrc.includes('280);'), 'src/mobile_app.js syncs Mobile review-panel flip timers (280ms/340ms)');
+
 assert(
   mobileSrc.includes("${topContextHTML}\n        <div id=\"m-prac-card-stage\">") ||
   mobileSrc.includes("${topContextHTML}\r\n        <div id=\"m-prac-card-stage\">"),

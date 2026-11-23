@@ -1436,10 +1436,10 @@ button:disabled { opacity: 0.48; cursor: not-allowed; transform: none; }
   100% { transform: perspective(1400px) rotateY(0deg); }
 }
 .m-review-panel.m-flip-out {
-  animation: mReFlipOut 0.2s cubic-bezier(0.55, 0, 0.9, 0.45) forwards;
+  animation: mReFlipOut 0.28s cubic-bezier(0.42, 0, 1, 1) forwards;
 }
 .m-review-panel.m-flip-in {
-  animation: mReFlipIn 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.15) forwards;
+  animation: mReFlipIn 0.34s cubic-bezier(0, 0, 0.25, 1) forwards;
 }
 @media (prefers-reduced-motion: reduce) {
   .m-review-panel.m-flip-out,
