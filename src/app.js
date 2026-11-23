@@ -2507,10 +2507,13 @@
       card.classList.remove('flipped');
     };
     requestAnimationFrame(() => requestAnimationFrame(() => card.classList.add('flipped')));
+    card.addEventListener('animationend', (e) => {
+      if (e.target === card) settle();
+    });
     card.addEventListener('transitionend', (e) => {
       if (e.target === card && e.propertyName === 'transform') settle();
     });
-    setTimeout(settle, 1150);
+    setTimeout(settle, 950);
   }
 
   function bindPostAnswerLayout(rootEl, opts = {}) {
@@ -2562,8 +2565,8 @@
         applyRightPanes(curRightTab);
         sidebar.classList.remove('re-flip-out');
         sidebar.classList.add('re-flip-in');
-        sidebar._flipT2 = setTimeout(() => sidebar.classList.remove('re-flip-in'), 340);
-      }, 340);
+        sidebar._flipT2 = setTimeout(() => sidebar.classList.remove('re-flip-in'), 320);
+      }, 360);
     };
 
     const reFootBtn = rootEl.querySelector('#btn-re-toggle-left');
@@ -3601,8 +3604,10 @@
       const toggleFlip = (e) => {
         if (e && e.target.closest('#btn-flip-jump')) return;
         state.cardFlipped = !state.cardFlipped;
-        flipCard.classList.remove('dealing');
+        flipCard.classList.remove('dealing', 'flip-to-back', 'flip-to-front');
+        void flipCard.offsetWidth;
         flipCard.classList.toggle('flipped', state.cardFlipped);
+        flipCard.classList.add(state.cardFlipped ? 'flip-to-back' : 'flip-to-front');
       };
       if (flipCard) {
         flipCard.onclick = toggleFlip;

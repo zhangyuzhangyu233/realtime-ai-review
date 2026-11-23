@@ -1272,8 +1272,8 @@
         applyPanes(curTab);
         panel.classList.remove('m-flip-out');
         panel.classList.add('m-flip-in');
-        panel._mFlipT2 = setTimeout(() => panel.classList.remove('m-flip-in'), 320);
-      }, 320);
+        panel._mFlipT2 = setTimeout(() => panel.classList.remove('m-flip-in'), 300);
+      }, 340);
     };
 
     hostEl.querySelectorAll('.m-re-subtab-btn[data-mrpanel]').forEach(btn => {

@@ -1428,22 +1428,40 @@ button:disabled { opacity: 0.48; cursor: not-allowed; transform: none; }
   overflow: hidden;
 }
 @keyframes mReFlipOut {
-  0% { transform: perspective(1400px) rotateY(0deg); }
-  100% { transform: perspective(1400px) rotateY(90deg); }
+  0% {
+    transform: perspective(1400px) rotateY(0deg) scale(1);
+    opacity: 1;
+    animation-timing-function: cubic-bezier(0.55, 0, 0.85, 0.5);
+  }
+  52% {
+    transform: perspective(1400px) rotateY(18deg) scale(0.982);
+    opacity: 0.98;
+    animation-timing-function: cubic-bezier(0.42, 0.22, 0.78, 0.75);
+  }
+  100% {
+    transform: perspective(1400px) rotateY(90deg) scale(0.96);
+    opacity: 0.88;
+  }
 }
 @keyframes mReFlipIn {
-  0% { transform: perspective(1400px) rotateY(-90deg); }
-  100% { transform: perspective(1400px) rotateY(0deg); }
+  0% {
+    transform: perspective(1400px) rotateY(-90deg) scale(0.96);
+    opacity: 0.88;
+  }
+  100% {
+    transform: perspective(1400px) rotateY(0deg) scale(1);
+    opacity: 1;
+  }
 }
 .m-review-panel.m-flip-out {
   transform-origin: center center;
   will-change: transform;
-  animation: mReFlipOut 0.32s cubic-bezier(0.37, 0, 0.75, 0.6) forwards;
+  animation: mReFlipOut 0.34s forwards;
 }
 .m-review-panel.m-flip-in {
   transform-origin: center center;
   will-change: transform;
-  animation: mReFlipIn 0.32s cubic-bezier(0.25, 0.4, 0.63, 1) forwards;
+  animation: mReFlipIn 0.30s cubic-bezier(0.16, 0.58, 0.35, 1) forwards;
 }
 @media (prefers-reduced-motion: reduce) {
   .m-review-panel.m-flip-out,
