@@ -2507,13 +2507,10 @@
       card.classList.remove('flipped');
     };
     requestAnimationFrame(() => requestAnimationFrame(() => card.classList.add('flipped')));
-    card.addEventListener('animationend', (e) => {
-      if (e.target === card) settle();
-    });
     card.addEventListener('transitionend', (e) => {
       if (e.target === card && e.propertyName === 'transform') settle();
     });
-    setTimeout(settle, 950);
+    setTimeout(settle, 1150);
   }
 
   function bindPostAnswerLayout(rootEl, opts = {}) {
@@ -2556,17 +2553,46 @@
         applyRightPanes(rKey);
         return;
       }
+      if (sidebar._flipCleanup) sidebar._flipCleanup();
       clearTimeout(sidebar._flipT1);
       clearTimeout(sidebar._flipT2);
       sidebar.classList.remove('re-flip-out', 're-flip-in');
       void sidebar.offsetWidth;
-      sidebar.classList.add('re-flip-out');
-      sidebar._flipT1 = setTimeout(() => {
+      let swapped = false;
+      let finished = false;
+      const cleanup = () => {
+        if (finished) return;
+        finished = true;
+        clearTimeout(sidebar._flipT1);
+        clearTimeout(sidebar._flipT2);
+        sidebar.removeEventListener('animationend', onOutEnd);
+        sidebar.removeEventListener('animationend', onInEnd);
+        sidebar.classList.remove('re-flip-out', 're-flip-in');
+        if (sidebar._flipCleanup === cleanup) sidebar._flipCleanup = null;
+      };
+      const doSwap = () => {
+        if (swapped || finished) return;
+        swapped = true;
+        clearTimeout(sidebar._flipT1);
+        sidebar.removeEventListener('animationend', onOutEnd);
         applyRightPanes(curRightTab);
         sidebar.classList.remove('re-flip-out');
+        sidebar.addEventListener('animationend', onInEnd);
         sidebar.classList.add('re-flip-in');
-        sidebar._flipT2 = setTimeout(() => sidebar.classList.remove('re-flip-in'), 320);
-      }, 360);
+        sidebar._flipT2 = setTimeout(cleanup, 560);
+      };
+      function onOutEnd(e) {
+        if (e && (e.target !== sidebar || e.animationName !== 'reFlipOut')) return;
+        doSwap();
+      }
+      function onInEnd(e) {
+        if (e && (e.target !== sidebar || e.animationName !== 'reFlipIn')) return;
+        cleanup();
+      }
+      sidebar._flipCleanup = cleanup;
+      sidebar.addEventListener('animationend', onOutEnd);
+      sidebar.classList.add('re-flip-out');
+      sidebar._flipT1 = setTimeout(doSwap, 300);
     };
 
     const reFootBtn = rootEl.querySelector('#btn-re-toggle-left');
@@ -3604,10 +3630,8 @@
       const toggleFlip = (e) => {
         if (e && e.target.closest('#btn-flip-jump')) return;
         state.cardFlipped = !state.cardFlipped;
-        flipCard.classList.remove('dealing', 'flip-to-back', 'flip-to-front');
-        void flipCard.offsetWidth;
+        flipCard.classList.remove('dealing');
         flipCard.classList.toggle('flipped', state.cardFlipped);
-        flipCard.classList.add(state.cardFlipped ? 'flip-to-back' : 'flip-to-front');
       };
       if (flipCard) {
         flipCard.onclick = toggleFlip;

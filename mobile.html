@@ -1427,7 +1427,7 @@ button:disabled { opacity: 0.48; cursor: not-allowed; transform: none; }
   overflow: hidden;
   border-radius: 16px;
   margin-bottom: 12px;
-  perspective: 1400px;
+  perspective: 1180px;
 }
 .m-review-panel {
   background: var(--bg-surface);
@@ -1437,40 +1437,22 @@ button:disabled { opacity: 0.48; cursor: not-allowed; transform: none; }
   overflow: hidden;
 }
 @keyframes mReFlipOut {
-  0% {
-    transform: perspective(1400px) rotateY(0deg) scale(1);
-    opacity: 1;
-    animation-timing-function: cubic-bezier(0.55, 0, 0.85, 0.5);
-  }
-  52% {
-    transform: perspective(1400px) rotateY(18deg) scale(0.982);
-    opacity: 0.98;
-    animation-timing-function: cubic-bezier(0.42, 0.22, 0.78, 0.75);
-  }
-  100% {
-    transform: perspective(1400px) rotateY(90deg) scale(0.96);
-    opacity: 0.88;
-  }
+  0% { transform: perspective(1180px) rotateY(0deg) scale(1); opacity: 1; }
+  100% { transform: perspective(1180px) rotateY(90deg) scale(0.965); opacity: 0.9; }
 }
 @keyframes mReFlipIn {
-  0% {
-    transform: perspective(1400px) rotateY(-90deg) scale(0.96);
-    opacity: 0.88;
-  }
-  100% {
-    transform: perspective(1400px) rotateY(0deg) scale(1);
-    opacity: 1;
-  }
+  0% { transform: perspective(1180px) rotateY(-90deg) scale(0.965); opacity: 0.9; }
+  100% { transform: perspective(1180px) rotateY(0deg) scale(1); opacity: 1; }
 }
 .m-review-panel.m-flip-out {
   transform-origin: center center;
   will-change: transform;
-  animation: mReFlipOut 0.34s forwards;
+  animation: mReFlipOut 0.24s cubic-bezier(0.38, 0.08, 0.76, 0.64) forwards;
 }
 .m-review-panel.m-flip-in {
   transform-origin: center center;
   will-change: transform;
-  animation: mReFlipIn 0.30s cubic-bezier(0.16, 0.58, 0.35, 1) forwards;
+  animation: mReFlipIn 0.48s cubic-bezier(0.22, 0.61, 0.28, 1) forwards;
 }
 @media (prefers-reduced-motion: reduce) {
   .m-review-panel.m-flip-out,
@@ -17684,17 +17666,46 @@ public class RunAway : IState {
         applyPanes(rKey);
         return;
       }
+      if (panel._mFlipCleanup) panel._mFlipCleanup();
       clearTimeout(panel._mFlipT1);
       clearTimeout(panel._mFlipT2);
       panel.classList.remove('m-flip-out', 'm-flip-in');
       void panel.offsetWidth;
-      panel.classList.add('m-flip-out');
-      panel._mFlipT1 = setTimeout(() => {
+      let swapped = false;
+      let finished = false;
+      const cleanup = () => {
+        if (finished) return;
+        finished = true;
+        clearTimeout(panel._mFlipT1);
+        clearTimeout(panel._mFlipT2);
+        panel.removeEventListener('animationend', onOutEnd);
+        panel.removeEventListener('animationend', onInEnd);
+        panel.classList.remove('m-flip-out', 'm-flip-in');
+        if (panel._mFlipCleanup === cleanup) panel._mFlipCleanup = null;
+      };
+      const doSwap = () => {
+        if (swapped || finished) return;
+        swapped = true;
+        clearTimeout(panel._mFlipT1);
+        panel.removeEventListener('animationend', onOutEnd);
         applyPanes(curTab);
         panel.classList.remove('m-flip-out');
+        panel.addEventListener('animationend', onInEnd);
         panel.classList.add('m-flip-in');
-        panel._mFlipT2 = setTimeout(() => panel.classList.remove('m-flip-in'), 300);
-      }, 340);
+        panel._mFlipT2 = setTimeout(cleanup, 520);
+      };
+      function onOutEnd(e) {
+        if (e && (e.target !== panel || e.animationName !== 'mReFlipOut')) return;
+        doSwap();
+      }
+      function onInEnd(e) {
+        if (e && (e.target !== panel || e.animationName !== 'mReFlipIn')) return;
+        cleanup();
+      }
+      panel._mFlipCleanup = cleanup;
+      panel.addEventListener('animationend', onOutEnd);
+      panel.classList.add('m-flip-out');
+      panel._mFlipT1 = setTimeout(doSwap, 280);
     };
 
     hostEl.querySelectorAll('.m-re-subtab-btn[data-mrpanel]').forEach(btn => {

@@ -1263,17 +1263,46 @@
         applyPanes(rKey);
         return;
       }
+      if (panel._mFlipCleanup) panel._mFlipCleanup();
       clearTimeout(panel._mFlipT1);
       clearTimeout(panel._mFlipT2);
       panel.classList.remove('m-flip-out', 'm-flip-in');
       void panel.offsetWidth;
-      panel.classList.add('m-flip-out');
-      panel._mFlipT1 = setTimeout(() => {
+      let swapped = false;
+      let finished = false;
+      const cleanup = () => {
+        if (finished) return;
+        finished = true;
+        clearTimeout(panel._mFlipT1);
+        clearTimeout(panel._mFlipT2);
+        panel.removeEventListener('animationend', onOutEnd);
+        panel.removeEventListener('animationend', onInEnd);
+        panel.classList.remove('m-flip-out', 'm-flip-in');
+        if (panel._mFlipCleanup === cleanup) panel._mFlipCleanup = null;
+      };
+      const doSwap = () => {
+        if (swapped || finished) return;
+        swapped = true;
+        clearTimeout(panel._mFlipT1);
+        panel.removeEventListener('animationend', onOutEnd);
         applyPanes(curTab);
         panel.classList.remove('m-flip-out');
+        panel.addEventListener('animationend', onInEnd);
         panel.classList.add('m-flip-in');
-        panel._mFlipT2 = setTimeout(() => panel.classList.remove('m-flip-in'), 300);
-      }, 340);
+        panel._mFlipT2 = setTimeout(cleanup, 520);
+      };
+      function onOutEnd(e) {
+        if (e && (e.target !== panel || e.animationName !== 'mReFlipOut')) return;
+        doSwap();
+      }
+      function onInEnd(e) {
+        if (e && (e.target !== panel || e.animationName !== 'mReFlipIn')) return;
+        cleanup();
+      }
+      panel._mFlipCleanup = cleanup;
+      panel.addEventListener('animationend', onOutEnd);
+      panel.classList.add('m-flip-out');
+      panel._mFlipT1 = setTimeout(doSwap, 280);
     };
 
     hostEl.querySelectorAll('.m-re-subtab-btn[data-mrpanel]').forEach(btn => {

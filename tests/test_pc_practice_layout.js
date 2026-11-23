@@ -155,53 +155,51 @@ for (const mCls of [
   assert(mobileCss.includes(mCls), `src/mobile.css defines ${mCls}`);
 }
 
-// Multi-keyframe slow-start -> swift-flip curves with strict zero-overshoot & synced JS timers
-function checkBlockCurvesZeroOvershoot(cssText, blockRe, label) {
-  const blockMatch = cssText.match(blockRe);
-  assert(Boolean(blockMatch), `${label} rule/keyframe block exists`);
-  if (!blockMatch) return;
-  const curves = [...blockMatch[0].matchAll(/cubic-bezier\(([^)]+)\)/g)].map(m => m[1]);
-  assert(curves.length > 0, `${label} defines at least one cubic-bezier curve`);
-  curves.forEach(cStr => {
-    const nums = cStr.split(',').map(x => Number(x.trim()));
+// Zero-overshoot, bounded-angular-velocity tactile flip curves & animationend handoff (PC + Mobile)
+function assertSmoothBezier(cssText, selector, label, degSpan) {
+  const esc = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const m = cssText.match(new RegExp(`${esc}\\s*\\{[^}]*?([0-9.]+)s\\s+cubic-bezier\\(([^)]+)\\)`));
+  assert(Boolean(m), `${label} defines duration + cubic-bezier curve`);
+  if (m) {
+    const durSec = Number(m[1]);
+    const nums = m[2].split(',').map(x => Number(x.trim()));
     const [x1, y1, x2, y2] = nums;
-    let minY = Infinity, maxY = -Infinity;
+    let minY = Infinity, maxY = -Infinity, maxV = 0;
     for (let i = 0; i <= 100; i++) {
       const u = i / 100, mu = 1 - u;
       const y = 3 * mu * mu * u * y1 + 3 * mu * u * u * y2 + u * u * u;
+      const dx = 3 * mu * mu * x1 + 6 * mu * u * (x2 - x1) + 3 * u * u * (1 - x2);
+      const dy = 3 * mu * mu * y1 + 6 * mu * u * (y2 - y1) + 3 * u * u * (1 - y2);
       if (y < minY) minY = y;
       if (y > maxY) maxY = y;
+      if (dx > 1e-6) {
+        const v = dy / dx;
+        if (v > maxV) maxV = v;
+      }
     }
+    const peakDegPerSec = degSpan ? maxV * (degSpan / durSec) : maxV * 100;
+    const speedOk = degSpan ? (peakDegPerSec <= 580) : (maxV <= 2.4);
     assert(
-      nums.length === 4 && minY >= -0.0001 && maxY <= 1.0001,
-      `${label} curve (${cStr}) has zero bounce/overshoot (minY=${minY.toFixed(3)}, maxY=${maxY.toFixed(3)})`
+      nums.length === 4 && minY >= -0.0001 && maxY <= 1.0001 && speedOk,
+      `${label} uses smooth non-bouncing curve (${durSec}s ${m[2]}, maxY=${maxY.toFixed(2)}, maxV=${maxV.toFixed(2)}${degSpan ? `, ${peakDegPerSec.toFixed(0)}deg/s` : ''})`
     );
-  });
+  }
 }
-
-for (const kf of ['@keyframes cardFlipToBack', '@keyframes cardFlipToFront', '@keyframes reviewCardFlip']) {
-  assert(styleCss.includes(kf) && styleCss.includes('28%') && styleCss.includes('54%'), `src/style.css defines multi-stop ${kf} (28%/54%)`);
-}
-assert(/@keyframes reFlipOut\s*\{[\s\S]*?52%[\s\S]*?\}/.test(styleCss), 'src/style.css defines 52% mid-stop in @keyframes reFlipOut');
-assert(/@keyframes mReFlipOut\s*\{[\s\S]*?52%[\s\S]*?\}/.test(mobileCss), 'src/mobile.css defines 52% mid-stop in @keyframes mReFlipOut');
-
-checkBlockCurvesZeroOvershoot(styleCss, /\.flip-card\s*\{[^}]*\}/, 'PC .flip-card');
-checkBlockCurvesZeroOvershoot(styleCss, /@keyframes cardFlipToBack\s*\{[\s\S]*?100%\s*\{[^}]*\}\s*\}/, 'PC @keyframes cardFlipToBack');
-checkBlockCurvesZeroOvershoot(styleCss, /@keyframes cardFlipToFront\s*\{[\s\S]*?100%\s*\{[^}]*\}\s*\}/, 'PC @keyframes cardFlipToFront');
-checkBlockCurvesZeroOvershoot(styleCss, /\.review-flip-card\s*\{[^}]*\}/, 'PC .review-flip-card');
-checkBlockCurvesZeroOvershoot(styleCss, /@keyframes reviewCardFlip\s*\{[\s\S]*?100%\s*\{[^}]*\}\s*\}/, 'PC @keyframes reviewCardFlip');
-checkBlockCurvesZeroOvershoot(styleCss, /@keyframes reFlipOut\s*\{[\s\S]*?100%\s*\{[^}]*\}\s*\}/, 'PC @keyframes reFlipOut');
-checkBlockCurvesZeroOvershoot(styleCss, /\.review-explain-sidebar\.re-flip-in\s*\{[^}]*\}/, 'PC .re-flip-in');
-checkBlockCurvesZeroOvershoot(mobileCss, /@keyframes mReFlipOut\s*\{[\s\S]*?100%\s*\{[^}]*\}\s*\}/, 'Mobile @keyframes mReFlipOut');
-checkBlockCurvesZeroOvershoot(mobileCss, /\.m-review-panel\.m-flip-in\s*\{[^}]*\}/, 'Mobile .m-flip-in');
-
+assertSmoothBezier(styleCss, '.flip-card', 'PC .flip-card', 180);
+assertSmoothBezier(styleCss, '.flip-card.dealing', 'PC .flip-card.dealing', 10);
+assertSmoothBezier(styleCss, '.flip-front-mascot-badge', 'PC .flip-front-mascot-badge', 0);
+assertSmoothBezier(styleCss, '.review-flip-card', 'PC .review-flip-card', 180);
+assertSmoothBezier(styleCss, '.review-explain-sidebar.re-flip-out', 'PC .re-flip-out', 90);
+assertSmoothBezier(styleCss, '.review-explain-sidebar.re-flip-in', 'PC .re-flip-in', 90);
+assertSmoothBezier(mobileCss, '.m-review-panel.m-flip-out', 'Mobile .m-flip-out', 90);
+assertSmoothBezier(mobileCss, '.m-review-panel.m-flip-in', 'Mobile .m-flip-in', 90);
 assert(
-  appSrc.includes('flip-to-back') && appSrc.includes("addEventListener('animationend'") && appSrc.includes('320)') && appSrc.includes('360)'),
-  'src/app.js wires flip-to-back/animationend and syncs PC right-panel timers (360ms/320ms)'
+  appSrc.includes("animationName !== 'reFlipOut'") && appSrc.includes("animationName !== 'reFlipIn'"),
+  'src/app.js uses animationend handoff for seamless PC right-panel flip'
 );
 assert(
-  mobileSrc.includes('300);') && mobileSrc.includes('340);') && mobileSrc.includes('void panel.offsetWidth'),
-  'src/mobile_app.js syncs Mobile review-panel flip timers (340ms/300ms) with reflow restart'
+  mobileSrc.includes("animationName !== 'mReFlipOut'") && mobileSrc.includes("animationName !== 'mReFlipIn'"),
+  'src/mobile_app.js uses animationend handoff for seamless Mobile review-panel flip'
 );
 
 assert(
