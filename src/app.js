@@ -2555,14 +2555,15 @@
       }
       clearTimeout(sidebar._flipT1);
       clearTimeout(sidebar._flipT2);
-      sidebar.classList.remove('re-flip-in');
+      sidebar.classList.remove('re-flip-out', 're-flip-in');
+      void sidebar.offsetWidth;
       sidebar.classList.add('re-flip-out');
       sidebar._flipT1 = setTimeout(() => {
         applyRightPanes(curRightTab);
         sidebar.classList.remove('re-flip-out');
         sidebar.classList.add('re-flip-in');
-        sidebar._flipT2 = setTimeout(() => sidebar.classList.remove('re-flip-in'), 360);
-      }, 300);
+        sidebar._flipT2 = setTimeout(() => sidebar.classList.remove('re-flip-in'), 340);
+      }, 340);
     };
 
     const reFootBtn = rootEl.querySelector('#btn-re-toggle-left');

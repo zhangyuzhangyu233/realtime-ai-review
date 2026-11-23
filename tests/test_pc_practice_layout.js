@@ -155,28 +155,43 @@ for (const mCls of [
   assert(mobileCss.includes(mCls), `src/mobile.css defines ${mCls}`);
 }
 
-// Zero-overshoot monotonic flip curves & synced JS swap timers (PC + Mobile)
-function assertZeroOvershootBezier(cssText, selector, label) {
+// Zero-overshoot, bounded-velocity harmonic flip curves & synced JS swap timers (PC + Mobile)
+function assertSmoothBezier(cssText, selector, label) {
   const esc = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const m = cssText.match(new RegExp(`${esc}\\s*\\{[\\s\\S]*?cubic-bezier\\(([^)]+)\\)`));
   assert(Boolean(m), `${label} defines cubic-bezier curve`);
   if (m) {
     const nums = m[1].split(',').map(x => Number(x.trim()));
+    const [x1, y1, x2, y2] = nums;
+    let minY = Infinity, maxY = -Infinity, maxV = 0;
+    for (let i = 0; i <= 100; i++) {
+      const u = i / 100, mu = 1 - u;
+      const y = 3 * mu * mu * u * y1 + 3 * mu * u * u * y2 + u * u * u;
+      const dx = 3 * mu * mu * x1 + 6 * mu * u * (x2 - x1) + 3 * u * u * (1 - x2);
+      const dy = 3 * mu * mu * y1 + 6 * mu * u * (y2 - y1) + 3 * u * u * (1 - y2);
+      if (y < minY) minY = y;
+      if (y > maxY) maxY = y;
+      if (dx > 1e-6) {
+        const v = dy / dx;
+        if (v > maxV) maxV = v;
+      }
+    }
     assert(
-      nums.length === 4 && nums[1] >= 0 && nums[1] <= 1 && nums[3] >= 0 && nums[3] <= 1,
-      `${label} uses smooth non-bouncing bezier (${m[1]})`
+      nums.length === 4 && minY >= -0.0001 && maxY <= 1.0001 && maxV <= 1.75,
+      `${label} uses smooth non-bouncing curve (${m[1]}, maxY=${maxY.toFixed(2)}, maxV=${maxV.toFixed(2)})`
     );
   }
 }
-assertZeroOvershootBezier(styleCss, '.flip-card', 'PC .flip-card');
-assertZeroOvershootBezier(styleCss, '.flip-card.dealing', 'PC .flip-card.dealing');
-assertZeroOvershootBezier(styleCss, '.review-flip-card', 'PC .review-flip-card');
-assertZeroOvershootBezier(styleCss, '.review-explain-sidebar.re-flip-out', 'PC .re-flip-out');
-assertZeroOvershootBezier(styleCss, '.review-explain-sidebar.re-flip-in', 'PC .re-flip-in');
-assertZeroOvershootBezier(mobileCss, '.m-review-panel.m-flip-out', 'Mobile .m-flip-out');
-assertZeroOvershootBezier(mobileCss, '.m-review-panel.m-flip-in', 'Mobile .m-flip-in');
-assert(appSrc.includes('360);') && appSrc.includes('300);'), 'src/app.js syncs PC right-panel flip timers (300ms/360ms)');
-assert(mobileSrc.includes('340);') && mobileSrc.includes('280);'), 'src/mobile_app.js syncs Mobile review-panel flip timers (280ms/340ms)');
+assertSmoothBezier(styleCss, '.flip-card', 'PC .flip-card');
+assertSmoothBezier(styleCss, '.flip-card.dealing', 'PC .flip-card.dealing');
+assertSmoothBezier(styleCss, '.flip-front-mascot-badge', 'PC .flip-front-mascot-badge');
+assertSmoothBezier(styleCss, '.review-flip-card', 'PC .review-flip-card');
+assertSmoothBezier(styleCss, '.review-explain-sidebar.re-flip-out', 'PC .re-flip-out');
+assertSmoothBezier(styleCss, '.review-explain-sidebar.re-flip-in', 'PC .re-flip-in');
+assertSmoothBezier(mobileCss, '.m-review-panel.m-flip-out', 'Mobile .m-flip-out');
+assertSmoothBezier(mobileCss, '.m-review-panel.m-flip-in', 'Mobile .m-flip-in');
+assert(appSrc.includes('340);') && appSrc.includes('void sidebar.offsetWidth'), 'src/app.js syncs PC right-panel flip timers (340ms/340ms) with reflow restart');
+assert(mobileSrc.includes('320);') && mobileSrc.includes('void panel.offsetWidth'), 'src/mobile_app.js syncs Mobile review-panel flip timers (320ms/320ms) with reflow restart');
 
 assert(
   mobileSrc.includes("${topContextHTML}\n        <div id=\"m-prac-card-stage\">") ||

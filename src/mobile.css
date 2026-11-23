@@ -1436,10 +1436,14 @@ button:disabled { opacity: 0.48; cursor: not-allowed; transform: none; }
   100% { transform: perspective(1400px) rotateY(0deg); }
 }
 .m-review-panel.m-flip-out {
-  animation: mReFlipOut 0.28s cubic-bezier(0.42, 0, 1, 1) forwards;
+  transform-origin: center center;
+  will-change: transform;
+  animation: mReFlipOut 0.32s cubic-bezier(0.37, 0, 0.75, 0.6) forwards;
 }
 .m-review-panel.m-flip-in {
-  animation: mReFlipIn 0.34s cubic-bezier(0, 0, 0.25, 1) forwards;
+  transform-origin: center center;
+  will-change: transform;
+  animation: mReFlipIn 0.32s cubic-bezier(0.25, 0.4, 0.63, 1) forwards;
 }
 @media (prefers-reduced-motion: reduce) {
   .m-review-panel.m-flip-out,

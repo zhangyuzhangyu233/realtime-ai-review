@@ -1265,14 +1265,15 @@
       }
       clearTimeout(panel._mFlipT1);
       clearTimeout(panel._mFlipT2);
-      panel.classList.remove('m-flip-in');
+      panel.classList.remove('m-flip-out', 'm-flip-in');
+      void panel.offsetWidth;
       panel.classList.add('m-flip-out');
       panel._mFlipT1 = setTimeout(() => {
         applyPanes(curTab);
         panel.classList.remove('m-flip-out');
         panel.classList.add('m-flip-in');
-        panel._mFlipT2 = setTimeout(() => panel.classList.remove('m-flip-in'), 340);
-      }, 280);
+        panel._mFlipT2 = setTimeout(() => panel.classList.remove('m-flip-in'), 320);
+      }, 320);
     };
 
     hostEl.querySelectorAll('.m-re-subtab-btn[data-mrpanel]').forEach(btn => {
