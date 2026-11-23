@@ -243,6 +243,39 @@
     return { valid: true, cost, reason: '' };
   }
 
+  function resolvePathDragHit(relX, relY, rows, cols, cellSz, gap, useCoreCircle = true) {
+    if (!(cellSz > 0) || rows <= 0 || cols <= 0) return null;
+    if (relX < 0 || relY < 0) return null;
+    const step = cellSz + gap;
+    const col = Math.floor(relX / step);
+    const row = Math.floor(relY / step);
+    if (row < 0 || row >= rows || col < 0 || col >= cols) return null;
+    const inCellX = relX - col * step;
+    const inCellY = relY - row * step;
+    if (inCellX > cellSz || inCellY > cellSz) return null;
+    if (useCoreCircle) {
+      const cx = cellSz / 2;
+      const cy = cellSz / 2;
+      if (Math.hypot(inCellX - cx, inCellY - cy) > cellSz * 0.40) return null;
+    }
+    return row * cols + col;
+  }
+
+  function interpolateGridSteps(fromCid, toCid, cols, maxSteps = 6) {
+    if (fromCid == null || toCid == null || fromCid === toCid || !(cols > 0)) return [];
+    let r = Math.floor(fromCid / cols), c = fromCid % cols;
+    const r2 = Math.floor(toCid / cols), c2 = toCid % cols;
+    const cheb = Math.max(Math.abs(r2 - r), Math.abs(c2 - c));
+    if (cheb === 0 || cheb > maxSteps) return [];
+    const steps = [];
+    while (r !== r2 || c !== c2) {
+      r += Math.sign(r2 - r);
+      c += Math.sign(c2 - c);
+      steps.push(r * cols + c);
+    }
+    return steps;
+  }
+
   const ZOOM_IN_SVG = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>';
   const ZOOM_OUT_SVG = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/></svg>';
 
@@ -400,6 +433,7 @@
           <div class="db-mini-grid">
             <button type="button" class="db-btn" data-pgact="undo">↶ 退一步</button>
             <button type="button" class="db-btn" data-pgact="clear-path">清路径</button>
+            ${isScratch ? `<button type="button" class="db-btn ${boardSpec.allowCornerCut ? 'active' : ''}" data-pgact="toggle-corner-cut" style="grid-column:span 2">斜穿墙角：${boardSpec.allowCornerCut ? '允许' : '禁止'}</button>` : ''}
             <button type="button" class="db-btn" data-pgact="reset" style="grid-column:span 2">${isScratch ? '重置草稿板' : '恢复初始网格'}</button>
           </div>
         </div>
@@ -436,7 +470,7 @@
           </div>
         </div>
         <div class="db-foot">
-          <span class="db-status-msg">提示：按住鼠标沿相邻格拖动可直接连线；点击末格可回退；双击格子快速记录 f/g/h 估值。</span>
+          <span class="db-status-msg">提示：按住鼠标沿横竖或斜向 8 方向拖动即可连续连线；点击末格回退；双击格子记录 f/g/h 估值。</span>
           <span class="db-legend">
             <span class="db-leg-dot" style="background:#38bdf8"></span>起点 S
             <span class="db-leg-dot" style="background:#f59e0b;margin-left:8px"></span>终点 G
@@ -490,7 +524,7 @@
     const rows = boardSpec.rows || 4;
     const cols = boardSpec.cols || 6;
     const isScratch = boardSpec.role === 'scratch';
-    const allowCornerCut = !!boardSpec.allowCornerCut;
+    let allowCornerCut = !!boardSpec.allowCornerCut;
     let isLocked = !!opts.isLocked;
     const isZoomed = !!opts.isZoomed;
     let evalResult = opts.evalResult || null;
@@ -502,6 +536,7 @@
     let undoStack = [];
     let dragInfo = null;
     let popCid = null;
+    let layoutMetrics = { cellSz: 48, gap: 5, step: 53, gw: cols * 53 - 5, gh: rows * 53 - 5 };
 
     const stageHost = containerEl.querySelector('.pg-stage-host');
     const gridEl = containerEl.querySelector('.pg-grid');
@@ -577,6 +612,9 @@
       const gap = availW < 340 ? 3 : 5;
       const maxDesired = isZoomed ? 66 : 54;
       const cellSz = Math.max(34, Math.min(maxDesired, Math.floor((availW - (cols - 1) * gap) / cols)));
+      const gw = cols * cellSz + (cols - 1) * gap;
+      const gh = rows * cellSz + (rows - 1) * gap;
+      layoutMetrics = { cellSz, gap, step: cellSz + gap, gw, gh };
 
       if (gridEl) {
         gridEl.style.gap = `${gap}px`;
@@ -621,8 +659,6 @@
       }
 
       if (svgEl && gridEl) {
-        const gw = cols * cellSz + (cols - 1) * gap;
-        const gh = rows * cellSz + (rows - 1) * gap;
         svgEl.setAttribute('viewBox', `0 0 ${gw} ${gh}`);
         const seq = data.path || [];
         if (seq.length) {
@@ -644,6 +680,9 @@
           svgEl.innerHTML = inner;
         } else {
           svgEl.innerHTML = '';
+        }
+        if (dragInfo?.mode === 'path' && dragInfo.pointerRel) {
+          updateRubberLine(dragInfo.pointerRel.x, dragInfo.pointerRel.y);
         }
       }
 
@@ -722,13 +761,45 @@
       return true;
     }
 
+    function clearRubberLine() {
+      if (!svgEl) return;
+      const old = svgEl.querySelector('.pg-rubber');
+      if (old) old.remove();
+    }
+
+    function updateRubberLine(relX, relY) {
+      if (!svgEl || !data.path.length) {
+        clearRubberLine();
+        return;
+      }
+      const last = data.path[data.path.length - 1];
+      const lr = Math.floor(last / cols), lc = last % cols;
+      const sx = lc * layoutMetrics.step + layoutMetrics.cellSz / 2;
+      const sy = lr * layoutMetrics.step + layoutMetrics.cellSz / 2;
+      let line = svgEl.querySelector('.pg-rubber');
+      if (!line) {
+        line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('class', 'pg-rubber');
+        line.setAttribute('stroke', 'rgba(52, 211, 153, 0.72)');
+        line.setAttribute('stroke-width', '2.6');
+        line.setAttribute('stroke-dasharray', '5 4');
+        line.setAttribute('stroke-linecap', 'round');
+        line.setAttribute('pointer-events', 'none');
+        svgEl.appendChild(line);
+      }
+      line.setAttribute('x1', sx.toFixed(1));
+      line.setAttribute('y1', sy.toFixed(1));
+      line.setAttribute('x2', Number(relX).toFixed(1));
+      line.setAttribute('y2', Number(relY).toFixed(1));
+    }
+
     if (!isLocked) {
       containerEl.querySelectorAll('[data-pgtool]').forEach(btn => {
         btn.onclick = () => {
           pgTool = btn.dataset.pgtool;
           containerEl.querySelectorAll('[data-pgtool]').forEach(b => b.classList.toggle('active', b.dataset.pgtool === pgTool));
           const tips = {
-            path: '描绘路径模式：拖动或点击相邻格子从起点连向终点',
+            path: '描绘路径模式：拖动或点击相邻格（支持 8 方向与斜线）从起点连向终点',
             wall: '障碍画笔模式：点击或拖动即可放置/擦除不可通行墙体',
             start: '设起点模式：点击任意非墙格子将其设为新起点 S',
             end: '设终点模式：点击任意非墙格子将其设为新终点 G',
@@ -754,6 +825,12 @@
             data.path = [];
             render();
             notifyChange();
+          } else if (act === 'toggle-corner-cut' && isScratch) {
+            allowCornerCut = !allowCornerCut;
+            btn.classList.toggle('active', allowCornerCut);
+            btn.textContent = `斜穿墙角：${allowCornerCut ? '允许' : '禁止'}`;
+            render();
+            setStatus(allowCornerCut ? '已允许草稿板斜穿墙角' : '已禁止草稿板斜穿墙角');
           } else if (act === 'reset') {
             pushUndo();
             data = cloneData(null, boardSpec);
@@ -768,10 +845,16 @@
           const cell = e.target.closest('[data-pgcell]');
           if (!cell) return;
           e.preventDefault();
+          try { gridEl.setPointerCapture(e.pointerId); } catch (_) {}
           const cid = Number(cell.dataset.pgcell);
           if (pgTool === 'path') {
+            const curTip = data.path.length > 0 ? data.path[data.path.length - 1] : null;
+            if (curTip !== null && cid === curTip) {
+              dragInfo = { mode: 'path', lastCid: cid, startedOnTip: true, movedDuringDrag: false };
+              return;
+            }
             const changed = tryStepPath(cid, false);
-            dragInfo = { mode: 'path', lastCid: cid };
+            dragInfo = { mode: 'path', lastCid: cid, startedOnTip: false, movedDuringDrag: false };
             if (changed) { render(); notifyChange(); }
           } else if (pgTool === 'wall' && isScratch) {
             if (cid === data.start || cid === data.end) { setStatus('不能直接把起点或终点刷成障碍墙'); return; }
@@ -827,17 +910,54 @@
           if (!containerEl.isConnected) {
             window.removeEventListener('pointermove', handleDocMove);
             window.removeEventListener('pointerup', endDocDrag);
+            window.removeEventListener('pointercancel', endDocDrag);
             return;
           }
           if (!dragInfo) return;
-          const el = document.elementFromPoint(e.clientX, e.clientY)?.closest?.('[data-pgcell]');
-          if (!el) return;
-          const cid = Number(el.dataset.pgcell);
-          if (cid === dragInfo.lastCid) return;
-          dragInfo.lastCid = cid;
+          const rect = gridEl.getBoundingClientRect();
+          if (!rect.width || !rect.height) return;
+          const scaleX = layoutMetrics.gw / rect.width;
+          const scaleY = layoutMetrics.gh / rect.height;
+          const relX = (e.clientX - rect.left) * scaleX;
+          const relY = (e.clientY - rect.top) * scaleY;
+
           if (dragInfo.mode === 'path') {
-            if (tryStepPath(cid, true)) { render(); notifyChange(); }
+            dragInfo.pointerRel = {
+              x: Math.max(0, Math.min(layoutMetrics.gw, relX)),
+              y: Math.max(0, Math.min(layoutMetrics.gh, relY))
+            };
+            updateRubberLine(dragInfo.pointerRel.x, dragInfo.pointerRel.y);
+            const cid = resolvePathDragHit(relX, relY, rows, cols, layoutMetrics.cellSz, layoutMetrics.gap, true);
+            if (cid === null || cid === dragInfo.lastCid) return;
+            dragInfo.lastCid = cid;
+
+            let pathChanged = false;
+            if (data.path.length > 0) {
+              const last = data.path[data.path.length - 1];
+              if (cid === last) return;
+              if (data.path.length >= 2 && cid === data.path[data.path.length - 2]) {
+                pathChanged = tryStepPath(cid, true);
+              } else {
+                const steps = interpolateGridSteps(last, cid, cols, 6);
+                for (let i = 0; i < steps.length; i++) {
+                  const ok = tryStepPath(steps[i], true);
+                  if (ok) pathChanged = true;
+                  else break;
+                }
+              }
+            } else {
+              pathChanged = tryStepPath(cid, true);
+            }
+            if (pathChanged) {
+              dragInfo.movedDuringDrag = true;
+              render();
+              updateRubberLine(dragInfo.pointerRel.x, dragInfo.pointerRel.y);
+              notifyChange();
+            }
           } else if (dragInfo.mode === 'wall' && isScratch) {
+            const cid = resolvePathDragHit(relX, relY, rows, cols, layoutMetrics.cellSz, layoutMetrics.gap, false);
+            if (cid === null || cid === dragInfo.lastCid) return;
+            dragInfo.lastCid = cid;
             if (cid === data.start || cid === data.end) return;
             const has = data.obstacles.includes(cid);
             if (dragInfo.wallAction === 'add' && !has) {
@@ -852,15 +972,24 @@
             }
           }
         };
-        const endDocDrag = () => {
+        const endDocDrag = (e) => {
           if (!containerEl.isConnected) {
             window.removeEventListener('pointermove', handleDocMove);
             window.removeEventListener('pointerup', endDocDrag);
+            window.removeEventListener('pointercancel', endDocDrag);
+          }
+          if (dragInfo?.mode === 'path' && dragInfo.startedOnTip && !dragInfo.movedDuringDrag && data.path.length > 0 && e?.type === 'pointerup') {
+            pushUndo();
+            data.path.pop();
+            render();
+            notifyChange();
           }
           dragInfo = null;
+          clearRubberLine();
         };
         window.addEventListener('pointermove', handleDocMove);
         window.addEventListener('pointerup', endDocDrag);
+        window.addEventListener('pointercancel', endDocDrag);
       }
     }
 
@@ -2246,6 +2375,8 @@
   global.DiagramBoard = {
     createBoardHTML,
     mountBoard,
-    computePathCost
+    computePathCost,
+    resolvePathDragHit,
+    interpolateGridSteps
   };
 })(window);

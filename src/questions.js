@@ -578,7 +578,7 @@ window.QUESTION_BANK = [
     stem: '请分别简述【随机移动避障算法】与【绕行障碍物算法】的核心思想、实现步骤，并从实现难度、内存开销、路径效率及适用场景四个维度对比两者的优缺点。',
     scratchBoard: {
       kind: 'pathgrid', role: 'scratch',
-      rows: 5, cols: 7, start: 14, end: 20, obstacles: [9, 16, 23], allowCornerCut: false,
+      rows: 5, cols: 7, start: 14, end: 20, obstacles: [9, 16, 23], allowCornerCut: true,
       title: '避障推演草稿画板（不计分 · 辅助打草稿）',
       guide: '可选草稿区：可自由绘制障碍墙、起点 S、终点 G 与绕行路线，仅辅助理清算法步骤，不参与评分。'
     },
@@ -596,7 +596,7 @@ window.QUESTION_BANK = [
     stem: '请阐述【沿路径走算法】的两种权重分配方法，以及【沿墙走算法】在四方向（左手定则）和八方向（左/右手优先）下的核心实现步骤，并说明沿墙走算法在空旷环境中的局限及改进思路。',
     scratchBoard: {
       kind: 'pathgrid', role: 'scratch',
-      rows: 5, cols: 7, start: 14, end: 20, obstacles: [2, 9, 16, 17, 23], allowCornerCut: false,
+      rows: 5, cols: 7, start: 14, end: 20, obstacles: [2, 9, 16, 17, 23], allowCornerCut: true,
       title: '沿墙/沿路径草稿画板（不计分 · 辅助左/右手定则推演）',
       guide: '可选草稿区：可自由增删墙体，沿边界模拟四/八方向左手定则移动或空旷区域打转现象，不参与评分。'
     },
@@ -615,7 +615,7 @@ window.QUESTION_BANK = [
     stem: '请分别写出【广度优先搜索 (BFS)】与【深度优先搜索 (DFS 非递归)】的完整寻路步骤，并从数据结构、最优性（最短路径）、空间开销和适用场景四个方面比较 DFS、BFS 与 Dijkstra 算法。',
     scratchBoard: {
       kind: 'pathgrid', role: 'scratch',
-      rows: 5, cols: 7, start: 14, end: 20, obstacles: [9, 10, 16, 23, 24], allowCornerCut: false,
+      rows: 5, cols: 7, start: 14, end: 20, obstacles: [9, 10, 16, 23, 24], allowCornerCut: true,
       title: 'BFS / DFS / Dijkstra 推演草稿板（不计分）',
       guide: '可选草稿区：用「标 Open 表 / Close 表」模拟队列(BFS)、栈(DFS) 与松弛扩散序列，不参与评分。'
     },
@@ -633,7 +633,7 @@ window.QUESTION_BANK = [
     stem: '请完整阐述 A* 搜索算法的核心估价函数 f(n)=g(n)+h(n) 各分量含义、启发函数的可采纳性要求、Open/Close 双列表的作用及完整实现步骤，并列举至少 4 种 A* 优化策略。',
     scratchBoard: {
       kind: 'pathgrid', role: 'scratch',
-      rows: 5, cols: 7, start: 14, end: 20, obstacles: [8, 15, 16, 22, 23], givenNotes: { 14: '60|0/60' }, allowCornerCut: false,
+      rows: 5, cols: 7, start: 14, end: 20, obstacles: [8, 15, 16, 22, 23], givenNotes: { 14: '60|0/60' }, allowCornerCut: true,
       title: 'A* 手算演草画板（不计分 · 辅助标注 Open/Close 与 f/g/h）',
       guide: '可选草稿区：手动标记 Open/Close 节点并双击格子记录 f|g/h（如 50|10/40），仅用于理顺算法步骤，不参与评分。'
     },

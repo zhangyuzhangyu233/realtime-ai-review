@@ -262,11 +262,97 @@ const repE10Wall = G.evaluateSubjective(qE10, {
 assert(!repE10Wall.pass && repE10Wall.diagramEval.cellStatuses[8] === 'bad',
   `e10 obstacle collision #8 rejected & cell flagged red`);
 
-// 9. Verify e1..e4 have non-graded scratchBoard (not graded q.board)
+// 9. Verify e1..e4 have non-graded scratchBoard (not graded q.board) with default allowCornerCut=true
 for (const eid of ['e1', 'e2', 'e3', 'e4']) {
   const qx = BANK.find(x => x.id === eid);
-  assert(Boolean(qx && !qx.board && qx.scratchBoard && qx.scratchBoard.role === 'scratch'), `${eid} has optional non-graded scratchBoard`);
+  assert(
+    Boolean(qx && !qx.board && qx.scratchBoard && qx.scratchBoard.role === 'scratch' && qx.scratchBoard.allowCornerCut === true),
+    `${eid} has optional non-graded scratchBoard with allowCornerCut=true`
+  );
 }
+
+// 10. Diagonal path drag core-circle hit detection & Chebyshev fast-drag interpolation (PC + Mobile)
+const DB = ctx.window.DiagramBoard;
+assert(Boolean(DB && typeof DB.resolvePathDragHit === 'function' && typeof DB.interpolateGridSteps === 'function'),
+  'DiagramBoard exports resolvePathDragHit & interpolateGridSteps');
+
+function sampleDragHits(pts, rows, cols, cellSz, gap, useCoreCircle = true) {
+  const hits = [];
+  for (const [x, y] of pts) {
+    const cid = DB.resolvePathDragHit(x, y, rows, cols, cellSz, gap, useCoreCircle);
+    if (cid !== null && hits[hits.length - 1] !== cid) hits.push(cid);
+  }
+  return hits;
+}
+
+for (const cfg of [
+  { name: 'Desktop f6 (54px)', rows: 4, cols: 7, cellSz: 54, gap: 5, offsets: [0, -10, 10] },
+  { name: 'Mobile e10 (34px)', rows: 5, cols: 6, cellSz: 34, gap: 3, offsets: [0, -6, 6] }
+]) {
+  const step = cfg.cellSz + cfg.gap;
+  const x0 = 1 * step + cfg.cellSz / 2;
+  const y0 = 1 * step + cfg.cellSz / 2;
+  const x1 = 2 * step + cfg.cellSz / 2;
+  const y1 = 2 * step + cfg.cellSz / 2;
+  const startId = 1 * cfg.cols + 1;
+  const diagId = 2 * cfg.cols + 2;
+
+  for (const off of cfg.offsets) {
+    const pts = [];
+    for (let k = 0; k <= 24; k++) {
+      const t = k / 24;
+      const clampX = Math.max(startId === 0 ? 0 : step, x0 + (x1 - x0) * t + (t > 0.05 && t < 0.95 ? off : 0));
+      const clampY = y0 + (y1 - y0) * t - (t > 0.05 && t < 0.95 ? off : 0);
+      pts.push([clampX, clampY]);
+    }
+    const seq = sampleDragHits(pts, cfg.rows, cfg.cols, cfg.cellSz, cfg.gap, true);
+    assert(
+      seq.length === 2 && seq[0] === startId && seq[1] === diagId,
+      `${cfg.name} diagonal drag (offset=${off}px) resolves directly [${startId}, ${diagId}] without grazing orthogonal corners (got [${seq.join(', ')}])`
+    );
+  }
+
+  // Intentional L-turn through cell centers: (1,1) -> (1,2) -> (2,2)
+  const midX = x1, midY = y0;
+  const lPts = [];
+  for (let k = 0; k <= 12; k++) {
+    const t = k / 12;
+    lPts.push([x0 + (midX - x0) * t, y0 + (midY - y0) * t]);
+  }
+  for (let k = 1; k <= 12; k++) {
+    const t = k / 12;
+    lPts.push([midX + (x1 - midX) * t, midY + (y1 - midY) * t]);
+  }
+  const orthId = 1 * cfg.cols + 2;
+  const lSeq = sampleDragHits(lPts, cfg.rows, cfg.cols, cfg.cellSz, cfg.gap, true);
+  assert(
+    lSeq.length === 3 && lSeq[0] === startId && lSeq[1] === orthId && lSeq[2] === diagId,
+    `${cfg.name} intentional L-turn hits all 3 centers [${startId}, ${orthId}, ${diagId}]`
+  );
+
+  // Corner of cell (1,2): missed in core-circle mode (path), hit in full-cell mode (wall brush)
+  const cornerX = 2 * step + 2;
+  const cornerY = 1 * step + cfg.cellSz - 2;
+  assert(DB.resolvePathDragHit(cornerX, cornerY, cfg.rows, cfg.cols, cfg.cellSz, cfg.gap, true) === null,
+    `${cfg.name} core-circle filter ignores grazed cell corner (${cornerX.toFixed(1)}, ${cornerY.toFixed(1)})`);
+  assert(DB.resolvePathDragHit(cornerX, cornerY, cfg.rows, cfg.cols, cfg.cellSz, cfg.gap, false) === orthId,
+    `${cfg.name} full-cell mode (wall brush) still hits cell corner #${orthId}`);
+}
+
+const interpF6 = DB.interpolateGridSteps(8, 24, 7);
+assert(interpF6.length === 2 && interpF6[0] === 16 && interpF6[1] === 24, `interpolateGridSteps(8, 24, 7) -> [${interpF6.join(', ')}]`);
+
+const interpE10 = DB.interpolateGridSteps(3, 17, 6);
+assert(interpE10.length === 2 && interpE10[0] === 10 && interpE10[1] === 17, `interpolateGridSteps(3, 17, 6) -> [${interpE10.join(', ')}]`);
+
+const interpSame = DB.interpolateGridSteps(12, 12, 6);
+assert(interpSame.length === 0, 'interpolateGridSteps(12, 12, 6) -> []');
+
+// Verify scratch board HTML exposes toggle-corner-cut while graded e10 board does not
+const scratchHtml = DB.createBoardHTML(BANK.find(x => x.id === 'e1').scratchBoard, 'sc1', null, false);
+const gradedHtml = DB.createBoardHTML(qE10.board, 'gr1', null, false);
+assert(scratchHtml.includes('data-pgact="toggle-corner-cut"'), 'Scratch board renders toggle-corner-cut button');
+assert(!gradedHtml.includes('data-pgact="toggle-corner-cut"'), 'Graded e10 board does not expose toggle-corner-cut cheat button');
 
 console.log(`\nSummary: ${fails === 0 ? 'ALL DIAGRAM GRADER TESTS PASSED!' : fails + ' FAILURES'}`);
 process.exit(fails ? 1 : 0);
